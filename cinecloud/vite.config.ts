@@ -14,7 +14,9 @@ const config = defineConfig({
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],
     }),
+    // Tailwind CSS v4 must come before React plugins
     tailwindcss(),
+    // React-related plugins come after Tailwind
     tanstackStart(),
     viteReact(),
   ],
