@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { movies, reviews } from '@/data/dummy-data'
 
-export const Route = createFileRoute('/_authenticated/reviews')({
+export const Route = createFileRoute('/admin/reviews')({
   component: ReviewsPage,
 })
 

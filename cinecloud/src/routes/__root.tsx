@@ -1,14 +1,14 @@
 /// <reference types="vite/client" />
 import {
-  createRootRoute,
   HeadContent,
   Outlet,
   Scripts,
+  createRootRoute,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import amplifyCss from '@aws-amplify/ui-react/styles.css?url'
 import type { ReactNode } from 'react'
 import appCss from '@/styles.css?url'
-import amplifyCss from '@aws-amplify/ui-react/styles.css?url'
 import { configureAmplify } from '@/lib/amplify-config'
 import { AuthProvider } from '@/lib/auth-context'
 import { Toaster } from '@/components/ui/sonner'

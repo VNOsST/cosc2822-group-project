@@ -9,23 +9,41 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UserRouteImport } from './routes/user'
+import { Route as PublicRouteImport } from './routes/public'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedShowtimesRouteImport } from './routes/_authenticated/showtimes'
-import { Route as AuthenticatedRoomsRouteImport } from './routes/_authenticated/rooms'
-import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated/reviews'
-import { Route as AuthenticatedMoviesRouteImport } from './routes/_authenticated/movies'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
+import { Route as UserReviewsRouteImport } from './routes/user/reviews'
+import { Route as UserProfileRouteImport } from './routes/user/profile'
+import { Route as UserBookingsRouteImport } from './routes/user/bookings'
+import { Route as PublicShowtimesRouteImport } from './routes/public/showtimes'
+import { Route as PublicMoviesRouteImport } from './routes/public/movies'
+import { Route as AdminShowtimesRouteImport } from './routes/admin/showtimes'
+import { Route as AdminRoomsRouteImport } from './routes/admin/rooms'
+import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
+import { Route as AdminMoviesRouteImport } from './routes/admin/movies'
+import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
 
+const UserRoute = UserRouteImport.update({
+  id: '/user',
+  path: '/user',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicRoute = PublicRouteImport.update({
+  id: '/public',
+  path: '/public',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -33,111 +51,198 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedShowtimesRoute = AuthenticatedShowtimesRouteImport.update({
-  id: '/showtimes',
-  path: '/showtimes',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedRoomsRoute = AuthenticatedRoomsRouteImport.update({
-  id: '/rooms',
-  path: '/rooms',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedReviewsRoute = AuthenticatedReviewsRouteImport.update({
+const UserReviewsRoute = UserReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => UserRoute,
 } as any)
-const AuthenticatedMoviesRoute = AuthenticatedMoviesRouteImport.update({
-  id: '/movies',
-  path: '/movies',
-  getParentRoute: () => AuthenticatedRoute,
+const UserProfileRoute = UserProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => UserRoute,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
+const UserBookingsRoute = UserBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => UserRoute,
+} as any)
+const PublicShowtimesRoute = PublicShowtimesRouteImport.update({
+  id: '/showtimes',
+  path: '/showtimes',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicMoviesRoute = PublicMoviesRouteImport.update({
+  id: '/movies',
+  path: '/movies',
+  getParentRoute: () => PublicRoute,
+} as any)
+const AdminShowtimesRoute = AdminShowtimesRouteImport.update({
+  id: '/showtimes',
+  path: '/showtimes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRoomsRoute = AdminRoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReviewsRoute = AdminReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMoviesRoute = AdminMoviesRouteImport.update({
+  id: '/movies',
+  path: '/movies',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookingsRoute = AdminBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
-  '/bookings': typeof AuthenticatedBookingsRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
-  '/movies': typeof AuthenticatedMoviesRoute
-  '/reviews': typeof AuthenticatedReviewsRoute
-  '/rooms': typeof AuthenticatedRoomsRoute
-  '/showtimes': typeof AuthenticatedShowtimesRoute
+  '/public': typeof PublicRouteWithChildren
+  '/user': typeof UserRouteWithChildren
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/movies': typeof AdminMoviesRoute
+  '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/rooms': typeof AdminRoomsRoute
+  '/admin/showtimes': typeof AdminShowtimesRoute
+  '/public/movies': typeof PublicMoviesRoute
+  '/public/showtimes': typeof PublicShowtimesRoute
+  '/user/bookings': typeof UserBookingsRoute
+  '/user/profile': typeof UserProfileRoute
+  '/user/reviews': typeof UserReviewsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
-  '/bookings': typeof AuthenticatedBookingsRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
-  '/movies': typeof AuthenticatedMoviesRoute
-  '/reviews': typeof AuthenticatedReviewsRoute
-  '/rooms': typeof AuthenticatedRoomsRoute
-  '/showtimes': typeof AuthenticatedShowtimesRoute
+  '/public': typeof PublicRouteWithChildren
+  '/user': typeof UserRouteWithChildren
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/movies': typeof AdminMoviesRoute
+  '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/rooms': typeof AdminRoomsRoute
+  '/admin/showtimes': typeof AdminShowtimesRoute
+  '/public/movies': typeof PublicMoviesRoute
+  '/public/showtimes': typeof PublicShowtimesRoute
+  '/user/bookings': typeof UserBookingsRoute
+  '/user/profile': typeof UserProfileRoute
+  '/user/reviews': typeof UserReviewsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
-  '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/movies': typeof AuthenticatedMoviesRoute
-  '/_authenticated/reviews': typeof AuthenticatedReviewsRoute
-  '/_authenticated/rooms': typeof AuthenticatedRoomsRoute
-  '/_authenticated/showtimes': typeof AuthenticatedShowtimesRoute
+  '/public': typeof PublicRouteWithChildren
+  '/user': typeof UserRouteWithChildren
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/movies': typeof AdminMoviesRoute
+  '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/rooms': typeof AdminRoomsRoute
+  '/admin/showtimes': typeof AdminShowtimesRoute
+  '/public/movies': typeof PublicMoviesRoute
+  '/public/showtimes': typeof PublicShowtimesRoute
+  '/user/bookings': typeof UserBookingsRoute
+  '/user/profile': typeof UserProfileRoute
+  '/user/reviews': typeof UserReviewsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/login'
-    | '/bookings'
-    | '/dashboard'
-    | '/movies'
-    | '/reviews'
-    | '/rooms'
-    | '/showtimes'
+    | '/public'
+    | '/user'
+    | '/admin/bookings'
+    | '/admin/dashboard'
+    | '/admin/movies'
+    | '/admin/reviews'
+    | '/admin/rooms'
+    | '/admin/showtimes'
+    | '/public/movies'
+    | '/public/showtimes'
+    | '/user/bookings'
+    | '/user/profile'
+    | '/user/reviews'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/login'
-    | '/bookings'
-    | '/dashboard'
-    | '/movies'
-    | '/reviews'
-    | '/rooms'
-    | '/showtimes'
+    | '/public'
+    | '/user'
+    | '/admin/bookings'
+    | '/admin/dashboard'
+    | '/admin/movies'
+    | '/admin/reviews'
+    | '/admin/rooms'
+    | '/admin/showtimes'
+    | '/public/movies'
+    | '/public/showtimes'
+    | '/user/bookings'
+    | '/user/profile'
+    | '/user/reviews'
   id:
     | '__root__'
     | '/'
-    | '/_authenticated'
+    | '/admin'
     | '/login'
-    | '/_authenticated/bookings'
-    | '/_authenticated/dashboard'
-    | '/_authenticated/movies'
-    | '/_authenticated/reviews'
-    | '/_authenticated/rooms'
-    | '/_authenticated/showtimes'
+    | '/public'
+    | '/user'
+    | '/admin/bookings'
+    | '/admin/dashboard'
+    | '/admin/movies'
+    | '/admin/reviews'
+    | '/admin/rooms'
+    | '/admin/showtimes'
+    | '/public/movies'
+    | '/public/showtimes'
+    | '/user/bookings'
+    | '/user/profile'
+    | '/user/reviews'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PublicRoute: typeof PublicRouteWithChildren
+  UserRoute: typeof UserRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/user': {
+      id: '/user'
+      path: '/user'
+      fullPath: '/user'
+      preLoaderRoute: typeof UserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/public': {
+      id: '/public'
+      path: '/public'
+      fullPath: '/public'
+      preLoaderRoute: typeof PublicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -145,11 +250,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthenticatedRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -159,77 +264,139 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/showtimes': {
-      id: '/_authenticated/showtimes'
-      path: '/showtimes'
-      fullPath: '/showtimes'
-      preLoaderRoute: typeof AuthenticatedShowtimesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/rooms': {
-      id: '/_authenticated/rooms'
-      path: '/rooms'
-      fullPath: '/rooms'
-      preLoaderRoute: typeof AuthenticatedRoomsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/reviews': {
-      id: '/_authenticated/reviews'
+    '/user/reviews': {
+      id: '/user/reviews'
       path: '/reviews'
-      fullPath: '/reviews'
-      preLoaderRoute: typeof AuthenticatedReviewsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/user/reviews'
+      preLoaderRoute: typeof UserReviewsRouteImport
+      parentRoute: typeof UserRoute
     }
-    '/_authenticated/movies': {
-      id: '/_authenticated/movies'
-      path: '/movies'
-      fullPath: '/movies'
-      preLoaderRoute: typeof AuthenticatedMoviesRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/user/profile': {
+      id: '/user/profile'
+      path: '/profile'
+      fullPath: '/user/profile'
+      preLoaderRoute: typeof UserProfileRouteImport
+      parentRoute: typeof UserRoute
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/bookings': {
-      id: '/_authenticated/bookings'
+    '/user/bookings': {
+      id: '/user/bookings'
       path: '/bookings'
-      fullPath: '/bookings'
-      preLoaderRoute: typeof AuthenticatedBookingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/user/bookings'
+      preLoaderRoute: typeof UserBookingsRouteImport
+      parentRoute: typeof UserRoute
+    }
+    '/public/showtimes': {
+      id: '/public/showtimes'
+      path: '/showtimes'
+      fullPath: '/public/showtimes'
+      preLoaderRoute: typeof PublicShowtimesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/public/movies': {
+      id: '/public/movies'
+      path: '/movies'
+      fullPath: '/public/movies'
+      preLoaderRoute: typeof PublicMoviesRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/admin/showtimes': {
+      id: '/admin/showtimes'
+      path: '/showtimes'
+      fullPath: '/admin/showtimes'
+      preLoaderRoute: typeof AdminShowtimesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/rooms': {
+      id: '/admin/rooms'
+      path: '/rooms'
+      fullPath: '/admin/rooms'
+      preLoaderRoute: typeof AdminRoomsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reviews': {
+      id: '/admin/reviews'
+      path: '/reviews'
+      fullPath: '/admin/reviews'
+      preLoaderRoute: typeof AdminReviewsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/movies': {
+      id: '/admin/movies'
+      path: '/movies'
+      fullPath: '/admin/movies'
+      preLoaderRoute: typeof AdminMoviesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookings': {
+      id: '/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AdminBookingsRouteImport
+      parentRoute: typeof AdminRoute
     }
   }
 }
 
-interface AuthenticatedRouteChildren {
-  AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedMoviesRoute: typeof AuthenticatedMoviesRoute
-  AuthenticatedReviewsRoute: typeof AuthenticatedReviewsRoute
-  AuthenticatedRoomsRoute: typeof AuthenticatedRoomsRoute
-  AuthenticatedShowtimesRoute: typeof AuthenticatedShowtimesRoute
+interface AdminRouteChildren {
+  AdminBookingsRoute: typeof AdminBookingsRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminMoviesRoute: typeof AdminMoviesRoute
+  AdminReviewsRoute: typeof AdminReviewsRoute
+  AdminRoomsRoute: typeof AdminRoomsRoute
+  AdminShowtimesRoute: typeof AdminShowtimesRoute
 }
 
-const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedMoviesRoute: AuthenticatedMoviesRoute,
-  AuthenticatedReviewsRoute: AuthenticatedReviewsRoute,
-  AuthenticatedRoomsRoute: AuthenticatedRoomsRoute,
-  AuthenticatedShowtimesRoute: AuthenticatedShowtimesRoute,
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminBookingsRoute: AdminBookingsRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminMoviesRoute: AdminMoviesRoute,
+  AdminReviewsRoute: AdminReviewsRoute,
+  AdminRoomsRoute: AdminRoomsRoute,
+  AdminShowtimesRoute: AdminShowtimesRoute,
 }
 
-const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface PublicRouteChildren {
+  PublicMoviesRoute: typeof PublicMoviesRoute
+  PublicShowtimesRoute: typeof PublicShowtimesRoute
+}
+
+const PublicRouteChildren: PublicRouteChildren = {
+  PublicMoviesRoute: PublicMoviesRoute,
+  PublicShowtimesRoute: PublicShowtimesRoute,
+}
+
+const PublicRouteWithChildren =
+  PublicRoute._addFileChildren(PublicRouteChildren)
+
+interface UserRouteChildren {
+  UserBookingsRoute: typeof UserBookingsRoute
+  UserProfileRoute: typeof UserProfileRoute
+  UserReviewsRoute: typeof UserReviewsRoute
+}
+
+const UserRouteChildren: UserRouteChildren = {
+  UserBookingsRoute: UserBookingsRoute,
+  UserProfileRoute: UserProfileRoute,
+  UserReviewsRoute: UserReviewsRoute,
+}
+
+const UserRouteWithChildren = UserRoute._addFileChildren(UserRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
+  PublicRoute: PublicRouteWithChildren,
+  UserRoute: UserRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

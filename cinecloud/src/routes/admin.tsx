@@ -4,13 +4,13 @@ import { AdminSidebar } from '@/components/admin-sidebar'
 import { AdminHeader } from '@/components/admin-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
-export const Route = createFileRoute('/_authenticated')({
-  component: AuthenticatedLayout,
+export const Route = createFileRoute('/admin')({
+  component: AdminLayout,
 })
 
-function AuthenticatedLayout() {
+function AdminLayout() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requiredRole="Admins">
       <SidebarProvider>
         <AdminSidebar />
         <SidebarInset>

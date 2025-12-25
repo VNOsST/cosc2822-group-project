@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { movies } from '@/data/dummy-data'
 
-export const Route = createFileRoute('/_authenticated/movies')({
+export const Route = createFileRoute('/admin/movies')({
   component: MoviesPage,
 })
 

@@ -1,0 +1,35 @@
+# Dependencies
+node_modules
+bun.lockb
+
+# Build outputs
+.output
+dist
+build
+
+# Development files
+.git
+.gitignore
+.vscode
+.idea
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Testing
+coverage
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.md
+!README.md
+.prettierrc
+.eslintrc
+eslint.config.js
+prettier.config.js

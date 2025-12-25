@@ -10,7 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { bookings, movies, reviews, rooms, showtimes } from '@/data/dummy-data'
 
-export const Route = createFileRoute('/_authenticated/dashboard')({
+export const Route = createFileRoute('/admin/dashboard')({
   component: DashboardPage,
 })
 

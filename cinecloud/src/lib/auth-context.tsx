@@ -4,11 +4,14 @@ import { signOut as amplifySignOut } from 'aws-amplify/auth/cognito'
 import { Hub } from 'aws-amplify/utils'
 import type { ReactNode } from 'react'
 
-// DUMMY_DATA: Remove when connecting to real database
+// Role types for access control
+export type UserRole = 'unauthenticated' | 'Users' | 'Admins'
+
 interface User {
   userId: string
   username: string
   email?: string
+  role: UserRole
 }
 
 interface AuthContextType {
@@ -29,10 +32,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const session = await fetchAuthSession()
       if (session.tokens) {
         const idToken = session.tokens.idToken
+        
+        // Extract Cognito groups from token to determine role
+        const cognitoGroups = idToken?.payload['cognito:groups']
+        const groups = Array.isArray(cognitoGroups) 
+          ? (cognitoGroups as Array<string>) 
+          : []
+        const role: UserRole = groups.includes('Admins') ? 'Admins' : 'Users'
+        
         setUser({
           userId: idToken?.payload.sub as string,
           username: (idToken?.payload['cognito:username'] as string) || 'User',
           email: idToken?.payload.email as string,
+          role,
         })
       } else {
         setUser(null)

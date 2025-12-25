@@ -22,32 +22,32 @@ import {
 const navigationItems = [
   {
     title: 'Dashboard',
-    href: '/dashboard',
+    href: '/admin/dashboard',
     icon: LayoutDashboard,
   },
   {
     title: 'Rooms',
-    href: '/rooms',
+    href: '/admin/rooms',
     icon: DoorOpen,
   },
   {
     title: 'Movies',
-    href: '/movies',
+    href: '/admin/movies',
     icon: Film,
   },
   {
     title: 'Showtimes',
-    href: '/showtimes',
+    href: '/admin/showtimes',
     icon: Calendar,
   },
   {
     title: 'Bookings',
-    href: '/bookings',
+    href: '/admin/bookings',
     icon: Ticket,
   },
   {
     title: 'Reviews',
-    href: '/reviews',
+    href: '/admin/reviews',
     icon: MessageSquare,
   },
 ]
@@ -58,7 +58,7 @@ export function AdminSidebar() {
   return (
     <Sidebar className="border-r border-border/50">
       <SidebarHeader className="border-b border-border/50 px-6 py-4">
-        <Link to="/dashboard" className="flex items-center gap-2">
+        <Link to="/admin/dashboard" className="flex items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500">
             <Film className="h-5 w-5 text-white" />
           </div>

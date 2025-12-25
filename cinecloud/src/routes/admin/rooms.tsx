@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table'
 import { rooms } from '@/data/dummy-data'
 
-export const Route = createFileRoute('/_authenticated/rooms')({
+export const Route = createFileRoute('/admin/rooms')({
   component: RoomsPage,
 })
 

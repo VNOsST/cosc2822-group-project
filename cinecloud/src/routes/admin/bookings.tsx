@@ -29,13 +29,13 @@ const searchSchema = z.object({
   status: z.enum(['all', 'confirmed', 'pending', 'cancelled']).optional(),
 })
 
-export const Route = createFileRoute('/_authenticated/bookings')({
+export const Route = createFileRoute('/admin/bookings')({
   component: BookingsPage,
   validateSearch: searchSchema,
 })
 
 function BookingsPage() {
-  const { status } = useSearch({ from: '/_authenticated/bookings' })
+  const { status } = useSearch({ from: '/admin/bookings' })
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState(status || 'all')
 
