@@ -29,10 +29,10 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   if (requiredRole && user?.role !== requiredRole) {
     // Redirect to appropriate page based on actual role
     if (user?.role === 'Admins') {
-      return <Navigate to="/dashboard" />
+      return <Navigate to="/admin/dashboard" />
     }
     if (user?.role === 'Users') {
-      return <Navigate to="/movies" />
+      return <Navigate to="/public/movies" />
     }
     return <Navigate to="/login" />
   }

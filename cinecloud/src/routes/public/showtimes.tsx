@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Clock, Calendar, MapPin } from 'lucide-react'
+import { Calendar, Clock, MapPin } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -65,9 +65,6 @@ function PublicShowtimesPage() {
   const showtimesByDate = MOCK_SHOWTIMES.reduce(
     (acc, showtime) => {
       const date = showtime.date
-      if (!acc[date]) {
-        acc[date] = []
-      }
       acc[date].push(showtime)
       return acc
     },
@@ -78,7 +75,7 @@ function PublicShowtimesPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
+        <h1 className="bg-linear-to-r from-amber-400 to-orange-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
           Showtimes
         </h1>
         <p className="mt-3 text-lg text-slate-400">

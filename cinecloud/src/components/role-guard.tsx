@@ -39,12 +39,12 @@ export function RoleGuard({
   const userRole: UserRole = user?.role ?? 'unauthenticated'
   if (!allowedRoles.includes(userRole)) {
     // User is authenticated but doesn't have required role
-    if (userRole === 'user') {
+    if (userRole === 'Users') {
       // Regular users go to user home
-      return <Navigate to="/movies" />
-    } else if (userRole === 'admin') {
+      return <Navigate to="/user" />
+    } else if (userRole === 'Admins') {
       // Admins go to admin dashboard
-      return <Navigate to="/dashboard" />
+      return <Navigate to="/admin" />
     } else {
       // Unauthenticated go to login
       return <Navigate to={fallbackPath} search={{ redirect: location.pathname }} />

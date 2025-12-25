@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Star, Clock, Calendar } from 'lucide-react'
+import { Clock, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -77,7 +77,7 @@ function PublicMoviesPage() {
     <div className="space-y-8">
       {/* Hero Section */}
       <div className="text-center">
-        <h1 className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
+        <h1 className="bg-linear-to-r from-amber-400 to-orange-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
           Now Showing
         </h1>
         <p className="mt-3 text-lg text-slate-400">
@@ -92,13 +92,13 @@ function PublicMoviesPage() {
             key={movie.id}
             className="group overflow-hidden border-slate-700/50 bg-slate-800/50 transition-all duration-300 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10"
           >
-            <div className="relative aspect-[2/3] overflow-hidden">
+            <div className="relative aspect-2/3 overflow-hidden">
               <img
                 src={movie.posterUrl}
                 alt={movie.title}
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-transparent to-transparent" />
               <Badge className="absolute right-2 top-2 bg-amber-500 text-slate-900">
                 <Star className="mr-1 h-3 w-3 fill-current" />
                 {movie.rating}
@@ -121,7 +121,7 @@ function PublicMoviesPage() {
                 {movie.description}
               </p>
               <div className="flex gap-2">
-                <Link to="/showtimes" className="flex-1">
+                <Link to="/public/showtimes" className="flex-1">
                   <Button
                     size="sm"
                     className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400"

@@ -36,7 +36,7 @@ function RootComponent() {
   return (
     <RootDocument>
       <AuthProvider>
-        <div className="min-h-screen bg-background text-foreground antialiased">
+        <div className="dark min-h-screen bg-background text-foreground antialiased">
           <Outlet />
           <Toaster richColors position="top-right" />
         </div>

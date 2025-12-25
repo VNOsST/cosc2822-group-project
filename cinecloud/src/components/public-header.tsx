@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Film, Ticket, LogIn, UserPlus } from 'lucide-react'
+import { Film, LogIn, Ticket, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import {
@@ -15,12 +15,12 @@ export function PublicHeader() {
   const { user, isAuthenticated, signOut } = useAuth()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/80">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-slate-900/95 backdrop-blur supports-backdrop-filter:bg-slate-900/80">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/public/movies" className="flex items-center gap-2">
           <Film className="h-8 w-8 text-amber-500" />
-          <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-xl font-bold text-transparent">
+          <span className="bg-linear-to-r from-amber-400 to-orange-500 bg-clip-text text-xl font-bold text-transparent">
             CineCloud
           </span>
         </Link>
@@ -46,7 +46,10 @@ export function PublicHeader() {
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                <Button
+                  variant="ghost"
+                  className="relative h-9 w-9 rounded-full"
+                >
                   <Avatar className="h-9 w-9">
                     <AvatarFallback className="bg-amber-500/20 text-amber-500">
                       {user.username.charAt(0).toUpperCase()}
@@ -58,11 +61,13 @@ export function PublicHeader() {
                 <div className="flex items-center gap-2 p-2">
                   <div className="flex flex-col space-y-0.5">
                     <p className="text-sm font-medium">{user.username}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                {user.role === 'admin' ? (
+                {user.role === 'Admins' ? (
                   <DropdownMenuItem asChild>
                     <Link to="/admin/dashboard">
                       <Ticket className="mr-2 h-4 w-4" />
@@ -88,13 +93,20 @@ export function PublicHeader() {
           ) : (
             <>
               <Link to="/login">
-                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-slate-300 hover:text-white"
+                >
                   <LogIn className="mr-2 h-4 w-4" />
                   Log in
                 </Button>
               </Link>
               <Link to="/login">
-                <Button size="sm" className="bg-amber-500 text-slate-900 hover:bg-amber-400">
+                <Button
+                  size="sm"
+                  className="bg-amber-500 text-slate-900 hover:bg-amber-400"
+                >
                   <UserPlus className="mr-2 h-4 w-4" />
                   Sign up
                 </Button>

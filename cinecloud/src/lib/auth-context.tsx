@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUser({
           userId: idToken?.payload.sub as string,
-          username: (idToken?.payload['cognito:username'] as string) || 'User',
+          username: (idToken?.payload.name as string) || 'User',
           email: idToken?.payload.email as string,
           role,
         })

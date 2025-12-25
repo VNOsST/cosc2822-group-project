@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { Film, Ticket, Star, User, LogOut, LayoutDashboard } from 'lucide-react'
+import { Film, LayoutDashboard, LogOut, Star, Ticket, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
 import {
@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 
 const navItems = [
-  { title: 'Browse Movies', icon: Film, href: '/movies' },
+  { title: 'Browse Movies', icon: Film, href: '/public/movies' },
   { title: 'My Bookings', icon: Ticket, href: '/user/bookings' },
   { title: 'My Reviews', icon: Star, href: '/user/reviews' },
   { title: 'Profile', icon: User, href: '/user/profile' },
@@ -29,11 +29,11 @@ export function UserSidebar() {
   const { user, signOut } = useAuth()
 
   return (
-    <Sidebar className="border-r border-slate-700/50">
-      <SidebarHeader className="border-b border-slate-700/50 p-4">
-        <Link to="/movies" className="flex items-center gap-2">
+    <Sidebar className="border-r border-sidebar-border/50">
+      <SidebarHeader className="border-b border-sidebar-border/50 p-4">
+        <Link to="/public/movies" className="flex items-center gap-2">
           <Film className="h-8 w-8 text-amber-500" />
-          <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-xl font-bold text-transparent">
+          <span className="bg-linear-to-r from-amber-400 to-orange-500 bg-clip-text text-xl font-bold text-transparent">
             CineCloud
           </span>
         </Link>
@@ -67,14 +67,14 @@ export function UserSidebar() {
         </SidebarGroup>
 
         {/* Admin link for admin users */}
-        {user?.role === 'admin' && (
+        {user?.role === 'Admins' && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-slate-500">Admin</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <Link to="/dashboard">
+                    <Link to="/admin/dashboard">
                       <LayoutDashboard className="h-4 w-4" />
                       <span>Admin Dashboard</span>
                     </Link>
