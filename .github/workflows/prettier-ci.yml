@@ -18,6 +18,10 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./cinecloud
 
     steps:
     - name: Check out code
