@@ -9,7 +9,6 @@ export const Route = createFileRoute('/')({
 function IndexPage() {
   const { user, isLoading } = useAuth()
 
-
   if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-slate-900">
@@ -22,7 +21,7 @@ function IndexPage() {
   if (user?.role === 'Admins') {
     return <Navigate to="/admin/dashboard" />
   }
-  
+
   if (user?.role === 'Users') {
     return <Navigate to="/public/movies" />
   }

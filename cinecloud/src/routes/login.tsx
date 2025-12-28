@@ -1,12 +1,27 @@
 import { Navigate, createFileRoute, useSearch } from '@tanstack/react-router'
 import { confirmSignUp, signIn, signUp } from 'aws-amplify/auth'
-import { CheckCircle2, Clapperboard, Film, Loader2, Lock, Phone, User } from 'lucide-react'
+import {
+  CheckCircle2,
+  Clapperboard,
+  Film,
+  Loader2,
+  Lock,
+  Phone,
+  User,
+} from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -28,7 +43,7 @@ function LoginPage() {
   const { redirect } = useSearch({ from: '/login' })
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState<LoginTabsView>('signin')
-  
+
   // Form states
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -58,17 +73,19 @@ function LoginPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    
+
     // Validate phone number format (E.164 format required by AWS Cognito)
     if (!phone.startsWith('+')) {
-      toast.error('Phone number must start with + and country code (e.g., +1234567890)')
+      toast.error(
+        'Phone number must start with + and country code (e.g., +1234567890)',
+      )
       setLoading(false)
       return
     }
-    
+
     // Remove any spaces, dashes, or parentheses from phone number
     const formattedPhone = phone.replace(/[\s\-()]/g, '')
-    
+
     try {
       await signUp({
         username: email, // Use email as username
@@ -81,7 +98,9 @@ function LoginPage() {
           },
         },
       })
-      toast.success('Sign up successful! Please check your email for the verification code.')
+      toast.success(
+        'Sign up successful! Please check your email for the verification code.',
+      )
       setView('confirm')
     } catch (error: any) {
       console.error(error)
@@ -127,28 +146,44 @@ function LoginPage() {
               CineCloud
             </span>
           </h1>
-          <p className="text-slate-400 font-medium">Elevating your cinema management</p>
+          <p className="text-slate-400 font-medium">
+            Elevating your cinema management
+          </p>
         </div>
 
         <Card className="border-slate-800 bg-slate-900/40 backdrop-blur-2xl shadow-2xl">
-          <Tabs value={view === 'signup' ? 'signup' : 'signin'} onValueChange={(v) => setView(v as LoginTabsView)}>
+          <Tabs
+            value={view === 'signup' ? 'signup' : 'signin'}
+            onValueChange={(v) => setView(v as LoginTabsView)}
+          >
             <CardHeader className="space-y-1">
               <div className="flex items-center justify-between mb-2">
-                 <CardTitle className="text-2xl font-bold text-white">
+                <CardTitle className="text-2xl font-bold text-white">
                   {view === 'signin' && 'Welcome Back'}
                   {view === 'signup' && 'Create Account'}
                   {view === 'confirm' && 'Verify Email'}
                 </CardTitle>
                 {view !== 'confirm' && (
                   <TabsList className="bg-slate-800/50 text-white">
-                    <TabsTrigger value="signin" className="data-[state=active]:bg-slate-700 text-xs font-medium text-white hover:cursor-pointer">Login</TabsTrigger>
-                    <TabsTrigger value="signup" className="data-[state=active]:bg-slate-700 text-xs font-medium text-white hover:cursor-pointer">Join</TabsTrigger>
+                    <TabsTrigger
+                      value="signin"
+                      className="data-[state=active]:bg-slate-700 text-xs font-medium text-white hover:cursor-pointer"
+                    >
+                      Login
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="signup"
+                      className="data-[state=active]:bg-slate-700 text-xs font-medium text-white hover:cursor-pointer"
+                    >
+                      Join
+                    </TabsTrigger>
                   </TabsList>
                 )}
               </div>
               <CardDescription className="text-slate-400">
                 {view === 'signin' && 'Sign in with your email and password'}
-                {view === 'signup' && 'Create your account with your name, email, phone, and password'}
+                {view === 'signup' &&
+                  'Create your account with your name, email, phone, and password'}
                 {view === 'confirm' && `Sent a verification code to ${email}`}
               </CardDescription>
             </CardHeader>
@@ -157,13 +192,15 @@ function LoginPage() {
               {view === 'signin' && (
                 <form onSubmit={handleSignIn} className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label htmlFor="username" className="text-slate-200">Email</Label>
+                    <Label htmlFor="username" className="text-slate-200">
+                      Email
+                    </Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
-                      <Input 
-                        id="username" 
+                      <Input
+                        id="username"
                         type="email"
-                        placeholder="your.email@example.com" 
+                        placeholder="your.email@example.com"
                         className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:ring-amber-500/50"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -173,14 +210,21 @@ function LoginPage() {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="password" className="text-slate-200">Password</Label>
-                      <button type="button" className="text-xs text-amber-500 hover:text-amber-400">Forgot password?</button>
+                      <Label htmlFor="password" className="text-slate-200">
+                        Password
+                      </Label>
+                      <button
+                        type="button"
+                        className="text-xs text-amber-500 hover:text-amber-400"
+                      >
+                        Forgot password?
+                      </button>
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
-                      <Input 
-                        id="password" 
-                        type="password" 
+                      <Input
+                        id="password"
+                        type="password"
                         className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:ring-amber-500/50"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -188,8 +232,8 @@ function LoginPage() {
                       />
                     </div>
                   </div>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold py-6 shadow-lg shadow-amber-500/20"
                     disabled={loading}
                   >
@@ -201,12 +245,14 @@ function LoginPage() {
               {view === 'signup' && (
                 <form onSubmit={handleSignUp} className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-slate-200">Full Name</Label>
+                    <Label htmlFor="name" className="text-slate-200">
+                      Full Name
+                    </Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
-                      <Input 
-                        id="name" 
-                        placeholder="John Doe" 
+                      <Input
+                        id="name"
+                        placeholder="John Doe"
                         className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -215,11 +261,13 @@ function LoginPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-slate-200">Email Address</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      placeholder="your.email@example.com" 
+                    <Label htmlFor="email" className="text-slate-200">
+                      Email Address
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your.email@example.com"
                       className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -227,28 +275,34 @@ function LoginPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-slate-200">Phone Number</Label>
+                    <Label htmlFor="phone" className="text-slate-200">
+                      Phone Number
+                    </Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
-                      <Input 
-                        id="phone" 
+                      <Input
+                        id="phone"
                         type="tel"
-                        placeholder="+1234567890" 
+                        placeholder="+1234567890"
                         className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         required
                       />
                     </div>
-                    <p className="text-xs text-slate-500">Include country code (e.g., +1 for US, +84 for Vietnam)</p>
+                    <p className="text-xs text-slate-500">
+                      Include country code (e.g., +1 for US, +84 for Vietnam)
+                    </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="reg-password" className="text-slate-200">Password</Label>
+                    <Label htmlFor="reg-password" className="text-slate-200">
+                      Password
+                    </Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
-                      <Input 
-                        id="reg-password" 
-                        type="password" 
+                      <Input
+                        id="reg-password"
+                        type="password"
                         className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -256,12 +310,16 @@ function LoginPage() {
                       />
                     </div>
                   </div>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold py-6 mt-2"
                     disabled={loading}
                   >
-                    {loading ? <Loader2 className="animate-spin" /> : 'Create Account'}
+                    {loading ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      'Create Account'
+                    )}
                   </Button>
                 </form>
               )}
@@ -269,10 +327,12 @@ function LoginPage() {
               {view === 'confirm' && (
                 <form onSubmit={handleConfirmSignUp} className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label htmlFor="code" className="text-slate-200">Verification Code</Label>
-                    <Input 
-                      id="code" 
-                      placeholder="Enter 6-digit code" 
+                    <Label htmlFor="code" className="text-slate-200">
+                      Verification Code
+                    </Label>
+                    <Input
+                      id="code"
+                      placeholder="Enter 6-digit code"
                       className="text-center tracking-widest text-lg bg-slate-800/50 border-slate-700 text-white"
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
@@ -280,16 +340,22 @@ function LoginPage() {
                       maxLength={6}
                     />
                   </div>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-6"
                     disabled={loading}
                   >
-                    {loading ? <Loader2 className="animate-spin" /> : <div className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5" /> Confirm Account</div>}
+                    {loading ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5" /> Confirm Account
+                      </div>
+                    )}
                   </Button>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
+                  <Button
+                    type="button"
+                    variant="ghost"
                     className="w-full text-slate-400 hover:text-white"
                     onClick={() => setView('signup')}
                   >
@@ -306,7 +372,9 @@ function LoginPage() {
                     <span className="w-full border-t border-slate-800" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-[#0f172a] px-2 text-slate-500">Trusted by CineCloud</span>
+                    <span className="bg-[#0f172a] px-2 text-slate-500">
+                      Trusted by CineCloud
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
@@ -317,7 +385,7 @@ function LoginPage() {
             )}
           </Tabs>
         </Card>
-        
+
         <p className="mt-8 text-center text-xs text-slate-500">
           © {new Date().getFullYear()} CineCloud Inc. All rights reserved.
         </p>

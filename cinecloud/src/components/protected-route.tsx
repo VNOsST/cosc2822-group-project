@@ -9,7 +9,10 @@ interface ProtectedRouteProps {
   requiredRole?: UserRole
 }
 
-export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
+export function ProtectedRoute({
+  children,
+  requiredRole,
+}: ProtectedRouteProps) {
   const { user, isAuthenticated, isLoading } = useAuth()
   const location = useLocation()
 
