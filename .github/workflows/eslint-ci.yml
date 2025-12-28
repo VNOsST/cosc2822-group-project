@@ -6,7 +6,10 @@ on:
     - 'dependabot/**'
     - 'staging'
     - 'production'
+    - 'fix/prettier-formatting/**'
   pull_request:
+    branches-ignore:
+    - 'fix/prettier-formatting/**'
   workflow_dispatch:
 
 
