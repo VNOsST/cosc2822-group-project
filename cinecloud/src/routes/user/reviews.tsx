@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Star, Film, Trash2 } from 'lucide-react'
+import { Film, Star, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
@@ -9,14 +9,16 @@ const MOCK_REVIEWS = [
     id: '1',
     movieTitle: 'Dune: Part Two',
     rating: 5,
-    comment: 'Absolutely stunning! The visuals and Hans Zimmer\'s score create an immersive experience like no other.',
+    comment:
+      "Absolutely stunning! The visuals and Hans Zimmer's score create an immersive experience like no other.",
     createdAt: '2024-12-20',
   },
   {
     id: '2',
     movieTitle: 'Oppenheimer',
     rating: 4,
-    comment: 'Brilliant acting and direction. A bit long but worth every minute.',
+    comment:
+      'Brilliant acting and direction. A bit long but worth every minute.',
     createdAt: '2024-12-15',
   },
   {
@@ -44,7 +46,8 @@ function UserReviewsPage() {
         {MOCK_REVIEWS.length === 0 ? (
           <Card className="border-slate-700/50 bg-slate-800/50">
             <CardContent className="py-8 text-center text-slate-400">
-              You haven't written any reviews yet. Watch a movie and share your thoughts!
+              You haven't written any reviews yet. Watch a movie and share your
+              thoughts!
             </CardContent>
           </Card>
         ) : (

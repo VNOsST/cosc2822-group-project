@@ -1,3 +1,26 @@
-package-lock.json
-pnpm-lock.yaml
-yarn.lock
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+.output/
+
+# Generated files
+src/routeTree.gen.ts
+components.json
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db

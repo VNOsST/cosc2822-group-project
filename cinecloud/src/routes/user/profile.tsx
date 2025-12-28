@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { User, Mail, Calendar } from 'lucide-react'
+import { Calendar, Mail, User } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
