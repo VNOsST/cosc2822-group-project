@@ -41,8 +41,8 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # Create a non-root user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 tanstack
+RUN groupadd --system --gid 1001 nodejs && \
+    useradd --system --uid 1001 --gid nodejs tanstack
 
 # Copy built application from builder
 COPY --from=builder --chown=tanstack:nodejs /app/.output ./.output
@@ -55,4 +55,4 @@ USER tanstack
 EXPOSE 3000
 
 # Start the application
-CMD ["bun", "run", ".output/server/index.mjs"]
+CMD ["bun", "start"]
