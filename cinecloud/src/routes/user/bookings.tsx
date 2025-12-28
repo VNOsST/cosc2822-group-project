@@ -50,7 +50,9 @@ function UserBookingsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-white">My Bookings</h1>
-        <p className="mt-1 text-slate-400">View and manage your movie bookings</p>
+        <p className="mt-1 text-slate-400">
+          View and manage your movie bookings
+        </p>
       </div>
 
       {/* Upcoming Bookings */}
@@ -143,7 +145,10 @@ function UserBookingsPage() {
                     <CardTitle className="text-lg text-slate-300">
                       {booking.movieTitle}
                     </CardTitle>
-                    <Badge variant="secondary" className="bg-slate-700 text-slate-400">
+                    <Badge
+                      variant="secondary"
+                      className="bg-slate-700 text-slate-400"
+                    >
                       Completed
                     </Badge>
                   </div>

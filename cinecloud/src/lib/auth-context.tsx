@@ -32,14 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const session = await fetchAuthSession()
       if (session.tokens) {
         const idToken = session.tokens.idToken
-        
+
         // Extract Cognito groups from token to determine role
         const cognitoGroups = idToken?.payload['cognito:groups']
-        const groups = Array.isArray(cognitoGroups) 
-          ? (cognitoGroups as Array<string>) 
+        const groups = Array.isArray(cognitoGroups)
+          ? (cognitoGroups as Array<string>)
           : []
         const role: UserRole = groups.includes('Admins') ? 'Admins' : 'Users'
-        
+
         setUser({
           userId: idToken?.payload.sub as string,
           username: (idToken?.payload.name as string) || 'User',

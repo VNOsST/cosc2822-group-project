@@ -13,7 +13,6 @@ import { configureAmplify } from '@/lib/amplify-config'
 import { AuthProvider } from '@/lib/auth-context'
 import { Toaster } from '@/components/ui/sonner'
 
-
 // Initialize Amplify
 configureAmplify()
 
