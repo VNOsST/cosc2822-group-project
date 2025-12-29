@@ -28,20 +28,13 @@
         "ignoreCase": false,
         "ignoreDeclarationSort": true,
         "ignoreMemberSort": false,
-        "memberSyntaxSortOrder": [
-          "none",
-          "all",
-          "multiple",
-          "single"
-        ]
+        "memberSyntaxSortOrder": ["none", "all", "multiple", "single"]
       }
     ]
   },
   "overrides": [
     {
-      "files": [
-        "**/*.{js,ts,tsx}"
-      ],
+      "files": ["**/*.{js,ts,tsx}"],
       "rules": {
         "for-direction": "error",
         "no-async-promise-executor": "error",
@@ -130,10 +123,7 @@
         "@typescript-eslint/no-unnecessary-condition": "warn",
         "@typescript-eslint/triple-slash-reference": "error",
         "typescript/no-shadow": "warn",
-        "import/consistent-type-specifier-style": [
-          "error",
-          "prefer-top-level"
-        ],
+        "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
         "import/first": "error",
         "import/no-commonjs": "error",
         "import/no-duplicates": "error"
@@ -142,15 +132,10 @@
         "es2020": true,
         "browser": true
       },
-      "plugins": [
-        "typescript",
-        "import"
-      ]
+      "plugins": ["typescript", "import"]
     },
     {
-      "files": [
-        "**/*.vue"
-      ],
+      "files": ["**/*.vue"],
       "rules": {
         "for-direction": "error",
         "no-async-promise-executor": "error",
@@ -239,18 +224,12 @@
         "@typescript-eslint/no-unnecessary-condition": "warn",
         "@typescript-eslint/triple-slash-reference": "error",
         "typescript/no-shadow": "warn",
-        "import/consistent-type-specifier-style": [
-          "error",
-          "prefer-top-level"
-        ],
+        "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
         "import/first": "error",
         "import/no-commonjs": "error",
         "import/no-duplicates": "error"
       },
-      "plugins": [
-        "typescript",
-        "import"
-      ],
+      "plugins": ["typescript", "import"],
       "env": {
         "browser": true
       }

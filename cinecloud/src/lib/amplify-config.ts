@@ -16,11 +16,11 @@ const missingVars = Object.entries(requiredEnvVars)
 if (missingVars.length > 0) {
   console.error(
     `Missing required AWS Cognito environment variables: ${missingVars.join(', ')}\n` +
-    'Please check your .env file and ensure all VITE_AWS_* variables are set.'
+      'Please check your .env file and ensure all VITE_AWS_* variables are set.',
   )
 }
 
-const amplifyConfig: ResourcesConfig = {  
+const amplifyConfig: ResourcesConfig = {
   Auth: {
     Cognito: {
       userPoolId: requiredEnvVars.userPoolId || '',
@@ -44,7 +44,9 @@ if (requiredEnvVars.region) {
 
 export function configureAmplify() {
   if (missingVars.length > 0) {
-    console.warn('Amplify configuration incomplete. Authentication may not work properly.')
+    console.warn(
+      'Amplify configuration incomplete. Authentication may not work properly.',
+    )
   }
   Amplify.configure(amplifyConfig)
 }

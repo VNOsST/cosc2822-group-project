@@ -47,7 +47,9 @@ export function RoleGuard({
       return <Navigate to="/admin" />
     } else {
       // Unauthenticated go to login
-      return <Navigate to={fallbackPath} search={{ redirect: location.pathname }} />
+      return (
+        <Navigate to={fallbackPath} search={{ redirect: location.pathname }} />
+      )
     }
   }
 

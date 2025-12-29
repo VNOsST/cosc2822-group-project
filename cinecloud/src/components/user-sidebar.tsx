@@ -52,7 +52,7 @@ export function UserSidebar() {
                     className={cn(
                       'transition-colors',
                       location.pathname === item.href &&
-                        'bg-amber-500/10 text-amber-500'
+                        'bg-amber-500/10 text-amber-500',
                     )}
                   >
                     <Link to={item.href}>
@@ -69,7 +69,9 @@ export function UserSidebar() {
         {/* Admin link for admin users */}
         {user?.role === 'Admins' && (
           <SidebarGroup>
-            <SidebarGroupLabel className="text-slate-500">Admin</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-slate-500">
+              Admin
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -95,7 +97,9 @@ export function UserSidebar() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-medium text-white">{user.username}</p>
+              <p className="truncate text-sm font-medium text-white">
+                {user.username}
+              </p>
               <p className="truncate text-xs text-slate-400">{user.email}</p>
             </div>
             <Button
