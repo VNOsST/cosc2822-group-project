@@ -13,6 +13,8 @@ Welcome to the CineCloud project documentation. This directory contains all tech
 ### Architecture & Design
 
 -   [System Architecture](./architecture/SYSTEM_ARCHITECTURE.md) - Overall system design
+-   [Microservices Architecture](./architecture/MICROSERVICES.md) - Backend microservices design
+-   [Folder Structure](./architecture/FOLDER_STRUCTURE.md) - Code organization guide
 -   [Database Schema](./architecture/DATABASE_SCHEMA.md) - DynamoDB table structures
 -   [API Documentation](./api/API_REFERENCE.md) - Complete API reference
 
@@ -52,6 +54,8 @@ Welcome to the CineCloud project documentation. This directory contains all tech
 ### For Architects
 
 -   [System Architecture](./architecture/SYSTEM_ARCHITECTURE.md)
+-   [Microservices Architecture](./architecture/MICROSERVICES.md)
+-   [Folder Structure](./architecture/FOLDER_STRUCTURE.md)
 -   [Database Schema](./architecture/DATABASE_SCHEMA.md)
 
 ## 📝 Document Conventions
