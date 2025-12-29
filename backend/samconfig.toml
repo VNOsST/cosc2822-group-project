@@ -1,0 +1,51 @@
+# AWS SAM CLI configuration file
+# More information about the format: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-config.html
+
+version = 0.1
+
+[default]
+[default.global.parameters]
+stack_name = "cinecloud-backend"
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.validate.parameters]
+lint = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+s3_prefix = "cinecloud-backend"
+region = "ap-southeast-1"
+parameter_overrides = "Environment=dev"
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[default.local_start_lambda.parameters]
+warm_containers = "EAGER"
+
+# Staging environment configuration
+[staging]
+[staging.deploy.parameters]
+stack_name = "cinecloud-backend-staging"
+s3_prefix = "cinecloud-backend-staging"
+parameter_overrides = "Environment=staging"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+region = "ap-southeast-1"
+
+# Production environment configuration
+[prod]
+[prod.deploy.parameters]
+stack_name = "cinecloud-backend-prod"
+s3_prefix = "cinecloud-backend-prod"
+parameter_overrides = "Environment=prod"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+region = "ap-southeast-1"

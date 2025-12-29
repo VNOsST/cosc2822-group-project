@@ -1,0 +1,265 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: CineCloud Backend API - Serverless Cinema Management System
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        NODE_ENV: production
+        DYNAMODB_REGION: !Ref AWS::Region
+        MOVIES_TABLE: !Ref MoviesTable
+        SHOWTIMES_TABLE: !Ref ShowtimesTable
+        BOOKINGS_TABLE: !Ref BookingsTable
+        ROOMS_TABLE: !Ref RoomsTable
+        RATINGS_TABLE: !Ref RatingsTable
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Deployment environment
+
+Resources:
+  # API Gateway
+  CineCloudApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "cinecloud-api-${Environment}"
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  # Lambda Function
+  CineCloudFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-api-${Environment}"
+      CodeUri: ./
+      Handler: index.handler
+      Description: CineCloud API Lambda Function
+      Events:
+        ApiRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /
+            Method: ANY
+        ApiProxy:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /{proxy+}
+            Method: ANY
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MoviesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ShowtimesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BookingsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RoomsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RatingsTable
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/index.ts
+        External:
+          - "@aws-sdk/*"
+
+  # DynamoDB Tables
+  MoviesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "cinecloud-movies-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: tmdb_id
+          AttributeType: S
+        - AttributeName: type
+          AttributeType: S
+        - AttributeName: rating
+          AttributeType: N
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: tmdb_id-index
+          KeySchema:
+            - AttributeName: tmdb_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: type-rating-index
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: rating
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  ShowtimesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "cinecloud-showtimes-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: movie_id
+          AttributeType: S
+        - AttributeName: start_time
+          AttributeType: S
+        - AttributeName: room_id
+          AttributeType: S
+        - AttributeName: showtime_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: movie_id
+          KeyType: HASH
+        - AttributeName: start_time
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: room_id-start_time-index
+          KeySchema:
+            - AttributeName: room_id
+              KeyType: HASH
+            - AttributeName: start_time
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: showtime_id-index
+          KeySchema:
+            - AttributeName: showtime_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  BookingsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "cinecloud-bookings-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: user_email
+          AttributeType: S
+        - AttributeName: booking_id
+          AttributeType: S
+        - AttributeName: showtime_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_email
+          KeyType: HASH
+        - AttributeName: booking_id
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: showtime_id-index
+          KeySchema:
+            - AttributeName: showtime_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: user_id-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  RoomsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "cinecloud-rooms-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: room_id
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: room_id
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+
+  RatingsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "cinecloud-ratings-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: movie_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: movie_id-index
+          KeySchema:
+            - AttributeName: movie_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: user_id-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${CineCloudApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiEndpoint"
+
+  FunctionArn:
+    Description: Lambda Function ARN
+    Value: !GetAtt CineCloudFunction.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-FunctionArn"
+
+  MoviesTableName:
+    Description: Movies DynamoDB Table Name
+    Value: !Ref MoviesTable
+
+  ShowtimesTableName:
+    Description: Showtimes DynamoDB Table Name
+    Value: !Ref ShowtimesTable
+
+  BookingsTableName:
+    Description: Bookings DynamoDB Table Name
+    Value: !Ref BookingsTable
+
+  RoomsTableName:
+    Description: Rooms DynamoDB Table Name
+    Value: !Ref RoomsTable
+
+  RatingsTableName:
+    Description: Ratings DynamoDB Table Name
+    Value: !Ref RatingsTable
