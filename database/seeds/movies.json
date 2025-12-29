@@ -1,0 +1,97 @@
+[
+  {
+    "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+    "tmdb_id": "tt1375666",
+    "title": "Inception",
+    "synopsis": "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
+    "runtime": 148,
+    "release_date": "2010-07-16",
+    "poster_url": "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Ber.jpg",
+    "image_urls": [
+      "https://image.tmdb.org/t/p/w1280/s3TBrRGB1iav7gFOCNx3H31MoES.jpg"
+    ],
+    "genres": ["Action", "Science Fiction", "Adventure"],
+    "cast": ["Leonardo DiCaprio", "Joseph Gordon-Levitt", "Elliot Page"],
+    "rating": 8.8,
+    "tmdb_popularity_score": 98.5,
+    "created_at": "2024-11-29T12:00:00.000Z",
+    "updated_at": "2024-12-28T12:00:00.000Z",
+    "type": "MOVIE"
+  },
+  {
+    "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+    "tmdb_id": "tt0468569",
+    "title": "The Dark Knight",
+    "synopsis": "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
+    "runtime": 152,
+    "release_date": "2008-07-18",
+    "poster_url": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+    "image_urls": [
+      "https://image.tmdb.org/t/p/w1280/hkBaDkMWbLaf8B1lsWsKX7Ew3Xq.jpg"
+    ],
+    "genres": ["Drama", "Action", "Crime", "Thriller"],
+    "cast": ["Christian Bale", "Heath Ledger", "Aaron Eckhart"],
+    "rating": 9.0,
+    "tmdb_popularity_score": 95.2,
+    "created_at": "2024-11-29T12:00:00.000Z",
+    "updated_at": "2024-12-28T12:00:00.000Z",
+    "type": "MOVIE"
+  },
+  {
+    "id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+    "tmdb_id": "tt0111161",
+    "title": "The Shawshank Redemption",
+    "synopsis": "Framed in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison.",
+    "runtime": 142,
+    "release_date": "1994-09-23",
+    "poster_url": "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
+    "image_urls": [
+      "https://image.tmdb.org/t/p/w1280/kXfqcdQKsToO0OUXHcrrNCHDBzO.jpg"
+    ],
+    "genres": ["Drama", "Crime"],
+    "cast": ["Tim Robbins", "Morgan Freeman", "Bob Gunton"],
+    "rating": 9.3,
+    "tmdb_popularity_score": 88.7,
+    "created_at": "2024-11-29T12:00:00.000Z",
+    "updated_at": "2024-12-28T12:00:00.000Z",
+    "type": "MOVIE"
+  },
+  {
+    "id": "a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d",
+    "tmdb_id": "tt0816692",
+    "title": "Interstellar",
+    "synopsis": "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+    "runtime": 169,
+    "release_date": "2014-11-07",
+    "poster_url": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+    "image_urls": [
+      "https://image.tmdb.org/t/p/w1280/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg"
+    ],
+    "genres": ["Adventure", "Drama", "Science Fiction"],
+    "cast": ["Matthew McConaughey", "Anne Hathaway", "Jessica Chastain"],
+    "rating": 8.6,
+    "tmdb_popularity_score": 92.3,
+    "created_at": "2024-11-29T12:00:00.000Z",
+    "updated_at": "2024-12-28T12:00:00.000Z",
+    "type": "MOVIE"
+  },
+  {
+    "id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
+    "tmdb_id": "tt1853728",
+    "title": "Django Unchained",
+    "synopsis": "With the help of a German bounty hunter, a freed slave sets out to rescue his wife from a brutal Mississippi plantation owner.",
+    "runtime": 165,
+    "release_date": "2012-12-25",
+    "poster_url": "https://image.tmdb.org/t/p/w500/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg",
+    "image_urls": [
+      "https://image.tmdb.org/t/p/w1280/2oZklIzUbvZXXzIFzv7Hi68d6xf.jpg"
+    ],
+    "genres": ["Drama", "Western"],
+    "cast": ["Jamie Foxx", "Christoph Waltz", "Leonardo DiCaprio"],
+    "rating": 8.4,
+    "tmdb_popularity_score": 85.1,
+    "created_at": "2024-11-29T12:00:00.000Z",
+    "updated_at": "2024-12-28T12:00:00.000Z",
+    "type": "MOVIE"
+  }
+]

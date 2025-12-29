@@ -1,0 +1,74 @@
+[
+  {
+    "movie_id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+    "start_time": "2024-12-29T10:00:00.000Z",
+    "showtime_id": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+    "room_id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+    "endtime": "2024-12-29T11:28:00.000Z",
+    "price": 150000,
+    "occupied_seats": []
+  },
+  {
+    "movie_id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+    "start_time": "2024-12-29T14:00:00.000Z",
+    "showtime_id": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+    "room_id": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+    "endtime": "2024-12-29T15:28:00.000Z",
+    "price": 100000,
+    "occupied_seats": []
+  },
+  {
+    "movie_id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+    "start_time": "2024-12-29T18:00:00.000Z",
+    "showtime_id": "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+    "room_id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+    "endtime": "2024-12-29T19:32:00.000Z",
+    "price": 150000,
+    "occupied_seats": []
+  },
+  {
+    "movie_id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+    "start_time": "2024-12-29T21:00:00.000Z",
+    "showtime_id": "b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e",
+    "room_id": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+    "endtime": "2024-12-29T22:32:00.000Z",
+    "price": 100000,
+    "occupied_seats": []
+  },
+  {
+    "movie_id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+    "start_time": "2024-12-30T10:00:00.000Z",
+    "showtime_id": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+    "room_id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+    "endtime": "2024-12-30T11:22:00.000Z",
+    "price": 150000,
+    "occupied_seats": []
+  },
+  {
+    "movie_id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+    "start_time": "2024-12-30T14:00:00.000Z",
+    "showtime_id": "d6e7f8a9-b0c1-4d2e-3f4a-5b6c7d8e9f0a",
+    "room_id": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+    "endtime": "2024-12-30T15:22:00.000Z",
+    "price": 100000,
+    "occupied_seats": []
+  },
+  {
+    "movie_id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+    "start_time": "2024-12-30T18:00:00.000Z",
+    "showtime_id": "e7f8a9b0-c1d2-4e3f-4a5b-6c7d8e9f0a1b",
+    "room_id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+    "endtime": "2024-12-30T19:28:00.000Z",
+    "price": 150000,
+    "occupied_seats": []
+  },
+  {
+    "movie_id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+    "start_time": "2024-12-30T21:00:00.000Z",
+    "showtime_id": "f8a9b0c1-d2e3-4f4a-5b6c-7d8e9f0a1b2c",
+    "room_id": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+    "endtime": "2024-12-30T22:28:00.000Z",
+    "price": 100000,
+    "occupied_seats": []
+  }
+]

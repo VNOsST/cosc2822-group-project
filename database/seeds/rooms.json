@@ -1,0 +1,28 @@
+[
+  {
+    "room_id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+    "sk": "METADATA",
+    "name": "IMAX Hall 1",
+    "capacity": 120,
+    "screen_type": "IMAX",
+    "room_image_urls": ["https://example.com/rooms/imax-1.jpg"],
+    "layout_config": {
+      "rows": 10,
+      "columns": 12
+    },
+    "unavailable": ["A1", "A12", "J1", "J12"]
+  },
+  {
+    "room_id": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+    "sk": "METADATA",
+    "name": "Standard Hall 2",
+    "capacity": 80,
+    "screen_type": "Standard",
+    "room_image_urls": ["https://example.com/rooms/standard-2.jpg"],
+    "layout_config": {
+      "rows": 8,
+      "columns": 10
+    },
+    "unavailable": []
+  }
+]
