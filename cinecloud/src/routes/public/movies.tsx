@@ -14,7 +14,8 @@ const MOCK_MOVIES = [
     rating: 8.8,
     posterUrl: 'https://picsum.photos/seed/dune/300/450',
     releaseDate: '2024-03-01',
-    description: 'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.',
+    description:
+      'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.',
   },
   {
     id: '2',
@@ -24,7 +25,8 @@ const MOCK_MOVIES = [
     rating: 8.5,
     posterUrl: 'https://picsum.photos/seed/oppen/300/450',
     releaseDate: '2023-07-21',
-    description: 'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.',
+    description:
+      'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.',
   },
   {
     id: '3',
@@ -34,7 +36,8 @@ const MOCK_MOVIES = [
     rating: 7.8,
     posterUrl: 'https://picsum.photos/seed/batman/300/450',
     releaseDate: '2022-03-04',
-    description: 'When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate.',
+    description:
+      'When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate.',
   },
   {
     id: '4',
@@ -44,7 +47,8 @@ const MOCK_MOVIES = [
     rating: 8.7,
     posterUrl: 'https://picsum.photos/seed/inter/300/450',
     releaseDate: '2014-11-07',
-    description: 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.',
+    description:
+      "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
   },
   {
     id: '5',
@@ -54,7 +58,8 @@ const MOCK_MOVIES = [
     rating: 8.1,
     posterUrl: 'https://picsum.photos/seed/budapest/300/450',
     releaseDate: '2014-03-28',
-    description: 'A writer encounters the owner of an aging high-class hotel, who tells him of his early years.',
+    description:
+      'A writer encounters the owner of an aging high-class hotel, who tells him of his early years.',
   },
   {
     id: '6',
@@ -64,7 +69,8 @@ const MOCK_MOVIES = [
     rating: 8.5,
     posterUrl: 'https://picsum.photos/seed/parasite/300/450',
     releaseDate: '2019-05-30',
-    description: 'Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.',
+    description:
+      'Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.',
   },
 ]
 
@@ -109,7 +115,10 @@ function PublicMoviesPage() {
                 {movie.title}
               </h3>
               <div className="mb-3 flex flex-wrap gap-2">
-                <Badge variant="outline" className="border-slate-600 text-slate-400">
+                <Badge
+                  variant="outline"
+                  className="border-slate-600 text-slate-400"
+                >
                   {movie.genre}
                 </Badge>
                 <span className="flex items-center text-xs text-slate-500">

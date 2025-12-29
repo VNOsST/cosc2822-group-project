@@ -68,7 +68,7 @@ function PublicShowtimesPage() {
       acc[date].push(showtime)
       return acc
     },
-    {} as Record<string, typeof MOCK_SHOWTIMES>
+    {} as Record<string, typeof MOCK_SHOWTIMES>,
   )
 
   return (
@@ -117,7 +117,11 @@ function PublicShowtimesPage() {
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
                       {showtime.times.map((time) => (
-                        <Link key={time} to="/login" search={{ redirect: '/user/bookings' }}>
+                        <Link
+                          key={time}
+                          to="/login"
+                          search={{ redirect: '/user/bookings' }}
+                        >
                           <Button
                             variant="outline"
                             size="sm"
@@ -130,7 +134,10 @@ function PublicShowtimesPage() {
                       ))}
                     </div>
                     <div className="mt-3 flex items-center justify-between">
-                      <Badge variant="secondary" className="bg-slate-700 text-slate-300">
+                      <Badge
+                        variant="secondary"
+                        className="bg-slate-700 text-slate-300"
+                      >
                         ${showtime.price.toFixed(2)}
                       </Badge>
                     </div>
