@@ -23,7 +23,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./cinecloud
+        working-directory: ./frontend
 
     steps:
     - name: Check out code
