@@ -10,15 +10,15 @@ The backend follows a **microservices architecture** where each service is self-
 
 ✅ **Removed redundant files**:
 
--   Old service files at root: `src/movies.ts`, `src/showtimes.ts`, `src/bookings.ts`, `src/rooms.ts`, `src/ratings.ts`, `src/index.ts`
--   Old routes folder: `src/routes/*`
--   Old db folder: `src/db/*`
--   Old types folder: `src/types/*`
+- Old service files at root: `src/movies.ts`, `src/showtimes.ts`, `src/bookings.ts`, `src/rooms.ts`, `src/ratings.ts`, `src/index.ts`
+- Old routes folder: `src/routes/*`
+- Old db folder: `src/db/*`
+- Old types folder: `src/types/*`
 
 ✅ **New organized structure**:
 
--   All services in `src/services/{service-name}/`
--   All shared code in `src/shared/`
+- All services in `src/services/{service-name}/`
+- All shared code in `src/shared/`
 
 ## Directory Structure
 
@@ -57,11 +57,11 @@ services/{service-name}/
 
 #### `index.ts` - Service Entry Point
 
--   Initializes Hono application
--   Configures middleware (CORS, logging, error handling)
--   Sets up health check endpoint
--   Mounts routes
--   Exports Lambda handler
+- Initializes Hono application
+- Configures middleware (CORS, logging, error handling)
+- Sets up health check endpoint
+- Mounts routes
+- Exports Lambda handler
 
 **Example:**
 
@@ -80,10 +80,10 @@ export const handler = handle(app);
 
 #### `routes.ts` - API Routes
 
--   Defines all HTTP endpoints for the service
--   Implements business logic
--   Interacts with DynamoDB
--   Returns JSON responses
+- Defines all HTTP endpoints for the service
+- Implements business logic
+- Interacts with DynamoDB
+- Returns JSON responses
 
 **Example:**
 
@@ -94,11 +94,11 @@ import { docClient, TABLE_NAMES } from "../../shared/db/client";
 const movies = new Hono();
 
 movies.get("/", async (c) => {
-    // Fetch all movies
+  // Fetch all movies
 });
 
 movies.get("/:id", async (c) => {
-    // Fetch single movie
+  // Fetch single movie
 });
 
 export default movies;
@@ -114,14 +114,14 @@ export default movies;
 
 **Endpoints**:
 
--   `GET /` - List all movies
--   `GET /:id` - Get movie details
--   `GET /:id/showtimes` - Get showtimes for a movie
+- `GET /` - List all movies
+- `GET /:id` - Get movie details
+- `GET /:id/showtimes` - Get showtimes for a movie
 
 **Database Access**:
 
--   MoviesTable (read/write)
--   ShowtimesTable (read)
+- MoviesTable (read/write)
+- ShowtimesTable (read)
 
 ### 2. Showtimes Service (`services/showtimes/`)
 
@@ -131,14 +131,14 @@ export default movies;
 
 **Endpoints**:
 
--   `GET /` - List all showtimes (with optional filters)
--   `GET /:id` - Get showtime with seat map
+- `GET /` - List all showtimes (with optional filters)
+- `GET /:id` - Get showtime with seat map
 
 **Database Access**:
 
--   ShowtimesTable (read/write)
--   MoviesTable (read)
--   RoomsTable (read)
+- ShowtimesTable (read/write)
+- MoviesTable (read)
+- RoomsTable (read)
 
 ### 3. Bookings Service (`services/bookings/`)
 
@@ -148,15 +148,15 @@ export default movies;
 
 **Endpoints**:
 
--   `GET /` - Get user's bookings
--   `POST /` - Create new booking
--   `GET /showtime/:showtimeId` - Get bookings for a showtime
--   `DELETE /:userEmail/:bookingId` - Cancel booking
+- `GET /` - Get user's bookings
+- `POST /` - Create new booking
+- `GET /showtime/:showtimeId` - Get bookings for a showtime
+- `DELETE /:userEmail/:bookingId` - Cancel booking
 
 **Database Access**:
 
--   BookingsTable (read/write)
--   ShowtimesTable (read/write)
+- BookingsTable (read/write)
+- ShowtimesTable (read/write)
 
 ### 4. Rooms Service (`services/rooms/`)
 
@@ -166,13 +166,13 @@ export default movies;
 
 **Endpoints**:
 
--   `GET /` - List all rooms
--   `GET /:id` - Get room details
--   `POST /` - Create new room
+- `GET /` - List all rooms
+- `GET /:id` - Get room details
+- `POST /` - Create new room
 
 **Database Access**:
 
--   RoomsTable (read/write)
+- RoomsTable (read/write)
 
 ### 5. Ratings Service (`services/ratings/`)
 
@@ -182,14 +182,14 @@ export default movies;
 
 **Endpoints**:
 
--   `GET /movie/:movieId` - Get ratings for a movie
--   `GET /user/:userId` - Get user's ratings
--   `POST /` - Submit new rating
+- `GET /movie/:movieId` - Get ratings for a movie
+- `GET /user/:userId` - Get user's ratings
+- `POST /` - Submit new rating
 
 **Database Access**:
 
--   MovieRatingsTable (read/write)
--   MoviesTable (read/write)
+- MovieRatingsTable (read/write)
+- MoviesTable (read/write)
 
 ## Shared Code
 
@@ -199,15 +199,15 @@ export default movies;
 
 **Exports**:
 
--   `docClient` - Configured DynamoDBDocumentClient
--   `dynamoDBClient` - Raw DynamoDB client
--   `TABLE_NAMES` - Table name constants
+- `docClient` - Configured DynamoDBDocumentClient
+- `dynamoDBClient` - Raw DynamoDB client
+- `TABLE_NAMES` - Table name constants
 
 **Features**:
 
--   Automatic local/production configuration
--   SAM Local support
--   Environment variable handling
+- Automatic local/production configuration
+- SAM Local support
+- Environment variable handling
 
 ### `shared/types/entities.ts`
 
@@ -215,8 +215,8 @@ export default movies;
 
 **Exports**:
 
--   Entity interfaces: `User`, `Movie`, `Room`, `Showtime`, `Booking`, `MovieRating`, `Notification`
--   Type aliases: `UserRole`, `BookingStatus`, `NotificationType`
+- Entity interfaces: `User`, `Movie`, `Room`, `Showtime`, `Booking`, `MovieRating`, `Notification`
+- Type aliases: `UserRole`, `BookingStatus`, `NotificationType`
 
 **Usage**:
 
@@ -230,34 +230,34 @@ import type { Movie, Booking } from "../../shared/types/entities";
 
 Each service is self-contained with its own:
 
--   Lambda handler
--   Routes
--   Business logic
--   Error handling
+- Lambda handler
+- Routes
+- Business logic
+- Error handling
 
 ### 2. **Code Organization**
 
--   Clear separation between services
--   Easy to locate service-specific code
--   Shared code prevents duplication
+- Clear separation between services
+- Easy to locate service-specific code
+- Shared code prevents duplication
 
 ### 3. **Scalability**
 
--   Services can be developed independently
--   Easy to add new services
--   Simple to split large services
+- Services can be developed independently
+- Easy to add new services
+- Simple to split large services
 
 ### 4. **Maintainability**
 
--   Changes to one service don't affect others
--   Clear ownership and responsibilities
--   Easier testing and debugging
+- Changes to one service don't affect others
+- Clear ownership and responsibilities
+- Easier testing and debugging
 
 ### 5. **Team Collaboration**
 
--   Different teams can work on different services
--   Reduced merge conflicts
--   Clear module boundaries
+- Different teams can work on different services
+- Reduced merge conflicts
+- Clear module boundaries
 
 ## Development Guidelines
 
@@ -265,38 +265,38 @@ Each service is self-contained with its own:
 
 1. **Create service folder**:
 
-    ```bash
-    mkdir -p src/services/new-service
-    ```
+   ```bash
+   mkdir -p src/services/new-service
+   ```
 
 2. **Create `index.ts`**:
 
-    - Copy template from existing service
-    - Update service name and port
-    - Configure routes
+   - Copy template from existing service
+   - Update service name and port
+   - Configure routes
 
 3. **Create `routes.ts`**:
 
-    - Define API endpoints
-    - Implement business logic
-    - Use shared types and DB client
+   - Define API endpoints
+   - Implement business logic
+   - Use shared types and DB client
 
 4. **Update `template.yaml`**:
 
-    - Add Lambda function resource
-    - Configure API Gateway routes
-    - Set DynamoDB permissions
+   - Add Lambda function resource
+   - Configure API Gateway routes
+   - Set DynamoDB permissions
 
 5. **Update `package.json`**:
-    - Add dev script for local development
-    - Include in `dev:all` script
+   - Add dev script for local development
+   - Include in `dev:all` script
 
 ### Modifying a Service
 
 1. **Locate service folder**: `src/services/{service-name}/`
 2. **Edit files**:
-    - `index.ts` for middleware/config changes
-    - `routes.ts` for endpoint changes
+   - `index.ts` for middleware/config changes
+   - `routes.ts` for endpoint changes
 3. **Test locally**: `bun run dev:{service-name}`
 4. **Deploy**: `sam build && sam deploy`
 
@@ -304,24 +304,24 @@ Each service is self-contained with its own:
 
 **When to add to `shared/`**:
 
--   Code used by 2+ services
--   Database utilities
--   Common types
--   Validation schemas
--   Helper functions
+- Code used by 2+ services
+- Database utilities
+- Common types
+- Validation schemas
+- Helper functions
 
 **When NOT to share**:
 
--   Service-specific business logic
--   Single-use utilities
--   Service-specific types
+- Service-specific business logic
+- Single-use utilities
+- Service-specific types
 
 ## File Naming Conventions
 
--   **Service files**: `index.ts`, `routes.ts`
--   **Shared files**: Descriptive names (`client.ts`, `entities.ts`)
--   **Folders**: Lowercase, hyphenated (`my-service`)
--   **Types files**: `.ts` extension, not `.d.ts`
+- **Service files**: `index.ts`, `routes.ts`
+- **Shared files**: Descriptive names (`client.ts`, `entities.ts`)
+- **Folders**: Lowercase, hyphenated (`my-service`)
+- **Types files**: `.ts` extension, not `.d.ts`
 
 ## Import Paths
 
@@ -351,24 +351,24 @@ import routes from "./routes";
 
 ### Import Errors
 
--   Check path is correct relative to file
--   Verify file exists in `shared/` folder
--   Ensure TypeScript compiles without errors
+- Check path is correct relative to file
+- Verify file exists in `shared/` folder
+- Ensure TypeScript compiles without errors
 
 ### Service Won't Start
 
--   Check port isn't already in use
--   Verify `index.ts` exports handler
--   Ensure all dependencies are installed
+- Check port isn't already in use
+- Verify `index.ts` exports handler
+- Ensure all dependencies are installed
 
 ### Lambda Build Fails
 
--   Check `template.yaml` entry points
--   Verify file paths are correct
--   Run `sam build` to see detailed errors
+- Check `template.yaml` entry points
+- Verify file paths are correct
+- Run `sam build` to see detailed errors
 
 ## Related Documentation
 
--   [Microservices Architecture](./MICROSERVICES.md) - Architecture overview
--   [Backend README](../../backend/README.md) - Backend documentation
--   [API Reference](../api/API_REFERENCE.md) - API documentation
+- [Microservices Architecture](./MICROSERVICES.md) - Architecture overview
+- [Backend README](../../backend/README.md) - Backend documentation
+- [API Reference](../api/API_REFERENCE.md) - API documentation

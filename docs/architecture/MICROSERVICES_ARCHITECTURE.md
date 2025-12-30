@@ -57,9 +57,9 @@ Client → API Gateway → ShowtimesFunction → ShowtimesTable (RW)
 **Endpoints**: `/showtimes/*`
 **Tables**:
 
--   ShowtimesTable (Read/Write)
--   MoviesTable (Read)
--   RoomsTable (Read)
+- ShowtimesTable (Read/Write)
+- MoviesTable (Read)
+- RoomsTable (Read)
 
 ### 3. Bookings Service
 
@@ -73,8 +73,8 @@ Client → API Gateway → BookingsFunction → BookingsTable (RW)
 **Endpoints**: `/bookings/*`
 **Tables**:
 
--   BookingsTable (Read/Write)
--   ShowtimesTable (Read)
+- BookingsTable (Read/Write)
+- ShowtimesTable (Read)
 
 ### 4. Rooms Service
 
@@ -99,8 +99,8 @@ Client → API Gateway → RatingsFunction → MovieRatingsTable (RW)
 **Endpoints**: `/ratings/*`
 **Tables**:
 
--   MovieRatingsTable (Read/Write)
--   MoviesTable (Read)
+- MovieRatingsTable (Read/Write)
+- MoviesTable (Read)
 
 ## Request Flow Example
 
@@ -158,10 +158,10 @@ RatingsFunction
 
 **Benefits**:
 
--   Services remain independent
--   No inter-service API calls needed
--   Low latency data access
--   Eventual consistency is acceptable
+- Services remain independent
+- No inter-service API calls needed
+- Low latency data access
+- Eventual consistency is acceptable
 
 ## Deployment Architecture
 
@@ -346,7 +346,7 @@ Tables use on-demand billing, automatically scaling read/write capacity.
 
 ## Related Documentation
 
--   [MICROSERVICES.md](../backend/MICROSERVICES.md) - Detailed microservices documentation
--   [API Reference](./API_REFERENCE.md) - Complete API documentation
--   [Database Schema](./DATABASE_SCHEMA.md) - DynamoDB table schemas
--   [Deployment Guide](../deployment/BACKEND_DEPLOYMENT.md) - AWS deployment instructions
+- [MICROSERVICES.md](../backend/MICROSERVICES.md) - Detailed microservices documentation
+- [API Reference](./API_REFERENCE.md) - Complete API documentation
+- [Database Schema](./DATABASE_SCHEMA.md) - DynamoDB table schemas
+- [Deployment Guide](../deployment/BACKEND_DEPLOYMENT.md) - AWS deployment instructions

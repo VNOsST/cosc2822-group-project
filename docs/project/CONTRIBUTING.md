@@ -4,20 +4,20 @@ Thank you for your interest in contributing to CineCloud! This guide will help y
 
 ## Table of Contents
 
--   [Code of Conduct](#code-of-conduct)
--   [Getting Started](#getting-started)
--   [Development Workflow](#development-workflow)
--   [Coding Standards](#coding-standards)
--   [Commit Guidelines](#commit-guidelines)
--   [Pull Request Process](#pull-request-process)
--   [Testing Guidelines](#testing-guidelines)
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Workflow](#development-workflow)
+- [Coding Standards](#coding-standards)
+- [Commit Guidelines](#commit-guidelines)
+- [Pull Request Process](#pull-request-process)
+- [Testing Guidelines](#testing-guidelines)
 
 ## Code of Conduct
 
--   Be respectful and inclusive
--   Welcome newcomers and help them learn
--   Focus on constructive feedback
--   Maintain professional communication
+- Be respectful and inclusive
+- Welcome newcomers and help them learn
+- Focus on constructive feedback
+- Maintain professional communication
 
 ## Getting Started
 
@@ -25,9 +25,9 @@ Thank you for your interest in contributing to CineCloud! This guide will help y
 
 1. Install required tools:
 
-    - [Bun](https://bun.sh)
-    - [Docker](https://www.docker.com/)
-    - [Git](https://git-scm.com/)
+   - [Bun](https://bun.sh)
+   - [Docker](https://www.docker.com/)
+   - [Git](https://git-scm.com/)
 
 2. Fork the repository
 
@@ -66,10 +66,10 @@ git checkout -b fix/bug-description
 
 ### 2. Make Changes
 
--   Write clean, readable code
--   Follow existing patterns
--   Add comments for complex logic
--   Update documentation if needed
+- Write clean, readable code
+- Follow existing patterns
+- Add comments for complex logic
+- Update documentation if needed
 
 ### 3. Test Your Changes
 
@@ -110,10 +110,10 @@ Then create a Pull Request on GitHub.
 
 ### TypeScript
 
--   Use TypeScript for all new code
--   Define interfaces for data structures
--   Avoid `any` type
--   Use strict mode
+- Use TypeScript for all new code
+- Define interfaces for data structures
+- Avoid `any` type
+- Use strict mode
 
 ```typescript
 // Good
@@ -129,11 +129,11 @@ const user: any = { ... }
 
 ### Naming Conventions
 
--   **Files**: kebab-case (`user-profile.tsx`)
--   **Components**: PascalCase (`UserProfile`)
--   **Functions**: camelCase (`getUserById`)
--   **Constants**: UPPER_SNAKE_CASE (`API_BASE_URL`)
--   **Types/Interfaces**: PascalCase (`UserProfile`)
+- **Files**: kebab-case (`user-profile.tsx`)
+- **Components**: PascalCase (`UserProfile`)
+- **Functions**: camelCase (`getUserById`)
+- **Constants**: UPPER_SNAKE_CASE (`API_BASE_URL`)
+- **Types/Interfaces**: PascalCase (`UserProfile`)
 
 ### Code Organization
 
@@ -144,7 +144,7 @@ import { Button } from "@/components/ui/button";
 
 // 2. Types/Interfaces
 interface Props {
-    userId: string;
+  userId: string;
 }
 
 // 3. Constants
@@ -152,15 +152,15 @@ const MAX_RETRIES = 3;
 
 // 4. Component/Function
 export function UserProfile({ userId }: Props) {
-    // ...
+  // ...
 }
 ```
 
 ### Comments
 
--   Use JSDoc for functions
--   Explain "why", not "what"
--   Keep comments up-to-date
+- Use JSDoc for functions
+- Explain "why", not "what"
+- Keep comments up-to-date
 
 ```typescript
 /**
@@ -170,7 +170,7 @@ export function UserProfile({ userId }: Props) {
  * @returns Validation result
  */
 function validateBooking(bookingData: BookingData): ValidationResult {
-    // Implementation
+  // Implementation
 }
 ```
 
@@ -190,13 +190,13 @@ See [Commit Convention](../development/COMMIT_CONVENTION.md) for details.
 
 ### Types
 
--   `feat`: New feature
--   `fix`: Bug fix
--   `docs`: Documentation
--   `style`: Formatting
--   `refactor`: Code restructuring
--   `test`: Adding tests
--   `chore`: Maintenance
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation
+- `style`: Formatting
+- `refactor`: Code restructuring
+- `test`: Adding tests
+- `chore`: Maintenance
 
 ### Examples
 
@@ -214,12 +214,12 @@ refactor(database): optimize query performance
 
 ### Before Submitting
 
--   [ ] Code follows style guidelines
--   [ ] Tests pass locally
--   [ ] Documentation updated
--   [ ] No console logs or debugging code
--   [ ] Commits follow convention
--   [ ] Branch is up-to-date with main
+- [ ] Code follows style guidelines
+- [ ] Tests pass locally
+- [ ] Documentation updated
+- [ ] No console logs or debugging code
+- [ ] Commits follow convention
+- [ ] Branch is up-to-date with main
 
 ### PR Template
 
@@ -230,10 +230,10 @@ Brief description of changes
 
 ## Type of Change
 
--   [ ] Bug fix
--   [ ] New feature
--   [ ] Breaking change
--   [ ] Documentation update
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
 
 ## Testing
 
@@ -241,13 +241,13 @@ How to test the changes
 
 ## Checklist
 
--   [ ] Code follows style guidelines
--   [ ] Self-reviewed code
--   [ ] Commented complex code
--   [ ] Updated documentation
--   [ ] No new warnings
--   [ ] Added tests
--   [ ] All tests pass
+- [ ] Code follows style guidelines
+- [ ] Self-reviewed code
+- [ ] Commented complex code
+- [ ] Updated documentation
+- [ ] No new warnings
+- [ ] Added tests
+- [ ] All tests pass
 ```
 
 ### Review Process
@@ -268,15 +268,15 @@ import { describe, expect, test } from "bun:test";
 import { getUserById } from "./user-service";
 
 describe("getUserById", () => {
-    test("returns user when found", async () => {
-        const user = await getUserById("valid-id");
-        expect(user).toBeDefined();
-        expect(user.id).toBe("valid-id");
-    });
+  test("returns user when found", async () => {
+    const user = await getUserById("valid-id");
+    expect(user).toBeDefined();
+    expect(user.id).toBe("valid-id");
+  });
 
-    test("throws error when not found", async () => {
-        expect(getUserById("invalid-id")).rejects.toThrow();
-    });
+  test("throws error when not found", async () => {
+    expect(getUserById("invalid-id")).rejects.toThrow();
+  });
 });
 ```
 
@@ -286,14 +286,14 @@ Test API endpoints end-to-end:
 
 ```typescript
 test("create booking endpoint", async () => {
-    const response = await fetch("http://localhost:3001/bookings", {
-        method: "POST",
-        body: JSON.stringify(bookingData),
-    });
+  const response = await fetch("http://localhost:3001/bookings", {
+    method: "POST",
+    body: JSON.stringify(bookingData),
+  });
 
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data.booking_id).toBeDefined();
+  expect(response.status).toBe(200);
+  const data = await response.json();
+  expect(data.booking_id).toBeDefined();
 });
 ```
 
@@ -301,40 +301,40 @@ test("create booking endpoint", async () => {
 
 Aim for:
 
--   Minimum 70% code coverage
--   All critical paths tested
--   Edge cases covered
+- Minimum 70% code coverage
+- All critical paths tested
+- Edge cases covered
 
 ## Documentation
 
 ### Code Documentation
 
--   Use JSDoc/TSDoc for functions
--   Add README for new modules
--   Update API documentation
+- Use JSDoc/TSDoc for functions
+- Add README for new modules
+- Update API documentation
 
 ### Architecture Documentation
 
 When adding new features:
 
--   Update architecture diagrams
--   Document new patterns
--   Add to API reference
+- Update architecture diagrams
+- Document new patterns
+- Add to API reference
 
 ## Getting Help
 
--   Check existing documentation
--   Ask in team chat
--   Create GitHub issue
--   Reach out to maintainers
+- Check existing documentation
+- Ask in team chat
+- Create GitHub issue
+- Reach out to maintainers
 
 ## Recognition
 
 Contributors will be:
 
--   Listed in CONTRIBUTORS.md
--   Credited in release notes
--   Acknowledged in project README
+- Listed in CONTRIBUTORS.md
+- Credited in release notes
+- Acknowledged in project README
 
 ## License
 

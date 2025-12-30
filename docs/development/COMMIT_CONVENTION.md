@@ -45,37 +45,37 @@ Closes #123
 
 ### Description Guidelines
 
--   **Use imperative mood**: "add feature" not "added feature" or "adds feature"
--   **Keep it concise**: Limit to 50-72 characters
--   **Start with lowercase**: Unless it's a proper noun
--   **No period at the end**: Keep it clean
--   **Be specific**: "fix login bug" → "fix session timeout in login flow"
+- **Use imperative mood**: "add feature" not "added feature" or "adds feature"
+- **Keep it concise**: Limit to 50-72 characters
+- **Start with lowercase**: Unless it's a proper noun
+- **No period at the end**: Keep it clean
+- **Be specific**: "fix login bug" → "fix session timeout in login flow"
 
 ### Scope (Optional)
 
 The scope provides additional context about what part of the codebase is affected:
 
--   Use parentheses: `feat(auth):`
--   Keep it short: single word or hyphenated phrase
--   Be consistent: use the same scopes across the project
--   Examples: `(api)`, `(ui)`, `(auth)`, `(database)`, `(user-profile)`
+- Use parentheses: `feat(auth):`
+- Keep it short: single word or hyphenated phrase
+- Be consistent: use the same scopes across the project
+- Examples: `(api)`, `(ui)`, `(auth)`, `(database)`, `(user-profile)`
 
 ### Body (Optional)
 
--   **Separate from description**: Use a blank line
--   **Explain what and why**: Not how (code shows how)
--   **Wrap at 72 characters**: For better readability
--   **Use bullet points**: For multiple changes
--   **Provide context**: Include motivation for the change
+- **Separate from description**: Use a blank line
+- **Explain what and why**: Not how (code shows how)
+- **Wrap at 72 characters**: For better readability
+- **Use bullet points**: For multiple changes
+- **Provide context**: Include motivation for the change
 
 ### Footer (Optional)
 
 Use for:
 
--   **Breaking changes**: `BREAKING CHANGE: description`
--   **Issue references**: `Closes #123`, `Fixes #456`, `Relates to #789`
--   **Co-authors**: `Co-authored-by: Name <email>`
--   **Reviewed-by**: `Reviewed-by: Name <email>`
+- **Breaking changes**: `BREAKING CHANGE: description`
+- **Issue references**: `Closes #123`, `Fixes #456`, `Relates to #789`
+- **Co-authors**: `Co-authored-by: Name <email>`
+- **Reviewed-by**: `Reviewed-by: Name <email>`
 
 ## Examples
 
@@ -122,38 +122,38 @@ No functional changes, improves code reusability and testability.
 
 ❌ **Don't**
 
--   `fixed stuff`
--   `Updated files`
--   `WIP`
--   `asdfgh`
--   `Fixed bug in the login system that was causing issues`
+- `fixed stuff`
+- `Updated files`
+- `WIP`
+- `asdfgh`
+- `Fixed bug in the login system that was causing issues`
 
 ✅ **Do**
 
--   `fix(auth): resolve session timeout issue`
--   `docs(api): update endpoint documentation`
--   `feat(search): implement fuzzy matching`
--   `refactor(components): extract header logic`
--   `fix(login): prevent race condition in token refresh`
+- `fix(auth): resolve session timeout issue`
+- `docs(api): update endpoint documentation`
+- `feat(search): implement fuzzy matching`
+- `refactor(components): extract header logic`
+- `fix(login): prevent race condition in token refresh`
 
 ## Atomic Commits
 
--   **One logical change per commit**: Don't mix unrelated changes
--   **Commit often**: Small, focused commits are easier to review and revert
--   **Test before committing**: Ensure each commit passes tests
--   **Complete work**: Each commit should leave the code in a working state
+- **One logical change per commit**: Don't mix unrelated changes
+- **Commit often**: Small, focused commits are easier to review and revert
+- **Test before committing**: Ensure each commit passes tests
+- **Complete work**: Each commit should leave the code in a working state
 
 ## Tools and Automation
 
 Consider using:
 
--   **Commitlint**: Enforce commit message format
--   **Husky**: Git hooks for pre-commit checks
--   **Commitizen**: Interactive commit message builder
--   **Conventional Changelog**: Automatically generate changelogs
+- **Commitlint**: Enforce commit message format
+- **Husky**: Git hooks for pre-commit checks
+- **Commitizen**: Interactive commit message builder
+- **Conventional Changelog**: Automatically generate changelogs
 
 ## References
 
--   [Conventional Commits](https://www.conventionalcommits.org/)
--   [Angular Commit Guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit)
--   [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [Angular Commit Guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit)
+- [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/)

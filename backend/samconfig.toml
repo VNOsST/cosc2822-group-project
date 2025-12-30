@@ -19,7 +19,7 @@ capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
 s3_prefix = "cinecloud-backend"
-region = "ap-southeast-1"
+region = "us-east-1"
 parameter_overrides = "Environment=dev"
 
 [default.local_start_api.parameters]
@@ -37,7 +37,7 @@ parameter_overrides = "Environment=staging"
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
-region = "ap-southeast-1"
+region = "us-east-1"
 
 # Production environment configuration
 [prod]
@@ -48,4 +48,4 @@ parameter_overrides = "Environment=prod"
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
-region = "ap-southeast-1"
+region = "us-east-1"

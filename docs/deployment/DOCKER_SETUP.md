@@ -8,8 +8,8 @@ CineCloud uses Docker Compose to run DynamoDB Local and its admin UI for local d
 
 ## Prerequisites
 
--   [Docker Desktop](https://www.docker.com/products/docker-desktop) installed
--   Docker Compose (included with Docker Desktop)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) installed
+- Docker Compose (included with Docker Desktop)
 
 ## Configuration
 
@@ -19,17 +19,17 @@ The `docker-compose.yml` file in the project root defines two services:
 
 #### 1. DynamoDB Local
 
--   **Image**: `amazon/dynamodb-local:latest`
--   **Port**: `8000`
--   **Purpose**: Local DynamoDB instance for development
--   **Data**: Persisted in `dynamodb-data` volume
+- **Image**: `amazon/dynamodb-local:latest`
+- **Port**: `8000`
+- **Purpose**: Local DynamoDB instance for development
+- **Data**: Persisted in `dynamodb-data` volume
 
 #### 2. DynamoDB Admin
 
--   **Image**: `aaronshaf/dynamodb-admin`
--   **Port**: `8001`
--   **Purpose**: Web UI for managing DynamoDB tables
--   **Access**: http://localhost:8001
+- **Image**: `aaronshaf/dynamodb-admin`
+- **Port**: `8001`
+- **Purpose**: Web UI for managing DynamoDB tables
+- **Access**: http://localhost:8001
 
 ## Quick Start
 
@@ -143,10 +143,10 @@ docker exec cinecloud-dynamodb tar xzf /tmp/dynamodb-backup.tar.gz -C /home/dyna
 
 Open http://localhost:8001 in your browser to:
 
--   View all tables
--   Browse table data
--   Create/delete tables
--   Query and scan operations
+- View all tables
+- Browse table data
+- Create/delete tables
+- Query and scan operations
 
 ### AWS CLI
 
@@ -182,34 +182,34 @@ Edit `docker-compose.yml`:
 
 ```yaml
 services:
-    dynamodb-local:
-        ports:
-            - "8888:8000" # Change 8888 to desired port
+  dynamodb-local:
+    ports:
+      - "8888:8000" # Change 8888 to desired port
 
-    dynamodb-admin:
-        ports:
-            - "8889:8001" # Change 8889 to desired port
+  dynamodb-admin:
+    ports:
+      - "8889:8001" # Change 8889 to desired port
 ```
 
 ### Adjust Resources
 
 ```yaml
 services:
-    dynamodb-local:
-        deploy:
-            resources:
-                limits:
-                    cpus: "1"
-                    memory: 512M
+  dynamodb-local:
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
 ```
 
 ### Add Environment Variables
 
 ```yaml
 services:
-    dynamodb-local:
-        environment:
-            - JAVA_OPTS=-Xmx256m
+  dynamodb-local:
+    environment:
+      - JAVA_OPTS=-Xmx256m
 ```
 
 ## Troubleshooting
@@ -302,16 +302,16 @@ cd database && bun run reset
 
 For production:
 
--   Use AWS DynamoDB (managed service)
--   Don't run DynamoDB Local in production
--   Remove docker-compose.yml from production deployments
--   Use proper AWS credentials and regions
+- Use AWS DynamoDB (managed service)
+- Don't run DynamoDB Local in production
+- Remove docker-compose.yml from production deployments
+- Use proper AWS credentials and regions
 
 ## Additional Resources
 
--   [DynamoDB Local Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html)
--   [Docker Compose Documentation](https://docs.docker.com/compose/)
--   [DynamoDB Admin GitHub](https://github.com/aaronshaf/dynamodb-admin)
+- [DynamoDB Local Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html)
+- [Docker Compose Documentation](https://docs.docker.com/compose/)
+- [DynamoDB Admin GitHub](https://github.com/aaronshaf/dynamodb-admin)
 
 ## Common Commands Reference
 

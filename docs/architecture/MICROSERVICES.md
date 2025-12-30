@@ -8,97 +8,97 @@ The CineCloud backend is built using a microservices architecture where each ser
 
 ### 1. Movies Service (`/movies`)
 
--   **Lambda Function**: `MoviesFunction`
--   **Handler**: `src/services/movies/index.ts`
--   **Port (Local)**: 3002
--   **Responsibilities**:
-    -   Movie catalog management
-    -   Movie search and filtering
-    -   Movie details retrieval
--   **DynamoDB Tables**:
-    -   `MoviesTable` (read/write)
+- **Lambda Function**: `MoviesFunction`
+- **Handler**: `src/services/movies/index.ts`
+- **Port (Local)**: 3002
+- **Responsibilities**:
+  - Movie catalog management
+  - Movie search and filtering
+  - Movie details retrieval
+- **DynamoDB Tables**:
+  - `MoviesTable` (read/write)
 
 ### 2. Showtimes Service (`/showtimes`)
 
--   **Lambda Function**: `ShowtimesFunction`
--   **Handler**: `src/services/showtimes/index.ts`
--   **Port (Local)**: 3003
--   **Responsibilities**:
-    -   Showtime scheduling
-    -   Showtime availability
-    -   Movie-room-time associations
--   **DynamoDB Tables**:
-    -   `ShowtimesTable` (read/write)
-    -   `MoviesTable` (read)
-    -   `RoomsTable` (read)
+- **Lambda Function**: `ShowtimesFunction`
+- **Handler**: `src/services/showtimes/index.ts`
+- **Port (Local)**: 3003
+- **Responsibilities**:
+  - Showtime scheduling
+  - Showtime availability
+  - Movie-room-time associations
+- **DynamoDB Tables**:
+  - `ShowtimesTable` (read/write)
+  - `MoviesTable` (read)
+  - `RoomsTable` (read)
 
 ### 3. Bookings Service (`/bookings`)
 
--   **Lambda Function**: `BookingsFunction`
--   **Handler**: `src/services/bookings/index.ts`
--   **Port (Local)**: 3004
--   **Responsibilities**:
-    -   Ticket booking management
-    -   Seat reservation
-    -   Booking status tracking
--   **DynamoDB Tables**:
-    -   `BookingsTable` (read/write)
-    -   `ShowtimesTable` (read)
+- **Lambda Function**: `BookingsFunction`
+- **Handler**: `src/services/bookings/index.ts`
+- **Port (Local)**: 3004
+- **Responsibilities**:
+  - Ticket booking management
+  - Seat reservation
+  - Booking status tracking
+- **DynamoDB Tables**:
+  - `BookingsTable` (read/write)
+  - `ShowtimesTable` (read)
 
 ### 4. Rooms Service (`/rooms`)
 
--   **Lambda Function**: `RoomsFunction`
--   **Handler**: `src/services/rooms/index.ts`
--   **Port (Local)**: 3005
--   **Responsibilities**:
-    -   Cinema room management
-    -   Seat layout configuration
-    -   Room availability
--   **DynamoDB Tables**:
-    -   `RoomsTable` (read/write)
+- **Lambda Function**: `RoomsFunction`
+- **Handler**: `src/services/rooms/index.ts`
+- **Port (Local)**: 3005
+- **Responsibilities**:
+  - Cinema room management
+  - Seat layout configuration
+  - Room availability
+- **DynamoDB Tables**:
+  - `RoomsTable` (read/write)
 
 ### 5. Ratings Service (`/ratings`)
 
--   **Lambda Function**: `RatingsFunction`
--   **Handler**: `src/services/ratings/index.ts`
--   **Port (Local)**: 3006
--   **Responsibilities**:
-    -   Movie ratings management
-    -   User reviews
-    -   Rating aggregation
--   **DynamoDB Tables**:
-    -   `RatingsTable` (read/write)
-    -   `MoviesTable` (read)
+- **Lambda Function**: `RatingsFunction`
+- **Handler**: `src/services/ratings/index.ts`
+- **Port (Local)**: 3006
+- **Responsibilities**:
+  - Movie ratings management
+  - User reviews
+  - Rating aggregation
+- **DynamoDB Tables**:
+  - `RatingsTable` (read/write)
+  - `MoviesTable` (read)
 
 ## Architecture Benefits
 
 ### Scalability
 
--   Each service scales independently based on its specific load
--   High-traffic services (e.g., movies, showtimes) can scale without affecting others
+- Each service scales independently based on its specific load
+- High-traffic services (e.g., movies, showtimes) can scale without affecting others
 
 ### Isolation
 
--   Service failures are contained and don't cascade
--   Each service can be deployed and updated independently
--   Easier to debug and troubleshoot issues
+- Service failures are contained and don't cascade
+- Each service can be deployed and updated independently
+- Easier to debug and troubleshoot issues
 
 ### Performance
 
--   Smaller bundle sizes per Lambda function
--   Faster cold starts
--   More efficient memory usage
+- Smaller bundle sizes per Lambda function
+- Faster cold starts
+- More efficient memory usage
 
 ### Security
 
--   Principle of least privilege - each service only has access to required DynamoDB tables
--   Easier to implement service-specific security policies
+- Principle of least privilege - each service only has access to required DynamoDB tables
+- Easier to implement service-specific security policies
 
 ### Development
 
--   Teams can work on different services independently
--   Easier to understand and maintain smaller codebases
--   Clear service boundaries and responsibilities
+- Teams can work on different services independently
+- Easier to understand and maintain smaller codebases
+- Clear service boundaries and responsibilities
 
 ## API Gateway Routing
 
@@ -126,9 +126,9 @@ POST /ratings        → RatingsFunction
 
 Services are designed to be independent, but some services read from tables managed by other services:
 
--   **Showtimes** reads from Movies and Rooms tables
--   **Bookings** reads from Showtimes table
--   **Ratings** reads from Movies table
+- **Showtimes** reads from Movies and Rooms tables
+- **Bookings** reads from Showtimes table
+- **Ratings** reads from Movies table
 
 This read-only cross-service data access maintains service independence while allowing necessary data relationships.
 
@@ -179,9 +179,9 @@ bun run dev
 
 ### Prerequisites
 
--   AWS SAM CLI installed
--   AWS credentials configured
--   DynamoDB tables created
+- AWS SAM CLI installed
+- AWS credentials configured
+- DynamoDB tables created
 
 ### Deploy All Services
 
@@ -236,10 +236,10 @@ All services implement consistent error handling:
 
 ```json
 {
-    "success": false,
-    "error": "Error type",
-    "message": "Detailed error message",
-    "service": "service-name"
+  "success": false,
+  "error": "Error type",
+  "message": "Detailed error message",
+  "service": "service-name"
 }
 ```
 
@@ -249,33 +249,33 @@ The `service` field helps identify which microservice encountered the error.
 
 All services are configured with CORS to allow cross-origin requests:
 
--   **Allowed Origins**: `*` (configure for production)
--   **Allowed Methods**: GET, POST, PUT, DELETE, OPTIONS
--   **Allowed Headers**: Content-Type, Authorization
+- **Allowed Origins**: `*` (configure for production)
+- **Allowed Methods**: GET, POST, PUT, DELETE, OPTIONS
+- **Allowed Headers**: Content-Type, Authorization
 
 ## Future Enhancements
 
 ### Potential Additional Services
 
--   **Users Service**: User management and authentication
--   **Notifications Service**: Email/SMS notifications
--   **Analytics Service**: Usage analytics and reporting
--   **Admin Service**: Administrative operations
+- **Users Service**: User management and authentication
+- **Notifications Service**: Email/SMS notifications
+- **Analytics Service**: Usage analytics and reporting
+- **Admin Service**: Administrative operations
 
 ### Service Mesh
 
 Consider implementing AWS App Mesh for:
 
--   Service-to-service authentication
--   Traffic management
--   Observability
+- Service-to-service authentication
+- Traffic management
+- Observability
 
 ### API Gateway Features
 
--   Request validation
--   Rate limiting per service
--   Caching for frequently accessed data
--   API keys and usage plans
+- Request validation
+- Rate limiting per service
+- Caching for frequently accessed data
+- API keys and usage plans
 
 ## Troubleshooting
 
@@ -287,21 +287,21 @@ Consider implementing AWS App Mesh for:
 
 ### Cold Start Issues
 
--   Consider using provisioned concurrency for critical services
--   Optimize bundle sizes by minimizing dependencies
--   Use Lambda layers for shared dependencies
+- Consider using provisioned concurrency for critical services
+- Optimize bundle sizes by minimizing dependencies
+- Use Lambda layers for shared dependencies
 
 ### Cross-Service Data Issues
 
--   Verify read permissions for tables accessed by multiple services
--   Check data consistency across tables
--   Review GSI configurations for query patterns
+- Verify read permissions for tables accessed by multiple services
+- Check data consistency across tables
+- Review GSI configurations for query patterns
 
 ## Related Documentation
 
--   [Folder Structure](./FOLDER_STRUCTURE.md) - Code organization
--   [Backend Deployment Guide](../deployment/BACKEND_DEPLOYMENT.md) - AWS deployment
--   [API Reference](../api/API_REFERENCE.md) - Complete API docs
--   [Database Schema](./DATABASE_SCHEMA.md) - DynamoDB schema
--   [System Architecture](./SYSTEM_ARCHITECTURE.md) - Overall system design
--   [Backend README](../../backend/README.md) - Quick start guide
+- [Folder Structure](./FOLDER_STRUCTURE.md) - Code organization
+- [Backend Deployment Guide](../deployment/BACKEND_DEPLOYMENT.md) - AWS deployment
+- [API Reference](../api/API_REFERENCE.md) - Complete API docs
+- [Database Schema](./DATABASE_SCHEMA.md) - DynamoDB schema
+- [System Architecture](./SYSTEM_ARCHITECTURE.md) - Overall system design
+- [Backend README](../../backend/README.md) - Quick start guide

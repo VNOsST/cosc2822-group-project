@@ -8,34 +8,34 @@ Complete guide for developing CineCloud locally.
 
 1. **Bun Runtime**
 
-    ```bash
-    # Install Bun
-    curl -fsSL https://bun.sh/install | bash  # macOS/Linux
-    # Or download from https://bun.sh for Windows
-    ```
+   ```bash
+   # Install Bun
+   curl -fsSL https://bun.sh/install | bash  # macOS/Linux
+   # Or download from https://bun.sh for Windows
+   ```
 
 2. **Docker & Docker Compose**
 
-    - Download from https://www.docker.com/products/docker-desktop
+   - Download from https://www.docker.com/products/docker-desktop
 
 3. **Git**
 
-    - Download from https://git-scm.com/
+   - Download from https://git-scm.com/
 
 4. **Code Editor** (Recommended: VS Code)
-    - Install from https://code.visualstudio.com/
+   - Install from https://code.visualstudio.com/
 
 ### Recommended VS Code Extensions
 
 ```json
 {
-    "recommendations": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "bradlc.vscode-tailwindcss",
-        "amazonwebservices.aws-toolkit-vscode",
-        "unifiedjs.vscode-mdx"
-    ]
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "amazonwebservices.aws-toolkit-vscode",
+    "unifiedjs.vscode-mdx"
+  ]
 }
 ```
 
@@ -120,7 +120,7 @@ import { Hono } from "hono";
 const app = new Hono();
 
 app.get("/", async (c) => {
-    return c.json({ message: "Hello" });
+  return c.json({ message: "Hello" });
 });
 
 export default app;
@@ -158,11 +158,11 @@ bun run preview
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/example")({
-    component: ExamplePage,
+  component: ExamplePage,
 });
 
 function ExamplePage() {
-    return <div>Example Page</div>;
+  return <div>Example Page</div>;
 }
 ```
 
@@ -246,13 +246,13 @@ Access DynamoDB Admin UI: http://localhost:8001
 
 ```typescript
 export interface NewEntity {
-    id: string;
-    // ...fields
+  id: string;
+  // ...fields
 }
 
 export const TABLE_NAMES = {
-    // ...existing
-    NEW_TABLE: "NewTable",
+  // ...existing
+  NEW_TABLE: "NewTable",
 } as const;
 ```
 
@@ -301,11 +301,11 @@ Use VS Code debugger:
 
 ```json
 {
-    "type": "node",
-    "request": "launch",
-    "name": "Debug Backend",
-    "runtimeExecutable": "bun",
-    "args": ["run", "dev"]
+  "type": "node",
+  "request": "launch",
+  "name": "Debug Backend",
+  "runtimeExecutable": "bun",
+  "args": ["run", "dev"]
 }
 ```
 
@@ -313,9 +313,9 @@ Use VS Code debugger:
 
 Use browser DevTools:
 
--   React DevTools extension
--   Network tab for API calls
--   Console for logs
+- React DevTools extension
+- Network tab for API calls
+- Console for logs
 
 ## Common Tasks
 
@@ -377,18 +377,18 @@ git push -u origin feature/your-feature
 
 1. **Use Bun's built-in features**
 
-    - Fast package installation
-    - Native TypeScript support
-    - Built-in test runner
+   - Fast package installation
+   - Native TypeScript support
+   - Built-in test runner
 
 2. **Hot Reload**
 
-    - Backend and frontend have hot reload
-    - Changes reflect instantly
+   - Backend and frontend have hot reload
+   - Changes reflect instantly
 
 3. **Parallel Development**
-    - Run backend and frontend simultaneously
-    - Use separate terminal windows
+   - Run backend and frontend simultaneously
+   - Use separate terminal windows
 
 ## Troubleshooting
 
@@ -424,6 +424,6 @@ bun install
 
 ## Next Steps
 
--   [API Reference](../api/API_REFERENCE.md)
--   [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md)
--   [Contributing Guide](../project/CONTRIBUTING.md)
+- [API Reference](../api/API_REFERENCE.md)
+- [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md)
+- [Contributing Guide](../project/CONTRIBUTING.md)

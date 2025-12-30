@@ -6,9 +6,9 @@ Get CineCloud up and running in minutes.
 
 Before you begin, ensure you have:
 
--   [Docker](https://www.docker.com/) and Docker Compose
--   [Bun](https://bun.sh/) runtime (v1.0+)
--   Git
+- [Docker](https://www.docker.com/) and Docker Compose
+- [Bun](https://bun.sh/) runtime (v1.0+)
+- Git
 
 ## Step-by-Step Setup
 
@@ -31,8 +31,8 @@ docker-compose ps
 
 Services available:
 
--   **DynamoDB Local**: http://localhost:8000
--   **DynamoDB Admin UI**: http://localhost:8001
+- **DynamoDB Local**: http://localhost:8000
+- **DynamoDB Admin UI**: http://localhost:8001
 
 ### 3. Setup Database
 
@@ -183,13 +183,13 @@ bun run dev
 
 ## Next Steps
 
--   [Local Development Guide](./LOCAL_DEVELOPMENT.md) - Learn about the development workflow
--   [API Reference](../api/API_REFERENCE.md) - Explore available endpoints
--   [Branching Strategy](../development/BRANCHING_STRATEGY.md) - Understand Git workflow
--   [Architecture Overview](../architecture/SYSTEM_ARCHITECTURE.md) - Learn about system design
+- [Local Development Guide](./LOCAL_DEVELOPMENT.md) - Learn about the development workflow
+- [API Reference](../api/API_REFERENCE.md) - Explore available endpoints
+- [Branching Strategy](../development/BRANCHING_STRATEGY.md) - Understand Git workflow
+- [Architecture Overview](../architecture/SYSTEM_ARCHITECTURE.md) - Learn about system design
 
 ## Need Help?
 
--   Check the [FAQ](./FAQ.md)
--   Review the [API Documentation](../api/API_REFERENCE.md)
--   See [Contributing Guide](../project/CONTRIBUTING.md)
+- Check the [FAQ](./FAQ.md)
+- Review the [API Documentation](../api/API_REFERENCE.md)
+- See [Contributing Guide](../project/CONTRIBUTING.md)

@@ -11,6 +11,7 @@ This project follows a **simplified Git Flow** model optimized for continuous de
 ### Main Branch
 
 #### `main`
+
 - **Purpose**: Production-ready code and integration branch
 - **Protection**: Highly protected, requires pull request reviews
 - **Deployment**: Automatically deploys to production
@@ -20,6 +21,7 @@ This project follows a **simplified Git Flow** model optimized for continuous de
 ### Supporting Branches
 
 #### Feature Branches
+
 - **Purpose**: Develop new features
 - **Branch from**: `main`
 - **Merge into**: `main`
@@ -31,6 +33,7 @@ This project follows a **simplified Git Flow** model optimized for continuous de
   - `feature/789-payment-integration`
 
 #### Bugfix Branches
+
 - **Purpose**: Fix non-critical bugs
 - **Branch from**: `main`
 - **Merge into**: `main`
@@ -41,6 +44,7 @@ This project follows a **simplified Git Flow** model optimized for continuous de
   - `bugfix/567-cart-calculation`
 
 #### Release Branches
+
 - **Purpose**: Prepare a new production release
 - **Branch from**: `main`
 - **Merge into**: `main`
@@ -52,6 +56,7 @@ This project follows a **simplified Git Flow** model optimized for continuous de
   - `release/3.0.0-beta.1`
 
 #### Hotfix Branches
+
 - **Purpose**: Fix critical bugs in production
 - **Branch from**: `release`
 - **Merge into**: `release`
@@ -67,6 +72,7 @@ This project follows a **simplified Git Flow** model optimized for continuous de
 ### Feature Development
 
 1. **Create feature branch**
+
    ```bash
    git checkout main
    git pull origin main
@@ -74,12 +80,14 @@ This project follows a **simplified Git Flow** model optimized for continuous de
    ```
 
 2. **Develop and commit**
+
    ```bash
    git add .
    git commit -m "feat(auth): add login form validation"
    ```
 
 3. **Keep branch updated**
+
    ```bash
    git checkout main
    git pull origin main
@@ -88,6 +96,7 @@ This project follows a **simplified Git Flow** model optimized for continuous de
    ```
 
 4. **Push and create pull request**
+
    ```bash
    git push origin feature/123-user-authentication
    # Create PR on GitHub/GitLab/Bitbucket
@@ -104,6 +113,7 @@ This project follows a **simplified Git Flow** model optimized for continuous de
 ### Bugfix Development
 
 1. **Create bugfix branch**
+
    ```bash
    git checkout main
    git pull origin main
@@ -111,12 +121,14 @@ This project follows a **simplified Git Flow** model optimized for continuous de
    ```
 
 2. **Fix and commit**
+
    ```bash
    git add .
    git commit -m "fix(auth): correct email validation regex"
    ```
 
 3. **Push and create pull request**
+
    ```bash
    git push origin bugfix/234-login-validation
    # Create PR to main
@@ -133,6 +145,7 @@ This project follows a **simplified Git Flow** model optimized for continuous de
 ### Release Process
 
 1. **Create release branch**
+
    ```bash
    git checkout main
    git pull origin main
@@ -140,21 +153,24 @@ This project follows a **simplified Git Flow** model optimized for continuous de
    ```
 
 2. **Finalize release** (version bumps, changelog, documentation)
+
    ```bash
    # Update version files
    git commit -m "chore(release): bump version to 1.0.0"
-   
+
    # Update changelog
    git commit -m "docs(changelog): update for version 1.0.0"
    ```
 
 3. **Create pull request to main**
+
    ```bash
    git push origin release/1.0.0
    # Create PR to main
    ```
 
 4. **After merge, tag the release**
+
    ```bash
    git checkout main
    git pull origin main
@@ -171,6 +187,7 @@ This project follows a **simplified Git Flow** model optimized for continuous de
 ### Hotfix Process
 
 1. **Create hotfix branch**
+
    ```bash
    git checkout main
    git pull origin main
@@ -178,22 +195,26 @@ This project follows a **simplified Git Flow** model optimized for continuous de
    ```
 
 2. **Fix the critical issue**
+
    ```bash
    git commit -m "fix(auth): resolve critical session vulnerability"
    ```
 
 3. **Update version**
+
    ```bash
    git commit -m "chore(release): bump version to 1.0.1"
    ```
 
 4. **Create pull request and merge**
+
    ```bash
    git push origin hotfix/1.0.1
    # Create PR to main, get expedited review
    ```
 
 5. **After merge, tag the hotfix**
+
    ```bash
    git checkout main
    git pull origin main
@@ -210,11 +231,13 @@ This project follows a **simplified Git Flow** model optimized for continuous de
 ## Branch Naming Rules
 
 ### Format
+
 ```
 <type>/<identifier>-<description>
 ```
 
 ### Rules
+
 - Use lowercase and hyphens
 - Keep descriptions short (2-4 words)
 - Include issue/ticket number when applicable
@@ -223,12 +246,14 @@ This project follows a **simplified Git Flow** model optimized for continuous de
 ### Examples
 
 ✅ **Good**
+
 - `feature/456-oauth-integration`
 - `bugfix/789-cart-total-calculation`
 - `hotfix/critical-payment-error`
 - `release/2.1.0`
 
 ❌ **Bad**
+
 - `feature/new-feature` (not descriptive)
 - `bugfix/fix` (too generic)
 - `my-branch` (no type prefix)
@@ -239,10 +264,12 @@ This project follows a **simplified Git Flow** model optimized for continuous de
 ### Creating a Pull Request
 
 1. **Title format**: Follow commit convention
+
    - `feat(scope): add feature description`
    - `fix(scope): resolve bug description`
 
 2. **Description should include**:
+
    - Summary of changes
    - Motivation and context
    - Related issue numbers
@@ -260,9 +287,11 @@ This project follows a **simplified Git Flow** model optimized for continuous de
 
 ```markdown
 ## Description
+
 Brief description of what this PR does
 
 ## Type of Change
+
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
@@ -271,12 +300,15 @@ Brief description of what this PR does
 - [ ] Hotfix
 
 ## Related Issues
+
 Closes #123
 
 ## How Has This Been Tested?
+
 Describe the tests you ran and how to reproduce them
 
 ## Checklist
+
 - [ ] My code follows the project's style guidelines
 - [ ] I have performed a self-review of my code
 - [ ] I have commented my code, particularly in hard-to-understand areas
@@ -290,6 +322,7 @@ Describe the tests you ran and how to reproduce them
 ### Review Process
 
 1. **Code review requirements**:
+
    - At least one approval required for feature/bugfix
    - At least two approvals for release branches
    - Expedited review for hotfix (one approval minimum)
@@ -307,6 +340,7 @@ Describe the tests you ran and how to reproduce them
 ## Branch Protection Rules
 
 ### `main` Branch
+
 - ✅ Require pull request reviews (minimum 1-2 approvals)
 - ✅ Require status checks to pass
 - ✅ Require branches to be up to date
@@ -346,6 +380,7 @@ Describe the tests you ran and how to reproduce them
 ### When Conflicts Occur
 
 1. **Update your branch**
+
    ```bash
    git checkout main
    git pull origin main
@@ -354,6 +389,7 @@ Describe the tests you ran and how to reproduce them
    ```
 
 2. **Resolve conflicts**
+
    - Open conflicting files
    - Look for conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`)
    - Choose or merge changes
@@ -404,18 +440,21 @@ Follow [Semantic Versioning](https://semver.org/) (SemVer):
 Each branch should trigger:
 
 1. **On push to feature/bugfix/hotfix**:
+
    - Linting
    - Unit tests
    - Code coverage
    - Security scanning
 
 2. **On PR to main**:
+
    - All of the above
    - Integration tests
    - Build verification
    - Deploy to preview/staging environment (for features)
 
 3. **On merge to main**:
+
    - Run all tests
    - Build production artifacts
    - Deploy to production (after release tag)
@@ -512,12 +551,14 @@ git push origin main --tags
 ### Recommended Tools
 
 - **Git GUI Clients**:
+
   - GitKraken
   - SourceTree
   - GitHub Desktop
   - Fork
 
 - **Branch Management**:
+
   - `git-flow` extension (adapted)
   - `git-town` for branch synchronization
 
@@ -537,30 +578,30 @@ Add to `.gitconfig`:
     co = checkout
     cob = checkout -b
     com = checkout main
-    
+
     # View branches
     br = branch
     branches = branch -a
-    
+
     # Quick status
     st = status -sb
-    
+
     # Pull with rebase
     up = pull --rebase --autostash
     upm = !git checkout main && git pull --rebase --autostash
-    
+
     # Pretty log
     lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
-    
+
     # Delete merged branches
     cleanup = "!git branch --merged | grep -v '\\*\\|main' | xargs -n 1 git branch -d"
-    
+
     # Create feature branch
     feat = "!f() { git checkout main && git pull && git checkout -b feature/$1; }; f"
-    
+
     # Create bugfix branch
     bug = "!f() { git checkout main && git pull && git checkout -b bugfix/$1; }; f"
-    
+
     # Create hotfix branch
     hot = "!f() { git checkout main && git pull && git checkout -b hotfix/$1; }; f"
 ```
@@ -570,6 +611,7 @@ Add to `.gitconfig`:
 ### Common Issues
 
 **Issue**: Accidentally committed to wrong branch
+
 ```bash
 # Move commit to new branch
 git branch feature/correct-branch
@@ -578,6 +620,7 @@ git checkout feature/correct-branch
 ```
 
 **Issue**: Need to undo last commit
+
 ```bash
 # Keep changes
 git reset HEAD~
@@ -587,6 +630,7 @@ git reset HEAD~ --hard
 ```
 
 **Issue**: Branch diverged from remote
+
 ```bash
 # Fetch and reset
 git fetch origin
@@ -594,6 +638,7 @@ git reset --hard origin/your-branch
 ```
 
 **Issue**: Accidentally committed to main
+
 ```bash
 # Create new branch with the commit
 git branch feature/my-changes
@@ -606,6 +651,7 @@ git checkout feature/my-changes
 ```
 
 **Issue**: Need to sync feature with latest main
+
 ```bash
 # Option 1: Rebase (cleaner history)
 git checkout feature/your-branch
@@ -622,12 +668,12 @@ git merge origin/main
 
 ### Branch Types Summary
 
-| Branch Type | From   | To     | Purpose                    | Example                    |
-|-------------|--------|--------|----------------------------|----------------------------|
-| feature     | main   | main   | New features               | feature/123-login-page     |
-| bugfix      | main   | main   | Bug fixes                  | bugfix/456-validation-fix  |
-| release     | main   | main   | Release preparation        | release/1.0.0              |
-| hotfix      | main   | main   | Critical production fixes  | hotfix/1.0.1               |
+| Branch Type | From | To   | Purpose                   | Example                   |
+| ----------- | ---- | ---- | ------------------------- | ------------------------- |
+| feature     | main | main | New features              | feature/123-login-page    |
+| bugfix      | main | main | Bug fixes                 | bugfix/456-validation-fix |
+| release     | main | main | Release preparation       | release/1.0.0             |
+| hotfix      | main | main | Critical production fixes | hotfix/1.0.1              |
 
 ### Common Commands
 

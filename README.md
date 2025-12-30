@@ -33,36 +33,36 @@ cosc2822-group-project/
 
 ### For Developers
 
--   [Quick Start Guide](./docs/guides/QUICK_START.md)
--   [Local Development](./docs/guides/LOCAL_DEVELOPMENT.md)
--   [API Reference](./docs/api/API_REFERENCE.md)
--   [Branching Strategy](./docs/development/BRANCHING_STRATEGY.md)
--   [Commit Convention](./docs/development/COMMIT_CONVENTION.md)
--   [Contributing Guide](./docs/project/CONTRIBUTING.md)
+- [Quick Start Guide](./docs/guides/QUICK_START.md)
+- [Local Development](./docs/guides/LOCAL_DEVELOPMENT.md)
+- [API Reference](./docs/api/API_REFERENCE.md)
+- [Branching Strategy](./docs/development/BRANCHING_STRATEGY.md)
+- [Commit Convention](./docs/development/COMMIT_CONVENTION.md)
+- [Contributing Guide](./docs/project/CONTRIBUTING.md)
 
 ### For Architects
 
--   [System Architecture](./docs/architecture/SYSTEM_ARCHITECTURE.md)
--   [Database Schema](./docs/architecture/DATABASE_SCHEMA.md)
+- [System Architecture](./docs/architecture/SYSTEM_ARCHITECTURE.md)
+- [Database Schema](./docs/architecture/DATABASE_SCHEMA.md)
 
 ### For DevOps
 
--   [Backend Deployment](./docs/deployment/BACKEND_DEPLOYMENT.md)
--   [Database Setup](./docs/deployment/DATABASE_SETUP.md)
--   [Docker Setup](./docs/deployment/DOCKER_SETUP.md)
+- [Backend Deployment](./docs/deployment/BACKEND_DEPLOYMENT.md)
+- [Database Setup](./docs/deployment/DATABASE_SETUP.md)
+- [Docker Setup](./docs/deployment/DOCKER_SETUP.md)
 
 ### Project Information
 
--   [Project Proposal](./docs/project/PROJECT_PROPOSAL.md)
--   [Full Documentation Index](./docs/README.md)
+- [Project Proposal](./docs/project/PROJECT_PROPOSAL.md)
+- [Full Documentation Index](./docs/README.md)
 
 ## Quick Start
 
 ### Prerequisites
 
--   [Docker](https://www.docker.com/) and Docker Compose
--   [Bun](https://bun.sh/) runtime (v1.0+)
--   AWS CLI (optional, for table inspection)
+- [Docker](https://www.docker.com/) and Docker Compose
+- [Bun](https://bun.sh/) runtime (v1.0+)
+- AWS CLI (optional, for table inspection)
 
 ### 1. Start DynamoDB Local
 
@@ -156,12 +156,12 @@ bun run reset
 
 ## 🛠️ Technologies
 
--   **Frontend**: TanStack Start, React 19, Tailwind CSS, Radix UI
--   **Backend**: Hono (Lambda-compatible), Zod validation
--   **Database**: DynamoDB (Local for dev, AWS for production)
--   **Auth**: AWS Cognito (planned)
--   **Deployment**: AWS Lambda, API Gateway
--   **DevOps**: Docker, SAM CLI
+- **Frontend**: TanStack Start, React 19, Tailwind CSS, Radix UI
+- **Backend**: Hono (Lambda-compatible), Zod validation
+- **Database**: DynamoDB (Local for dev, AWS for production)
+- **Auth**: AWS Cognito (planned)
+- **Deployment**: AWS Lambda, API Gateway
+- **DevOps**: Docker, SAM CLI
 
 ## 📄 License
 

@@ -5,22 +5,25 @@ This guide covers deploying the CineCloud backend API to AWS Lambda using AWS SA
 ## Prerequisites
 
 1. **AWS CLI**: Install and configure with your AWS credentials
+
    ```bash
    aws configure
    ```
 
 2. **AWS SAM CLI**: Install the SAM CLI
+
    ```bash
    # Windows (using Chocolatey)
    choco install aws-sam-cli
-   
+
    # macOS (using Homebrew)
    brew install aws-sam-cli
-   
+
    # Or download from: https://aws.amazon.com/serverless/sam/
    ```
 
 3. **Docker**: Required for local testing with SAM
+
    - Download from: https://www.docker.com/products/docker-desktop
 
 4. **Node.js 20.x**: Required for Lambda runtime
@@ -42,16 +45,16 @@ backend/
 
 ## Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start local development server with Bun |
-| `npm run build:lambda` | Build Lambda function using SAM |
-| `npm run local:api` | Start local API Gateway emulator |
-| `npm run local:invoke` | Invoke Lambda function locally |
-| `npm run validate` | Validate SAM template |
-| `npm run deploy` | Deploy to AWS (dev environment) |
-| `npm run deploy:staging` | Deploy to staging environment |
-| `npm run deploy:prod` | Deploy to production environment |
+| Script                   | Description                             |
+| ------------------------ | --------------------------------------- |
+| `npm run dev`            | Start local development server with Bun |
+| `npm run build:lambda`   | Build Lambda function using SAM         |
+| `npm run local:api`      | Start local API Gateway emulator        |
+| `npm run local:invoke`   | Invoke Lambda function locally          |
+| `npm run validate`       | Validate SAM template                   |
+| `npm run deploy`         | Deploy to AWS (dev environment)         |
+| `npm run deploy:staging` | Deploy to staging environment           |
+| `npm run deploy:prod`    | Deploy to production environment        |
 
 ## Local Development
 
@@ -84,21 +87,25 @@ The API will be available at `http://localhost:3000`
 ### First-Time Setup
 
 1. **Validate the template**:
+
    ```bash
    npm run validate
    ```
 
 2. **Build the application**:
+
    ```bash
    npm run build:lambda
    ```
 
 3. **Deploy to dev environment**:
+
    ```bash
    npm run deploy
    ```
 
    Follow the prompts to confirm the deployment. SAM will:
+
    - Create an S3 bucket for deployment artifacts
    - Create all DynamoDB tables
    - Create the Lambda function
@@ -106,15 +113,16 @@ The API will be available at `http://localhost:3000`
 
 ### Deployment Environments
 
-| Environment | Command | Stack Name |
-|-------------|---------|------------|
-| Development | `npm run deploy` | cinecloud-backend |
-| Staging | `npm run deploy:staging` | cinecloud-backend-staging |
-| Production | `npm run deploy:prod` | cinecloud-backend-prod |
+| Environment | Command                  | Stack Name                |
+| ----------- | ------------------------ | ------------------------- |
+| Development | `npm run deploy`         | cinecloud-backend         |
+| Staging     | `npm run deploy:staging` | cinecloud-backend-staging |
+| Production  | `npm run deploy:prod`    | cinecloud-backend-prod    |
 
 ### Updating an Existing Deployment
 
 Simply run the deploy command again:
+
 ```bash
 npm run deploy
 ```
@@ -126,35 +134,41 @@ SAM will create a changeset showing what will be modified before applying change
 The SAM template (`template.yaml`) creates:
 
 ### Lambda Function
+
 - **Name**: `cinecloud-api-{environment}`
 - **Runtime**: Node.js 20.x
 - **Memory**: 256 MB
 - **Timeout**: 30 seconds
 
 ### API Gateway
+
 - **Type**: REST API
 - **CORS**: Enabled for all origins
 - **Endpoints**: All HTTP methods on `/{proxy+}`
 
 ### DynamoDB Tables
-| Table | Primary Key | Secondary Indexes |
-|-------|-------------|-------------------|
-| Movies | `id` (String) | - |
-| Showtimes | `id` (String) | `movieId-index` |
-| Bookings | `id` (String) | `showtimeId-index`, `userId-index` |
-| Rooms | `id` (String) | - |
-| Ratings | `id` (String) | `movieId-index`, `userId-index` |
+
+| Table     | Primary Key   | Secondary Indexes                  |
+| --------- | ------------- | ---------------------------------- |
+| Movies    | `id` (String) | -                                  |
+| Showtimes | `id` (String) | `movieId-index`                    |
+| Bookings  | `id` (String) | `showtimeId-index`, `userId-index` |
+| Rooms     | `id` (String) | -                                  |
+| Ratings   | `id` (String) | `movieId-index`, `userId-index`    |
 
 ## Monitoring & Debugging
 
 ### View Logs
+
 ```bash
 # Tail logs for the Lambda function
 sam logs -n CineCloudFunction --stack-name cinecloud-backend --tail
 ```
 
 ### CloudWatch Metrics
+
 Access CloudWatch in the AWS Console to view:
+
 - Invocation count
 - Duration
 - Error rate
@@ -163,6 +177,7 @@ Access CloudWatch in the AWS Console to view:
 ## Cost Optimization
 
 The deployment uses:
+
 - **Lambda**: Pay per invocation (first 1M requests/month free)
 - **DynamoDB**: On-demand billing (pay per request)
 - **API Gateway**: Pay per request (first 1M requests/month free)
@@ -172,14 +187,17 @@ The deployment uses:
 ### Common Issues
 
 1. **SAM build fails**:
+
    - Ensure Node.js 20.x is installed
    - Run `npm install` to ensure dependencies are up to date
 
 2. **Local API not starting**:
+
    - Ensure Docker is running
    - Check if port 3000 is available
 
 3. **Deployment permission errors**:
+
    - Verify AWS credentials are configured correctly
    - Ensure IAM user has required permissions (CloudFormation, Lambda, DynamoDB, API Gateway, IAM, S3)
 
