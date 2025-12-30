@@ -111,15 +111,15 @@ export interface DynamoDBItem {
   [key: string]: unknown
 }
 
-// Table names
+// Table names - Defaults for local development, can be overridden by environment variables
 export const TABLE_NAMES = {
-  USERS: 'Users',
-  MOVIES: 'Movies',
-  ROOMS: 'Rooms',
-  SHOWTIMES: 'Showtimes',
-  BOOKINGS: 'Bookings',
-  MOVIE_RATINGS: 'MovieRatings',
-  NOTIFICATIONS: 'Notifications',
+  USERS: process.env.USERS_TABLE || 'Users',
+  MOVIES: process.env.MOVIES_TABLE || 'Movies',
+  ROOMS: process.env.ROOMS_TABLE || 'Rooms',
+  SHOWTIMES: process.env.SHOWTIMES_TABLE || 'Showtimes',
+  BOOKINGS: process.env.BOOKINGS_TABLE || 'Bookings',
+  MOVIE_RATINGS: process.env.RATINGS_TABLE || 'MovieRatings',
+  NOTIFICATIONS: process.env.NOTIFICATIONS_TABLE || 'Notifications',
 } as const
 
 export type TableName = (typeof TABLE_NAMES)[keyof typeof TABLE_NAMES]

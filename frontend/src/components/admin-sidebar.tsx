@@ -1,4 +1,4 @@
-import { Link, useLocation } from '@tanstack/react-router'
+import { Link, useLocation } from "@tanstack/react-router";
 import {
   Calendar,
   DoorOpen,
@@ -6,7 +6,8 @@ import {
   LayoutDashboard,
   MessageSquare,
   Ticket,
-} from 'lucide-react'
+  Shield,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,49 +18,54 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar'
+} from "@/components/ui/sidebar";
 
 const navigationItems = [
   {
-    title: 'Dashboard',
-    href: '/admin/dashboard',
+    title: "Dashboard",
+    href: "/admin/dashboard",
     icon: LayoutDashboard,
   },
   {
-    title: 'Rooms',
-    href: '/admin/rooms',
+    title: "Rooms",
+    href: "/admin/rooms",
     icon: DoorOpen,
   },
   {
-    title: 'Movies',
-    href: '/admin/movies',
+    title: "Movies",
+    href: "/admin/movies",
     icon: Film,
   },
   {
-    title: 'Showtimes',
-    href: '/admin/showtimes',
+    title: "Showtimes",
+    href: "/admin/showtimes",
     icon: Calendar,
   },
   {
-    title: 'Bookings',
-    href: '/admin/bookings',
+    title: "Bookings",
+    href: "/admin/bookings",
     icon: Ticket,
   },
   {
-    title: 'Reviews',
-    href: '/admin/reviews',
+    title: "Reviews",
+    href: "/admin/reviews",
     icon: MessageSquare,
   },
-]
+  {
+    title: "RBAC Test",
+    href: "/admin/rbac-test",
+    icon: Shield,
+  },
+];
 
 export function AdminSidebar() {
-  const location = useLocation()
+  const location = useLocation();
 
   return (
     <Sidebar className="border-r border-border/50">
       <SidebarHeader className="border-b border-border/50 px-6 py-4">
         <Link to="/admin/dashboard" className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-orange-500">
             <Film className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -74,7 +80,7 @@ export function AdminSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => {
-                const isActive = location.pathname === item.href
+                const isActive = location.pathname === item.href;
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive}>
@@ -84,12 +90,12 @@ export function AdminSidebar() {
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                )
+                );
               })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }

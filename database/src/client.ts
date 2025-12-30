@@ -7,21 +7,27 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 
 // Environment configuration with sensible defaults for local development
-const ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000'
+// Environment configuration
+const ENDPOINT = process.env.DYNAMODB_ENDPOINT
 const REGION = process.env.DYNAMODB_REGION || 'local'
-const ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || 'local'
-const SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || 'local'
+const ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID
+const SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY
 
 /**
  * Base DynamoDB client instance
+ * Uses provided credentials/endpoint if available, otherwise falls back to default provider chain
  */
 const client = new DynamoDBClient({
-  endpoint: ENDPOINT,
+  ...(ENDPOINT ? { endpoint: ENDPOINT } : {}),
   region: REGION,
-  credentials: {
-    accessKeyId: ACCESS_KEY_ID,
-    secretAccessKey: SECRET_ACCESS_KEY,
-  },
+  ...(ACCESS_KEY_ID && SECRET_ACCESS_KEY
+    ? {
+        credentials: {
+          accessKeyId: ACCESS_KEY_ID,
+          secretAccessKey: SECRET_ACCESS_KEY,
+        },
+      }
+    : {}),
 })
 
 /**

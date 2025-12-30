@@ -9,6 +9,7 @@ import {
   QueryCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
+import { adminOnly } from "../../shared/middleware";
 import type { Room } from "../../shared/types/entities";
 
 const rooms = new Hono();
@@ -38,7 +39,7 @@ rooms.get("/", async (c) => {
         ExpressionAttributeValues: {
           ":metadata": "METADATA",
         },
-      }),
+      })
     );
 
     return c.json({
@@ -61,7 +62,7 @@ rooms.get("/:id", async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: id, sk: "METADATA" },
-      }),
+      })
     );
 
     if (!result.Item) {
@@ -79,17 +80,22 @@ rooms.get("/:id", async (c) => {
 });
 
 // POST /rooms - Create a new room (admin)
-rooms.post("/", async (c) => {
+rooms.post("/", adminOnly(), async (c) => {
   try {
     const body = await c.req.json();
     const validationResult = createRoomSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json({ success: false, error: validationResult.error.errors }, 400);
+      return c.json(
+        { success: false, error: validationResult.error.errors },
+        400
+      );
     }
 
     const data = validationResult.data;
-    const roomId = `room-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const roomId = `room-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
 
     const room: Room = {
       room_id: roomId,
@@ -106,7 +112,7 @@ rooms.post("/", async (c) => {
       new PutCommand({
         TableName: TABLE_NAMES.ROOMS,
         Item: room,
-      }),
+      })
     );
 
     return c.json(
@@ -115,7 +121,7 @@ rooms.post("/", async (c) => {
         data: room,
         message: "Room created successfully",
       },
-      201,
+      201
     );
   } catch (error) {
     console.error("[rooms]", "Error creating room:", error);
@@ -124,7 +130,7 @@ rooms.post("/", async (c) => {
 });
 
 // PUT /rooms/:id - Update a room (admin)
-rooms.put("/:id", async (c) => {
+rooms.put("/:id", adminOnly(), async (c) => {
   const { id } = c.req.param();
 
   try {
@@ -132,7 +138,10 @@ rooms.put("/:id", async (c) => {
     const validationResult = updateRoomSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json({ success: false, error: validationResult.error.errors }, 400);
+      return c.json(
+        { success: false, error: validationResult.error.errors },
+        400
+      );
     }
 
     const data = validationResult.data;
@@ -142,7 +151,7 @@ rooms.put("/:id", async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: id, sk: "METADATA" },
-      }),
+      })
     );
 
     if (!existingRoom.Item) {
@@ -173,7 +182,7 @@ rooms.put("/:id", async (c) => {
         UpdateExpression: `SET ${updateExpressions.join(", ")}`,
         ExpressionAttributeNames: expressionAttributeNames,
         ExpressionAttributeValues: expressionAttributeValues,
-      }),
+      })
     );
 
     // Fetch updated room
@@ -181,7 +190,7 @@ rooms.put("/:id", async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: id, sk: "METADATA" },
-      }),
+      })
     );
 
     return c.json({
@@ -196,7 +205,7 @@ rooms.put("/:id", async (c) => {
 });
 
 // DELETE /rooms/:id - Delete a room (admin)
-rooms.delete("/:id", async (c) => {
+rooms.delete("/:id", adminOnly(), async (c) => {
   const { id } = c.req.param();
 
   try {
@@ -205,7 +214,7 @@ rooms.delete("/:id", async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: id, sk: "METADATA" },
-      }),
+      })
     );
 
     if (!existingRoom.Item) {
@@ -221,7 +230,7 @@ rooms.delete("/:id", async (c) => {
         ExpressionAttributeValues: {
           ":roomId": id,
         },
-      }),
+      })
     );
 
     if (showtimesCheck.Items && showtimesCheck.Items.length > 0) {
@@ -230,7 +239,7 @@ rooms.delete("/:id", async (c) => {
           success: false,
           error: "Cannot delete room with existing showtimes",
         },
-        409,
+        409
       );
     }
 
@@ -239,7 +248,7 @@ rooms.delete("/:id", async (c) => {
       new DeleteCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: id, sk: "METADATA" },
-      }),
+      })
     );
 
     return c.json({

@@ -29,6 +29,7 @@ app.use(
 app.get("/health", (c) => c.json({ service: "bookings", status: "ok" }));
 
 // Mount routes at root since API Gateway routes to /bookings
+app.route("/bookings", bookingsRoutes);
 app.route("/", bookingsRoutes);
 
 // Error handling

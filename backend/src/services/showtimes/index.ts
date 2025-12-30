@@ -22,13 +22,14 @@ app.use(
     origin: "*",
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
-  }),
+  })
 );
 
 // Health check
 app.get("/health", (c) => c.json({ service: "showtimes", status: "ok" }));
 
 // Mount routes at root since API Gateway routes to /showtimes
+app.route("/showtimes", showtimesRoutes);
 app.route("/", showtimesRoutes);
 
 // Error handling
@@ -41,7 +42,7 @@ app.onError((err, c) => {
       message: err.message,
       service: "showtimes",
     },
-    500,
+    500
   );
 });
 
@@ -54,7 +55,7 @@ app.notFound((c) => {
       path: c.req.path,
       service: "showtimes",
     },
-    404,
+    404
   );
 });
 

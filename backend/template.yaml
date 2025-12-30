@@ -8,7 +8,7 @@ Globals:
     MemorySize: 256
     Runtime: nodejs20.x
     Architectures:
-      - x86_64
+    - x86_64
     Environment:
       Variables:
         NODE_ENV: production
@@ -18,15 +18,17 @@ Globals:
         BOOKINGS_TABLE: !Ref BookingsTable
         ROOMS_TABLE: !Ref RoomsTable
         RATINGS_TABLE: !Ref RatingsTable
+        NOTIFICATIONS_TABLE: !Ref NotificationsTable
+        USERS_TABLE: !Ref UsersTable
 
 Parameters:
   Environment:
     Type: String
     Default: dev
     AllowedValues:
-      - dev
-      - staging
-      - prod
+    - dev
+    - staging
+    - prod
     Description: Deployment environment
 
 Resources:
@@ -38,8 +40,89 @@ Resources:
       StageName: !Ref Environment
       Cors:
         AllowMethods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
-        AllowHeaders: "'Content-Type,Authorization'"
+        AllowHeaders: "'Content-Type,Authorization,X-Requested-With'"
         AllowOrigin: "'*'"
+        MaxAge: "'600'"
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt CineCloudUserPool.Arn
+            Identity:
+              Header: Authorization
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+        UNAUTHORIZED:
+          StatusCode: 401
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+        ACCESS_DENIED:
+          StatusCode: 403
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+
+  # Cognito User Pool
+  CineCloudUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "cinecloud-users-${Environment}"
+      AutoVerifiedAttributes:
+      - email
+      UsernameAttributes:
+      - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+
+  # User Pool Client
+  CineCloudUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "cinecloud-client-${Environment}"
+      UserPoolId: !Ref CineCloudUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+      - ALLOW_USER_PASSWORD_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+      - ALLOW_USER_SRP_AUTH
+
+  # Admin Group
+  AdminsGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: Admins
+      UserPoolId: !Ref CineCloudUserPool
+      Description: Administrator users with full access
+
+  # Users Group
+  UsersGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: Users
+      UserPoolId: !Ref CineCloudUserPool
+      Description: Regular users
 
   # Movies Service Lambda Function
   MoviesFunction:
@@ -49,22 +132,68 @@ Resources:
       CodeUri: ./
       Handler: services/movies/index.handler
       Description: CineCloud Movies Service
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
-        MoviesApi:
+        # Public routes (no auth required)
+        GetMovies:
           Type: Api
           Properties:
             RestApiId: !Ref CineCloudApi
             Path: /movies
-            Method: ANY
-        MoviesApiProxy:
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        SearchMovies:
           Type: Api
           Properties:
             RestApiId: !Ref CineCloudApi
-            Path: /movies/{proxy+}
-            Method: ANY
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref MoviesTable
+            Path: /movies/search
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetGenres:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /movies/genres
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetMovie:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /movies/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetMovieShowtimes:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /movies/{id}/showtimes
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        # Admin-only routes (require Cognito auth)
+        CreateMovie:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /movies
+            Method: POST
+        UpdateMovie:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /movies/{id}
+            Method: PUT
+        DeleteMovie:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /movies/{id}
+            Method: DELETE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -72,9 +201,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-          - src/services/movies/index.ts
+        - src/services/movies/index.ts
         External:
-          - "@aws-sdk/*"
+        - "@aws-sdk/*"
 
   # Showtimes Service Lambda Function
   ShowtimesFunction:
@@ -84,26 +213,44 @@ Resources:
       CodeUri: ./
       Handler: services/showtimes/index.handler
       Description: CineCloud Showtimes Service
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
-        ShowtimesApi:
+        # Public routes (no auth required)
+        GetShowtimes:
           Type: Api
           Properties:
             RestApiId: !Ref CineCloudApi
             Path: /showtimes
-            Method: ANY
-        ShowtimesApiProxy:
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetShowtimeById:
           Type: Api
           Properties:
             RestApiId: !Ref CineCloudApi
-            Path: /showtimes/{proxy+}
-            Method: ANY
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ShowtimesTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref MoviesTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref RoomsTable
+            Path: /showtimes/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        # Admin-only routes (require Cognito auth)
+        CreateShowtime:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /showtimes
+            Method: POST
+        UpdateShowtimeBySchedule:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /showtimes/{id}/schedule/{startTime}
+            Method: PUT
+        DeleteShowtimeBySchedule:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /showtimes/{id}/schedule/{startTime}
+            Method: DELETE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -111,9 +258,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-          - src/services/showtimes/index.ts
+        - src/services/showtimes/index.ts
         External:
-          - "@aws-sdk/*"
+        - "@aws-sdk/*"
 
   # Bookings Service Lambda Function
   BookingsFunction:
@@ -123,24 +270,48 @@ Resources:
       CodeUri: ./
       Handler: services/bookings/index.handler
       Description: CineCloud Bookings Service
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
-        BookingsApi:
+        # Public routes
+        GetBookingStats:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /bookings/stats
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        # Authenticated routes (all bookings routes require auth)
+        GetUserBookings:
           Type: Api
           Properties:
             RestApiId: !Ref CineCloudApi
             Path: /bookings
-            Method: ANY
-        BookingsApiProxy:
+            Method: GET
+        GetShowtimeBookings:
           Type: Api
           Properties:
             RestApiId: !Ref CineCloudApi
-            Path: /bookings/{proxy+}
-            Method: ANY
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref BookingsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ShowtimesTable
+            Path: /bookings/showtime/{showtimeId}
+            Method: GET
+        CreateBooking:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /bookings
+            Method: POST
+        GetBooking:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /bookings/{userEmail}/{bookingId}
+            Method: GET
+        DeleteBooking:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /bookings/{userEmail}/{bookingId}
+            Method: DELETE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -148,9 +319,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-          - src/services/bookings/index.ts
+        - src/services/bookings/index.ts
         External:
-          - "@aws-sdk/*"
+        - "@aws-sdk/*"
 
   # Rooms Service Lambda Function
   RoomsFunction:
@@ -160,22 +331,44 @@ Resources:
       CodeUri: ./
       Handler: services/rooms/index.handler
       Description: CineCloud Rooms Service
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
-        RoomsApi:
+        # Public routes (no auth required)
+        GetRooms:
           Type: Api
           Properties:
             RestApiId: !Ref CineCloudApi
             Path: /rooms
-            Method: ANY
-        RoomsApiProxy:
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetRoom:
           Type: Api
           Properties:
             RestApiId: !Ref CineCloudApi
-            Path: /rooms/{proxy+}
-            Method: ANY
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref RoomsTable
+            Path: /rooms/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        # Admin-only routes (require Cognito auth)
+        CreateRoom:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /rooms
+            Method: POST
+        UpdateRoom:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /rooms/{id}
+            Method: PUT
+        DeleteRoom:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /rooms/{id}
+            Method: DELETE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -183,9 +376,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-          - src/services/rooms/index.ts
+        - src/services/rooms/index.ts
         External:
-          - "@aws-sdk/*"
+        - "@aws-sdk/*"
 
   # Ratings Service Lambda Function
   RatingsFunction:
@@ -195,24 +388,52 @@ Resources:
       CodeUri: ./
       Handler: services/ratings/index.handler
       Description: CineCloud Ratings Service
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
-        RatingsApi:
+        # Public routes (no auth required)
+        GetMovieRatings:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/movie/{movieId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetUserRatings:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/user/{userId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetMovieRatingStats:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/movie/{movieId}/stats
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        # Authenticated routes (require Cognito auth)
+        CreateRating:
           Type: Api
           Properties:
             RestApiId: !Ref CineCloudApi
             Path: /ratings
-            Method: ANY
-        RatingsApiProxy:
+            Method: POST
+        UpdateRating:
           Type: Api
           Properties:
             RestApiId: !Ref CineCloudApi
-            Path: /ratings/{proxy+}
-            Method: ANY
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref RatingsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref MoviesTable
+            Path: /ratings/{id}
+            Method: PUT
+        DeleteRating:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/{id}
+            Method: DELETE
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -220,9 +441,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-          - src/services/ratings/index.ts
+        - src/services/ratings/index.ts
         External:
-          - "@aws-sdk/*"
+        - "@aws-sdk/*"
 
   # DynamoDB Tables
   MoviesTable:
@@ -235,32 +456,32 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-        - AttributeName: tmdb_id
-          AttributeType: S
-        - AttributeName: type
-          AttributeType: S
-        - AttributeName: rating
-          AttributeType: N
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: tmdb_id
+        AttributeType: S
+      - AttributeName: type
+        AttributeType: S
+      - AttributeName: rating
+        AttributeType: N
       KeySchema:
-        - AttributeName: id
-          KeyType: HASH
+      - AttributeName: id
+        KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: tmdb_id-index
-          KeySchema:
-            - AttributeName: tmdb_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: type-rating-index
-          KeySchema:
-            - AttributeName: type
-              KeyType: HASH
-            - AttributeName: rating
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
+      - IndexName: tmdb_id-index
+        KeySchema:
+        - AttributeName: tmdb_id
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+      - IndexName: type-rating-index
+        KeySchema:
+        - AttributeName: type
+          KeyType: HASH
+        - AttributeName: rating
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
 
   ShowtimesTable:
     Type: AWS::DynamoDB::Table
@@ -272,34 +493,34 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-        - AttributeName: movie_id
-          AttributeType: S
-        - AttributeName: start_time
-          AttributeType: S
-        - AttributeName: room_id
-          AttributeType: S
-        - AttributeName: showtime_id
-          AttributeType: S
+      - AttributeName: movie_id
+        AttributeType: S
+      - AttributeName: start_time
+        AttributeType: S
+      - AttributeName: room_id
+        AttributeType: S
+      - AttributeName: showtime_id
+        AttributeType: S
       KeySchema:
-        - AttributeName: movie_id
+      - AttributeName: movie_id
+        KeyType: HASH
+      - AttributeName: start_time
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: room_id-start_time-index
+        KeySchema:
+        - AttributeName: room_id
           KeyType: HASH
         - AttributeName: start_time
           KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: room_id-start_time-index
-          KeySchema:
-            - AttributeName: room_id
-              KeyType: HASH
-            - AttributeName: start_time
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-        - IndexName: showtime_id-index
-          KeySchema:
-            - AttributeName: showtime_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
+        Projection:
+          ProjectionType: ALL
+      - IndexName: showtime_id-index
+        KeySchema:
+        - AttributeName: showtime_id
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
 
   BookingsTable:
     Type: AWS::DynamoDB::Table
@@ -311,32 +532,32 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-        - AttributeName: user_email
-          AttributeType: S
-        - AttributeName: booking_id
-          AttributeType: S
-        - AttributeName: showtime_id
-          AttributeType: S
-        - AttributeName: user_id
-          AttributeType: S
+      - AttributeName: user_email
+        AttributeType: S
+      - AttributeName: booking_id
+        AttributeType: S
+      - AttributeName: showtime_id
+        AttributeType: S
+      - AttributeName: user_id
+        AttributeType: S
       KeySchema:
-        - AttributeName: user_email
-          KeyType: HASH
-        - AttributeName: booking_id
-          KeyType: RANGE
+      - AttributeName: user_email
+        KeyType: HASH
+      - AttributeName: booking_id
+        KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: showtime_id-index
-          KeySchema:
-            - AttributeName: showtime_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: user_id-index
-          KeySchema:
-            - AttributeName: user_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
+      - IndexName: showtime_id-index
+        KeySchema:
+        - AttributeName: showtime_id
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+      - IndexName: user_id-index
+        KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
 
   RoomsTable:
     Type: AWS::DynamoDB::Table
@@ -348,15 +569,15 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-        - AttributeName: room_id
-          AttributeType: S
-        - AttributeName: sk
-          AttributeType: S
+      - AttributeName: room_id
+        AttributeType: S
+      - AttributeName: sk
+        AttributeType: S
       KeySchema:
-        - AttributeName: room_id
-          KeyType: HASH
-        - AttributeName: sk
-          KeyType: RANGE
+      - AttributeName: room_id
+        KeyType: HASH
+      - AttributeName: sk
+        KeyType: RANGE
 
   RatingsTable:
     Type: AWS::DynamoDB::Table
@@ -368,28 +589,82 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-        - AttributeName: movie_id
-          AttributeType: S
-        - AttributeName: user_id
-          AttributeType: S
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: movie_id
+        AttributeType: S
+      - AttributeName: user_id
+        AttributeType: S
       KeySchema:
-        - AttributeName: id
-          KeyType: HASH
+      - AttributeName: id
+        KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: movie_id-index
-          KeySchema:
-            - AttributeName: movie_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: user_id-index
-          KeySchema:
-            - AttributeName: user_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
+      - IndexName: movie_id-index
+        KeySchema:
+        - AttributeName: movie_id
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+      - IndexName: user_id-index
+        KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+
+  NotificationsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "cinecloud-notifications-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: user_id
+        AttributeType: S
+      - AttributeName: sent_at
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: user_id-sent_at-index
+        KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+        - AttributeName: sent_at
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "cinecloud-users-data-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: email
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: email-index
+        KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
 
 Outputs:
   ApiEndpoint:
@@ -397,6 +672,24 @@ Outputs:
     Value: !Sub "https://${CineCloudApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
     Export:
       Name: !Sub "${AWS::StackName}-ApiEndpoint"
+
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref CineCloudUserPool
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolId"
+
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref CineCloudUserPoolClient
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolClientId"
+
+  UserPoolArn:
+    Description: Cognito User Pool ARN
+    Value: !GetAtt CineCloudUserPool.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolArn"
 
   MoviesTableName:
     Description: Movies DynamoDB Table Name
@@ -417,3 +710,11 @@ Outputs:
   RatingsTableName:
     Description: Ratings DynamoDB Table Name
     Value: !Ref RatingsTable
+
+  NotificationsTableName:
+    Description: Notifications DynamoDB Table Name
+    Value: !Ref NotificationsTable
+
+  UsersTableName:
+    Description: Users DynamoDB Table Name
+    Value: !Ref UsersTable

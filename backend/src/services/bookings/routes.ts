@@ -8,6 +8,7 @@ import {
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
+import { requireAuth, requireRole, getUser } from "../../shared/middleware";
 import type { Booking, Showtime, Movie } from "../../shared/types/entities";
 
 const bookings = new Hono();
@@ -23,8 +24,9 @@ const createBookingSchema = z.object({
 });
 
 // GET /bookings - Get user's bookings
-bookings.get("/", async (c) => {
-  const userEmail = c.req.query("user_email");
+bookings.get("/", requireAuth(), async (c) => {
+  const user = getUser(c);
+  const userEmail = user.email;
 
   if (!userEmail) {
     return c.json({ success: false, error: "user_email is required" }, 400);
@@ -38,7 +40,7 @@ bookings.get("/", async (c) => {
         ExpressionAttributeValues: {
           ":email": userEmail,
         },
-      }),
+      })
     );
 
     return c.json({
@@ -53,7 +55,7 @@ bookings.get("/", async (c) => {
 });
 
 // GET /bookings/showtime/:showtimeId - Get bookings for a showtime (admin)
-bookings.get("/showtime/:showtimeId", async (c) => {
+bookings.get("/showtime/:showtimeId", requireRole(["Admins"]), async (c) => {
   const { showtimeId } = c.req.param();
 
   try {
@@ -65,7 +67,7 @@ bookings.get("/showtime/:showtimeId", async (c) => {
         ExpressionAttributeValues: {
           ":showtimeId": showtimeId,
         },
-      }),
+      })
     );
 
     return c.json({
@@ -80,17 +82,22 @@ bookings.get("/showtime/:showtimeId", async (c) => {
 });
 
 // POST /bookings - Create a new booking
-bookings.post("/", async (c) => {
+bookings.post("/", requireAuth(), async (c) => {
   try {
     const body = await c.req.json();
     const validationResult = createBookingSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json({ success: false, error: validationResult.error.errors }, 400);
+      return c.json(
+        { success: false, error: validationResult.error.errors },
+        400
+      );
     }
 
     const data = validationResult.data;
-    const bookingId = `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const bookingId = `booking-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
 
     // First, get the showtime to check seat availability
     const showtimeResult = await docClient.send(
@@ -101,7 +108,7 @@ bookings.post("/", async (c) => {
         ExpressionAttributeValues: {
           ":showtimeId": data.showtime_id,
         },
-      }),
+      })
     );
 
     if (!showtimeResult.Items || showtimeResult.Items.length === 0) {
@@ -112,7 +119,9 @@ bookings.post("/", async (c) => {
     const occupiedSeats = new Set(showtime.occupied_seats || []);
 
     // Check if any requested seats are already occupied
-    const conflictingSeats = data.seats.filter((seat) => occupiedSeats.has(seat));
+    const conflictingSeats = data.seats.filter((seat) =>
+      occupiedSeats.has(seat)
+    );
     if (conflictingSeats.length > 0) {
       return c.json(
         {
@@ -120,7 +129,7 @@ bookings.post("/", async (c) => {
           error: "Some seats are already booked",
           conflicting_seats: conflictingSeats,
         },
-        409,
+        409
       );
     }
 
@@ -141,7 +150,7 @@ bookings.post("/", async (c) => {
       new PutCommand({
         TableName: TABLE_NAMES.BOOKINGS,
         Item: booking,
-      }),
+      })
     );
 
     // Update showtime with occupied seats
@@ -158,7 +167,7 @@ bookings.post("/", async (c) => {
         ExpressionAttributeValues: {
           ":seats": newOccupiedSeats,
         },
-      }),
+      })
     );
 
     return c.json(
@@ -167,7 +176,7 @@ bookings.post("/", async (c) => {
         data: booking,
         message: "Booking created successfully",
       },
-      201,
+      201
     );
   } catch (error) {
     console.error("[bookings]", "Error creating booking:", error);
@@ -176,7 +185,7 @@ bookings.post("/", async (c) => {
 });
 
 // DELETE /bookings/:userEmail/:bookingId - Cancel a booking
-bookings.delete("/:userEmail/:bookingId", async (c) => {
+bookings.delete("/:userEmail/:bookingId", requireAuth(), async (c) => {
   const { userEmail, bookingId } = c.req.param();
 
   try {
@@ -188,7 +197,7 @@ bookings.delete("/:userEmail/:bookingId", async (c) => {
           user_email: userEmail,
           booking_id: bookingId,
         },
-      }),
+      })
     );
 
     if (!bookingResult.Item) {
@@ -206,14 +215,16 @@ bookings.delete("/:userEmail/:bookingId", async (c) => {
         ExpressionAttributeValues: {
           ":showtimeId": booking.showtime_id,
         },
-      }),
+      })
     );
 
     if (showtimeResult.Items && showtimeResult.Items.length > 0) {
       const showtime = showtimeResult.Items[0] as Showtime;
       const occupiedSeats = showtime.occupied_seats || [];
       const seatsToRelease = new Set(booking.seats);
-      const updatedSeats = occupiedSeats.filter((seat) => !seatsToRelease.has(seat));
+      const updatedSeats = occupiedSeats.filter(
+        (seat) => !seatsToRelease.has(seat)
+      );
 
       // Update showtime to release seats
       await docClient.send(
@@ -227,7 +238,7 @@ bookings.delete("/:userEmail/:bookingId", async (c) => {
           ExpressionAttributeValues: {
             ":seats": updatedSeats,
           },
-        }),
+        })
       );
     }
 
@@ -246,7 +257,7 @@ bookings.delete("/:userEmail/:bookingId", async (c) => {
         ExpressionAttributeValues: {
           ":status": "cancelled",
         },
-      }),
+      })
     );
 
     return c.json({
@@ -260,7 +271,7 @@ bookings.delete("/:userEmail/:bookingId", async (c) => {
 });
 
 // GET /bookings/:userEmail/:bookingId - Get booking details
-bookings.get("/:userEmail/:bookingId", async (c) => {
+bookings.get("/:userEmail/:bookingId", requireAuth(), async (c) => {
   const { userEmail, bookingId } = c.req.param();
 
   try {
@@ -271,7 +282,7 @@ bookings.get("/:userEmail/:bookingId", async (c) => {
           user_email: userEmail,
           booking_id: bookingId,
         },
-      }),
+      })
     );
 
     if (!result.Item) {
@@ -289,7 +300,7 @@ bookings.get("/:userEmail/:bookingId", async (c) => {
         ExpressionAttributeValues: {
           ":showtimeId": booking.showtime_id,
         },
-      }),
+      })
     );
 
     const showtime = showtimeResult.Items?.[0] as Showtime | undefined;
@@ -301,7 +312,7 @@ bookings.get("/:userEmail/:bookingId", async (c) => {
         new GetCommand({
           TableName: TABLE_NAMES.MOVIES,
           Key: { id: booking.movie_id },
-        }),
+        })
       );
       movie = movieResult.Item as Movie | undefined;
     }
@@ -316,7 +327,10 @@ bookings.get("/:userEmail/:bookingId", async (c) => {
     });
   } catch (error) {
     console.error("[bookings]", "Error fetching booking details:", error);
-    return c.json({ success: false, error: "Failed to fetch booking details" }, 500);
+    return c.json(
+      { success: false, error: "Failed to fetch booking details" },
+      500
+    );
   }
 });
 
@@ -329,7 +343,7 @@ bookings.get("/stats", async (c) => {
     const result = await docClient.send(
       new ScanCommand({
         TableName: TABLE_NAMES.BOOKINGS,
-      }),
+      })
     );
 
     let bookings = result.Items as Booking[];
@@ -346,12 +360,17 @@ bookings.get("/stats", async (c) => {
 
     // Calculate statistics
     const totalBookings = bookings.length;
-    const confirmedBookings = bookings.filter((b) => b.status === "confirmed").length;
-    const cancelledBookings = bookings.filter((b) => b.status === "cancelled").length;
+    const confirmedBookings = bookings.filter(
+      (b) => b.status === "confirmed"
+    ).length;
+    const cancelledBookings = bookings.filter(
+      (b) => b.status === "cancelled"
+    ).length;
     const totalRevenue = bookings
       .filter((b) => b.status === "confirmed")
       .reduce((sum, b) => sum + b.total_amount, 0);
-    const averageBookingValue = confirmedBookings > 0 ? totalRevenue / confirmedBookings : 0;
+    const averageBookingValue =
+      confirmedBookings > 0 ? totalRevenue / confirmedBookings : 0;
 
     // Movie popularity (by booking count)
     const movieBookings: Record<string, number> = {};
@@ -382,7 +401,10 @@ bookings.get("/stats", async (c) => {
     });
   } catch (error) {
     console.error("[bookings]", "Error fetching booking statistics:", error);
-    return c.json({ success: false, error: "Failed to fetch booking statistics" }, 500);
+    return c.json(
+      { success: false, error: "Failed to fetch booking statistics" },
+      500
+    );
   }
 });
 
