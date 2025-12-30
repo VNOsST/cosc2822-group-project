@@ -3,13 +3,13 @@ services:
     image: amazon/dynamodb-local:latest
     container_name: cinecloud-dynamodb
     ports:
-      - "8000:8000"
+    - "8000:8000"
     user: root
     volumes:
-      - dynamodb-data:/home/dynamodblocal/data
+    - dynamodb-data:/home/dynamodblocal/data
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data"
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:8000 || exit 1"]
+      test: [ "CMD-SHELL", "curl -s http://localhost:8000 || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -18,7 +18,7 @@ services:
     image: aaronshaf/dynamodb-admin
     container_name: cinecloud-dynamodb-admin
     ports:
-      - "8001:8001"
+    - "8001:8001"
     environment:
       DYNAMO_ENDPOINT: http://dynamodb-local:8000
       AWS_REGION: local
@@ -27,6 +27,17 @@ services:
     depends_on:
       dynamodb-local:
         condition: service_healthy
+
+  redis:
+    image: redis:8-alpine
+    container_name: cinecloud-redis
+    ports:
+    - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   dynamodb-data:
