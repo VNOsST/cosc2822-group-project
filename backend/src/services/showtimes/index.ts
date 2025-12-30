@@ -17,12 +17,12 @@ const app = new Hono();
 app.use("*", logger());
 app.use("*", prettyJSON());
 app.use(
-    "*",
-    cors({
-        origin: "*",
-        allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowHeaders: ["Content-Type", "Authorization"],
-    })
+  "*",
+  cors({
+    origin: "*",
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+  }),
 );
 
 // Health check
@@ -33,29 +33,29 @@ app.route("/", showtimesRoutes);
 
 // Error handling
 app.onError((err, c) => {
-    console.error("[showtimes]", "Error:", err);
-    return c.json(
-        {
-            success: false,
-            error: "Internal server error",
-            message: err.message,
-            service: "showtimes",
-        },
-        500
-    );
+  console.error("[showtimes]", "Error:", err);
+  return c.json(
+    {
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+      service: "showtimes",
+    },
+    500,
+  );
 });
 
 // 404 handler
 app.notFound((c) => {
-    return c.json(
-        {
-            success: false,
-            error: "Not found",
-            path: c.req.path,
-            service: "showtimes",
-        },
-        404
-    );
+  return c.json(
+    {
+      success: false,
+      error: "Not found",
+      path: c.req.path,
+      service: "showtimes",
+    },
+    404,
+  );
 });
 
 // Export Lambda handler
@@ -63,6 +63,6 @@ export const handler = handle(app);
 
 // Export for local development
 export default {
-    port: 3003,
-    fetch: app.fetch,
+  port: 3003,
+  fetch: app.fetch,
 };
