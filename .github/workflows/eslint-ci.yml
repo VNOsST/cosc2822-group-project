@@ -13,7 +13,7 @@ on:
 
 jobs:
   lint:
-    name: ESLint Check
+    name: Lint Check (Frontend, Backend, Database)
     timeout-minutes: 10
     runs-on: ubuntu-latest
     if: ${{ !startsWith(github.head_ref, 'fix/prettier-formatting/') }}
@@ -23,7 +23,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./frontend
 
     steps:
     - name: Check out code
@@ -36,7 +35,7 @@ jobs:
     - name: Install dependencies
       run: bun install
 
-    - name: Run ESLint
+    - name: Run Lint (Frontend, Backend, Database)
       run: bun lint
 
     - name: Comment on PR (if failed)
