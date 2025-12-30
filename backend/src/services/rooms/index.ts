@@ -17,12 +17,12 @@ const app = new Hono();
 app.use("*", logger());
 app.use("*", prettyJSON());
 app.use(
-    "*",
-    cors({
-        origin: "*",
-        allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowHeaders: ["Content-Type", "Authorization"],
-    })
+  "*",
+  cors({
+    origin: "*",
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+  }),
 );
 
 // Health check
@@ -33,29 +33,29 @@ app.route("/", roomsRoutes);
 
 // Error handling
 app.onError((err, c) => {
-    console.error("[rooms]", "Error:", err);
-    return c.json(
-        {
-            success: false,
-            error: "Internal server error",
-            message: err.message,
-            service: "rooms",
-        },
-        500
-    );
+  console.error("[rooms]", "Error:", err);
+  return c.json(
+    {
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+      service: "rooms",
+    },
+    500,
+  );
 });
 
 // 404 handler
 app.notFound((c) => {
-    return c.json(
-        {
-            success: false,
-            error: "Not found",
-            path: c.req.path,
-            service: "rooms",
-        },
-        404
-    );
+  return c.json(
+    {
+      success: false,
+      error: "Not found",
+      path: c.req.path,
+      service: "rooms",
+    },
+    404,
+  );
 });
 
 // Export Lambda handler
@@ -63,6 +63,6 @@ export const handler = handle(app);
 
 // Export for local development
 export default {
-    port: 3005,
-    fetch: app.fetch,
+  port: 3005,
+  fetch: app.fetch,
 };

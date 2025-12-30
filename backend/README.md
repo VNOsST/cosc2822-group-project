@@ -8,20 +8,20 @@ This backend uses a **microservices architecture** where each service runs as an
 
 ### Services
 
--   **Movies Service** (`/movies`) - Movie catalog management with CRUD operations, search, and filtering
--   **Showtimes Service** (`/showtimes`) - Showtime scheduling with seat map generation and conflict detection
--   **Bookings Service** (`/bookings`) - Ticket reservations with seat validation and statistics
--   **Rooms Service** (`/rooms`) - Cinema room management with layout configuration
--   **Ratings Service** (`/ratings`) - Movie ratings and reviews with automatic average calculation
+- **Movies Service** (`/movies`) - Movie catalog management with CRUD operations, search, and filtering
+- **Showtimes Service** (`/showtimes`) - Showtime scheduling with seat map generation and conflict detection
+- **Bookings Service** (`/bookings`) - Ticket reservations with seat validation and statistics
+- **Rooms Service** (`/rooms`) - Cinema room management with layout configuration
+- **Ratings Service** (`/ratings`) - Movie ratings and reviews with automatic average calculation
 
 ## Tech Stack
 
--   **Runtime**: Node.js 20.x (AWS Lambda)
--   **Framework**: Hono - Fast, lightweight web framework
--   **Database**: Amazon DynamoDB
--   **Infrastructure**: AWS SAM (Serverless Application Model)
--   **Build Tool**: esbuild via SAM
--   **Language**: TypeScript
+- **Runtime**: Node.js 20.x (AWS Lambda)
+- **Framework**: Hono - Fast, lightweight web framework
+- **Database**: Amazon DynamoDB
+- **Infrastructure**: AWS SAM (Serverless Application Model)
+- **Build Tool**: esbuild via SAM
+- **Language**: TypeScript
 
 ## Project Structure
 
@@ -61,10 +61,10 @@ backend/
 
 ### Prerequisites
 
--   [Bun](https://bun.sh) installed for local development
--   [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
--   AWS credentials configured
--   DynamoDB tables set up (see [Database Setup](../docs/deployment/DATABASE_SETUP.md))
+- [Bun](https://bun.sh) installed for local development
+- [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
+- AWS credentials configured
+- DynamoDB tables set up (see [Database Setup](../docs/deployment/DATABASE_SETUP.md))
 
 ### Installation
 
@@ -83,11 +83,11 @@ bun run dev
 
 This starts all microservices:
 
--   Movies: http://localhost:3002
--   Showtimes: http://localhost:3003
--   Bookings: http://localhost:3004
--   Rooms: http://localhost:3005
--   Ratings: http://localhost:3006
+- Movies: http://localhost:3002
+- Showtimes: http://localhost:3003
+- Bookings: http://localhost:3004
+- Rooms: http://localhost:3005
+- Ratings: http://localhost:3006
 
 #### Run Individual Service
 
@@ -258,21 +258,21 @@ bun run type-check
 
 Each Lambda function logs to its own CloudWatch Log Group:
 
--   `/aws/lambda/cinecloud-movies-{env}`
--   `/aws/lambda/cinecloud-showtimes-{env}`
--   `/aws/lambda/cinecloud-bookings-{env}`
--   `/aws/lambda/cinecloud-rooms-{env}`
--   `/aws/lambda/cinecloud-ratings-{env}`
+- `/aws/lambda/cinecloud-movies-{env}`
+- `/aws/lambda/cinecloud-showtimes-{env}`
+- `/aws/lambda/cinecloud-bookings-{env}`
+- `/aws/lambda/cinecloud-rooms-{env}`
+- `/aws/lambda/cinecloud-ratings-{env}`
 
 ### Metrics
 
 Monitor these CloudWatch metrics:
 
--   **Invocations**: Number of times each function is called
--   **Duration**: Execution time
--   **Errors**: Function errors
--   **Throttles**: Throttled requests
--   **ConcurrentExecutions**: Number of concurrent executions
+- **Invocations**: Number of times each function is called
+- **Duration**: Execution time
+- **Errors**: Function errors
+- **Throttles**: Throttled requests
+- **ConcurrentExecutions**: Number of concurrent executions
 
 ## Troubleshooting
 
@@ -292,9 +292,9 @@ Monitor these CloudWatch metrics:
 
 #### Cold Starts
 
--   First request to a Lambda function may be slower
--   Consider provisioned concurrency for critical services
--   Monitor metrics to identify problematic services
+- First request to a Lambda function may be slower
+- Consider provisioned concurrency for critical services
+- Monitor metrics to identify problematic services
 
 ## Contributing
 
@@ -302,12 +302,12 @@ See [CONTRIBUTING.md](../docs/project/CONTRIBUTING.md) for contribution guidelin
 
 ## Related Documentation
 
--   [Folder Structure](../docs/architecture/FOLDER_STRUCTURE.md) - Detailed folder organization guide
--   [Microservices Architecture](../docs/architecture/MICROSERVICES.md) - Architecture overview
--   [Deployment Guide](../docs/deployment/BACKEND_DEPLOYMENT.md) - AWS deployment instructions
--   [API Reference](../docs/api/API_REFERENCE.md) - Complete API documentation
--   [Database Schema](../docs/architecture/DATABASE_SCHEMA.md) - DynamoDB schema
--   [System Architecture](../docs/architecture/SYSTEM_ARCHITECTURE.md) - Overall system design
+- [Folder Structure](../docs/architecture/FOLDER_STRUCTURE.md) - Detailed folder organization guide
+- [Microservices Architecture](../docs/architecture/MICROSERVICES.md) - Architecture overview
+- [Deployment Guide](../docs/deployment/BACKEND_DEPLOYMENT.md) - AWS deployment instructions
+- [API Reference](../docs/api/API_REFERENCE.md) - Complete API documentation
+- [Database Schema](../docs/architecture/DATABASE_SCHEMA.md) - DynamoDB schema
+- [System Architecture](../docs/architecture/SYSTEM_ARCHITECTURE.md) - Overall system design
 
 ## License
 
