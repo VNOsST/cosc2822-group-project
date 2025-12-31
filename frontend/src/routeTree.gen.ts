@@ -20,7 +20,6 @@ import { Route as UserBookingsRouteImport } from './routes/user/bookings'
 import { Route as AdminShowtimesRouteImport } from './routes/admin/showtimes'
 import { Route as AdminRoomsRouteImport } from './routes/admin/rooms'
 import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
-import { Route as AdminRbacTestRouteImport } from './routes/admin/rbac-test'
 import { Route as AdminMoviesRouteImport } from './routes/admin/movies'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
@@ -84,11 +83,6 @@ const AdminReviewsRoute = AdminReviewsRouteImport.update({
   path: '/reviews',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminRbacTestRoute = AdminRbacTestRouteImport.update({
-  id: '/rbac-test',
-  path: '/rbac-test',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminMoviesRoute = AdminMoviesRouteImport.update({
   id: '/movies',
   path: '/movies',
@@ -134,7 +128,6 @@ export interface FileRoutesByFullPath {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/movies': typeof AdminMoviesRoute
-  '/admin/rbac-test': typeof AdminRbacTestRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
@@ -155,7 +148,6 @@ export interface FileRoutesByTo {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/movies': typeof AdminMoviesRoute
-  '/admin/rbac-test': typeof AdminRbacTestRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
@@ -177,7 +169,6 @@ export interface FileRoutesById {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/movies': typeof AdminMoviesRoute
-  '/admin/rbac-test': typeof AdminRbacTestRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
@@ -200,7 +191,6 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/dashboard'
     | '/admin/movies'
-    | '/admin/rbac-test'
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
@@ -221,7 +211,6 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/dashboard'
     | '/admin/movies'
-    | '/admin/rbac-test'
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
@@ -242,7 +231,6 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/dashboard'
     | '/admin/movies'
-    | '/admin/rbac-test'
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
@@ -342,13 +330,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReviewsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/rbac-test': {
-      id: '/admin/rbac-test'
-      path: '/rbac-test'
-      fullPath: '/admin/rbac-test'
-      preLoaderRoute: typeof AdminRbacTestRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/movies': {
       id: '/admin/movies'
       path: '/movies'
@@ -405,7 +386,6 @@ interface AdminRouteChildren {
   AdminBookingsRoute: typeof AdminBookingsRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminMoviesRoute: typeof AdminMoviesRoute
-  AdminRbacTestRoute: typeof AdminRbacTestRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminRoomsRoute: typeof AdminRoomsRoute
   AdminShowtimesRoute: typeof AdminShowtimesRoute
@@ -415,7 +395,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBookingsRoute: AdminBookingsRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminMoviesRoute: AdminMoviesRoute,
-  AdminRbacTestRoute: AdminRbacTestRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   AdminRoomsRoute: AdminRoomsRoute,
   AdminShowtimesRoute: AdminShowtimesRoute,

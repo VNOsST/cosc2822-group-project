@@ -126,9 +126,13 @@ export const apiClient = {
         apiName: API_NAME,
         path,
         options: {
-          body: JSON.stringify(body),
+          body: body as FormData,
           queryParams: options?.queryParams,
-          headers: { ...authHeaders, ...options?.headers },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...authHeaders, 
+            ...options?.headers 
+          },
         },
       })
       const response = await restOperation.response
@@ -149,9 +153,13 @@ export const apiClient = {
         apiName: API_NAME,
         path,
         options: {
-          body: JSON.stringify(body),
+          body: body as FormData,
           queryParams: options?.queryParams,
-          headers: { ...authHeaders, ...options?.headers },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...authHeaders, 
+            ...options?.headers 
+          },
         },
       })
       const response = await restOperation.response
