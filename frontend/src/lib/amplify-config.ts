@@ -52,7 +52,9 @@ if (envVars.region) {
 
 export function configureAmplify() {
   if (missingVars.length > 0) {
-    console.warn('Amplify configuration incomplete. Authentication may not work properly.')
+    console.warn(
+      'Amplify configuration incomplete. Authentication may not work properly.',
+    )
   }
   if (!envVars.apiEndpoint) {
     console.warn('API endpoint not configured. API calls may fail.')

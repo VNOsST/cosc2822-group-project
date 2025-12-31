@@ -10,4 +10,4 @@ export {
   getUser,
   type AuthUser,
   type UserRole,
-} from './auth';
+} from "./auth";

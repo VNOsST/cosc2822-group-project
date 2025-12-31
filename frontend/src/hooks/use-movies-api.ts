@@ -25,9 +25,13 @@ export function useMovie(id: string) {
 }
 
 export function useMovieShowtimes(id: string) {
-  return useApiQuery<Showtime[]>([...QUERY_KEYS.showtimes(id)], `/movies/${id}/showtimes`, {
-    enabled: !!id,
-  })
+  return useApiQuery<Showtime[]>(
+    [...QUERY_KEYS.showtimes(id)],
+    `/movies/${id}/showtimes`,
+    {
+      enabled: !!id,
+    },
+  )
 }
 
 // Mutations (Admin only - backend middleware enforces this)
@@ -35,7 +39,8 @@ export function useCreateMovie() {
   const { invalidate } = useInvalidateQueries()
 
   return useApiMutation(
-    (data: Omit<Movie, 'id' | 'rating' | 'created_at' | 'updated_at'>) => apiClient.post<Movie>('/movies', data),
+    (data: Omit<Movie, 'id' | 'rating' | 'created_at' | 'updated_at'>) =>
+      apiClient.post<Movie>('/movies', data),
     {
       onSuccess: () => invalidate([...QUERY_KEYS.all]),
     },
@@ -46,7 +51,8 @@ export function useUpdateMovie() {
   const { invalidate } = useInvalidateQueries()
 
   return useApiMutation(
-    ({ id, ...data }: Partial<Movie> & { id: string }) => apiClient.put<Movie>(`/movies/${id}`, data),
+    ({ id, ...data }: Partial<Movie> & { id: string }) =>
+      apiClient.put<Movie>(`/movies/${id}`, data),
     {
       onSuccess: (_, { id }) => {
         invalidate([...QUERY_KEYS.all])

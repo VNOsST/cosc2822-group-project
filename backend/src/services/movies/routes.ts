@@ -50,7 +50,7 @@ movies.get("/", async (c) => {
           ":type": "MOVIE",
         },
         ScanIndexForward: false, // Descending order (highest rating first)
-      })
+      }),
     );
 
     return c.json({
@@ -70,10 +70,7 @@ movies.get("/search", async (c) => {
   const genre = c.req.query("genre")?.toLowerCase();
 
   if (!query && !genre) {
-    return c.json(
-      { success: false, error: "Search query or genre is required" },
-      400
-    );
+    return c.json({ success: false, error: "Search query or genre is required" }, 400);
   }
 
   try {
@@ -87,7 +84,7 @@ movies.get("/search", async (c) => {
         ExpressionAttributeValues: {
           ":type": "MOVIE",
         },
-      })
+      }),
     );
 
     let movies = result.Items as Movie[];
@@ -96,16 +93,13 @@ movies.get("/search", async (c) => {
     if (query) {
       movies = movies.filter(
         (movie) =>
-          movie.title.toLowerCase().includes(query) ||
-          movie.synopsis.toLowerCase().includes(query)
+          movie.title.toLowerCase().includes(query) || movie.synopsis.toLowerCase().includes(query),
       );
     }
 
     // Filter by genre
     if (genre) {
-      movies = movies.filter((movie) =>
-        movie.genres.some((g) => g.toLowerCase().includes(genre))
-      );
+      movies = movies.filter((movie) => movie.genres.some((g) => g.toLowerCase().includes(genre)));
     }
 
     // Sort by rating
@@ -135,7 +129,7 @@ movies.get("/genres", async (c) => {
         ExpressionAttributeValues: {
           ":type": "MOVIE",
         },
-      })
+      }),
     );
 
     const movies = result.Items as Movie[];
@@ -167,7 +161,7 @@ movies.get("/:id", async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.MOVIES,
         Key: { id },
-      })
+      }),
     );
 
     if (!result.Item) {
@@ -197,7 +191,7 @@ movies.get("/:id/showtimes", async (c) => {
           ":movieId": id,
         },
         ScanIndexForward: true, // Ascending order (earliest first)
-      })
+      }),
     );
 
     return c.json({
@@ -218,16 +212,11 @@ movies.post("/", adminOnly(), async (c) => {
     const validationResult = createMovieSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json(
-        { success: false, error: validationResult.error.errors },
-        400
-      );
+      return c.json({ success: false, error: validationResult.error.errors }, 400);
     }
 
     const data = validationResult.data;
-    const movieId = `movie-${Date.now()}-${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const movieId = `movie-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     const movie: Movie = {
       id: movieId,
@@ -251,7 +240,7 @@ movies.post("/", adminOnly(), async (c) => {
       new PutCommand({
         TableName: TABLE_NAMES.MOVIES,
         Item: movie,
-      })
+      }),
     );
 
     return c.json(
@@ -260,7 +249,7 @@ movies.post("/", adminOnly(), async (c) => {
         data: movie,
         message: "Movie created successfully",
       },
-      201
+      201,
     );
   } catch (error) {
     console.error("[movies]", "Error creating movie:", error);
@@ -277,10 +266,7 @@ movies.put("/:id", adminOnly(), async (c) => {
     const validationResult = updateMovieSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json(
-        { success: false, error: validationResult.error.errors },
-        400
-      );
+      return c.json({ success: false, error: validationResult.error.errors }, 400);
     }
 
     const data = validationResult.data;
@@ -290,7 +276,7 @@ movies.put("/:id", adminOnly(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.MOVIES,
         Key: { id },
-      })
+      }),
     );
 
     if (!existingMovie.Item) {
@@ -323,7 +309,7 @@ movies.put("/:id", adminOnly(), async (c) => {
         ExpressionAttributeNames: expressionAttributeNames,
         ExpressionAttributeValues: expressionAttributeValues,
         ReturnValues: "ALL_NEW",
-      })
+      }),
     );
 
     // Fetch updated movie
@@ -331,7 +317,7 @@ movies.put("/:id", adminOnly(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.MOVIES,
         Key: { id },
-      })
+      }),
     );
 
     return c.json({
@@ -355,7 +341,7 @@ movies.delete("/:id", adminOnly(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.MOVIES,
         Key: { id },
-      })
+      }),
     );
 
     if (!existingMovie.Item) {
@@ -367,7 +353,7 @@ movies.delete("/:id", adminOnly(), async (c) => {
       new DeleteCommand({
         TableName: TABLE_NAMES.MOVIES,
         Key: { id },
-      })
+      }),
     );
 
     return c.json({

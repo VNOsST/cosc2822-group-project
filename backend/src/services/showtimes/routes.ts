@@ -43,14 +43,14 @@ showtimes.get("/", async (c) => {
           ExpressionAttributeValues: {
             ":roomId": roomId,
           },
-        })
+        }),
       );
     } else {
       // Scan all showtimes
       result = await docClient.send(
         new ScanCommand({
           TableName: TABLE_NAMES.SHOWTIMES,
-        })
+        }),
       );
     }
 
@@ -62,10 +62,7 @@ showtimes.get("/", async (c) => {
     }
 
     // Sort by start_time
-    items.sort(
-      (a, b) =>
-        new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
-    );
+    items.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
     return c.json({
       success: true,
@@ -92,7 +89,7 @@ showtimes.get("/:id", async (c) => {
         ExpressionAttributeValues: {
           ":showtimeId": id,
         },
-      })
+      }),
     );
 
     if (!result.Items || result.Items.length === 0) {
@@ -106,7 +103,7 @@ showtimes.get("/:id", async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: showtime.room_id, sk: "METADATA" },
-      })
+      }),
     );
 
     const room = roomResult.Item as Room | undefined;
@@ -160,23 +157,18 @@ showtimes.post("/", adminOnly(), async (c) => {
     const validationResult = createShowtimeSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json(
-        { success: false, error: validationResult.error.errors },
-        400
-      );
+      return c.json({ success: false, error: validationResult.error.errors }, 400);
     }
 
     const data = validationResult.data;
-    const showtimeId = `showtime-${Date.now()}-${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const showtimeId = `showtime-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     // Verify movie exists
     const movieResult = await docClient.send(
       new GetCommand({
         TableName: TABLE_NAMES.MOVIES,
         Key: { id: data.movie_id },
-      })
+      }),
     );
 
     if (!movieResult.Item) {
@@ -188,7 +180,7 @@ showtimes.post("/", adminOnly(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: data.room_id, sk: "METADATA" },
-      })
+      }),
     );
 
     if (!roomResult.Item) {
@@ -204,7 +196,7 @@ showtimes.post("/", adminOnly(), async (c) => {
         ExpressionAttributeValues: {
           ":roomId": data.room_id,
         },
-      })
+      }),
     );
 
     const startTime = new Date(data.start_time).getTime();
@@ -226,7 +218,7 @@ showtimes.post("/", adminOnly(), async (c) => {
           success: false,
           error: "Time conflict with existing showtime in this room",
         },
-        409
+        409,
       );
     }
 
@@ -244,7 +236,7 @@ showtimes.post("/", adminOnly(), async (c) => {
       new PutCommand({
         TableName: TABLE_NAMES.SHOWTIMES,
         Item: showtime,
-      })
+      }),
     );
 
     return c.json(
@@ -253,7 +245,7 @@ showtimes.post("/", adminOnly(), async (c) => {
         data: showtime,
         message: "Showtime created successfully",
       },
-      201
+      201,
     );
   } catch (error) {
     console.error("[showtimes]", "Error creating showtime:", error);
@@ -270,10 +262,7 @@ showtimes.put("/:id/schedule/:startTime", adminOnly(), async (c) => {
     const validationResult = updateShowtimeSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json(
-        { success: false, error: validationResult.error.errors },
-        400
-      );
+      return c.json({ success: false, error: validationResult.error.errors }, 400);
     }
 
     const data = validationResult.data;
@@ -286,7 +275,7 @@ showtimes.put("/:id/schedule/:startTime", adminOnly(), async (c) => {
           movie_id: id,
           start_time: decodeURIComponent(startTime),
         },
-      })
+      }),
     );
 
     if (!existingShowtime.Item) {
@@ -320,7 +309,7 @@ showtimes.put("/:id/schedule/:startTime", adminOnly(), async (c) => {
         UpdateExpression: `SET ${updateExpressions.join(", ")}`,
         ExpressionAttributeNames: expressionAttributeNames,
         ExpressionAttributeValues: expressionAttributeValues,
-      })
+      }),
     );
 
     // Fetch updated showtime
@@ -331,7 +320,7 @@ showtimes.put("/:id/schedule/:startTime", adminOnly(), async (c) => {
           movie_id: id,
           start_time: decodeURIComponent(startTime),
         },
-      })
+      }),
     );
 
     return c.json({
@@ -358,7 +347,7 @@ showtimes.delete("/:id/schedule/:startTime", adminOnly(), async (c) => {
           movie_id: id,
           start_time: decodeURIComponent(startTime),
         },
-      })
+      }),
     );
 
     if (!existingShowtime.Item) {
@@ -374,7 +363,7 @@ showtimes.delete("/:id/schedule/:startTime", adminOnly(), async (c) => {
         ExpressionAttributeValues: {
           ":showtimeId": (existingShowtime.Item as Showtime).showtime_id,
         },
-      })
+      }),
     );
 
     if (bookingsCheck.Items && bookingsCheck.Items.length > 0) {
@@ -383,7 +372,7 @@ showtimes.delete("/:id/schedule/:startTime", adminOnly(), async (c) => {
           success: false,
           error: "Cannot delete showtime with existing bookings",
         },
-        409
+        409,
       );
     }
 
@@ -395,7 +384,7 @@ showtimes.delete("/:id/schedule/:startTime", adminOnly(), async (c) => {
           movie_id: id,
           start_time: decodeURIComponent(startTime),
         },
-      })
+      }),
     );
 
     return c.json({

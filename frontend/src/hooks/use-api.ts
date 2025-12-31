@@ -51,7 +51,8 @@ export function useInvalidateQueries() {
   const queryClient = useQueryClient()
 
   return {
-    invalidate: (queryKey: string[]) => queryClient.invalidateQueries({ queryKey }),
+    invalidate: (queryKey: string[]) =>
+      queryClient.invalidateQueries({ queryKey }),
     invalidateAll: () => queryClient.invalidateQueries(),
   }
 }

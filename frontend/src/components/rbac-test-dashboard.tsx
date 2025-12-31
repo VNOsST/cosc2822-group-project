@@ -3,36 +3,36 @@
  * Demonstrates admin endpoints and role-based access control
  */
 
-import * as React from "react";
+import * as React from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/use-auth";
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useAuth } from '@/hooks/use-auth'
 import {
   useMovies,
   useCreateMovie,
   useDeleteMovie,
-} from "@/hooks/use-movies-api";
-import { useRooms, useCreateRoom, useDeleteRoom } from "@/hooks/use-rooms-api";
+} from '@/hooks/use-movies-api'
+import { useRooms, useCreateRoom, useDeleteRoom } from '@/hooks/use-rooms-api'
 import {
   useShowtimes,
   useCreateShowtime,
   useDeleteShowtime,
-} from "@/hooks/use-showtimes-api";
+} from '@/hooks/use-showtimes-api'
 
 export function RbacTestDashboard() {
-  const { user, isAuthenticated } = useAuth();
-  const isAdmin = user?.role === "Admins";
+  const { user, isAuthenticated } = useAuth()
+  const isAdmin = user?.role === 'Admins'
 
   if (!isAuthenticated) {
     return (
@@ -41,7 +41,7 @@ export function RbacTestDashboard() {
           Please log in to test RBAC functionality.
         </AlertDescription>
       </Alert>
-    );
+    )
   }
 
   return (
@@ -50,8 +50,8 @@ export function RbacTestDashboard() {
         <div>
           <h1 className="text-3xl font-bold">RBAC Testing Dashboard</h1>
           <p className="text-muted-foreground mt-2">
-            Current User: {user?.email} | Role:{" "}
-            {isAdmin ? "Admin" : "Regular User"}
+            Current User: {user?.email} | Role:{' '}
+            {isAdmin ? 'Admin' : 'Regular User'}
           </p>
         </div>
       </div>
@@ -85,27 +85,27 @@ export function RbacTestDashboard() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }
 
 function MoviesTestPanel({ isAdmin }: { isAdmin: boolean }) {
-  const { data: movies, isLoading, error } = useMovies();
-  const createMovie = useCreateMovie();
-  const deleteMovie = useDeleteMovie();
+  const { data: movies, isLoading, error } = useMovies()
+  const createMovie = useCreateMovie()
+  const deleteMovie = useDeleteMovie()
 
   const [formData, setFormData] = React.useState({
-    tmdb_id: "",
-    title: "",
-    synopsis: "",
-    runtime: "",
-    release_date: "",
-    poster_url: "",
-    genres: "",
-    cast: "",
-  });
+    tmdb_id: '',
+    title: '',
+    synopsis: '',
+    runtime: '',
+    release_date: '',
+    poster_url: '',
+    genres: '',
+    cast: '',
+  })
 
   const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       await createMovie.mutateAsync({
         tmdb_id: formData.tmdb_id,
@@ -114,36 +114,36 @@ function MoviesTestPanel({ isAdmin }: { isAdmin: boolean }) {
         runtime: Number.parseInt(formData.runtime),
         release_date: formData.release_date,
         poster_url: formData.poster_url,
-        genres: formData.genres.split(",").map((g) => g.trim()),
-        cast: formData.cast.split(",").map((c) => c.trim()),
+        genres: formData.genres.split(',').map((g) => g.trim()),
+        cast: formData.cast.split(',').map((c) => c.trim()),
         image_urls: [],
         tmdb_popularity_score: 0,
-      });
+      })
       // Reset form
       setFormData({
-        tmdb_id: "",
-        title: "",
-        synopsis: "",
-        runtime: "",
-        release_date: "",
-        poster_url: "",
-        genres: "",
-        cast: "",
-      });
+        tmdb_id: '',
+        title: '',
+        synopsis: '',
+        runtime: '',
+        release_date: '',
+        poster_url: '',
+        genres: '',
+        cast: '',
+      })
     } catch (err) {
-      console.error("Failed to create movie:", err);
+      console.error('Failed to create movie:', err)
     }
-  };
+  }
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this movie?")) {
+    if (window.confirm('Are you sure you want to delete this movie?')) {
       try {
-        await deleteMovie.mutateAsync(id);
+        await deleteMovie.mutateAsync(id)
       } catch (err) {
-        console.error("Failed to delete movie:", err);
+        console.error('Failed to delete movie:', err)
       }
     }
-  };
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -152,8 +152,8 @@ function MoviesTestPanel({ isAdmin }: { isAdmin: boolean }) {
           <CardTitle>Create Movie (Admin Only)</CardTitle>
           <CardDescription>
             {isAdmin
-              ? "Fill out the form to create a new movie"
-              : "This will fail with 403 Forbidden - Admin role required"}
+              ? 'Fill out the form to create a new movie'
+              : 'This will fail with 403 Forbidden - Admin role required'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -256,14 +256,14 @@ function MoviesTestPanel({ isAdmin }: { isAdmin: boolean }) {
               disabled={createMovie.isPending}
               className="w-full"
             >
-              {createMovie.isPending ? "Creating..." : "Create Movie"}
+              {createMovie.isPending ? 'Creating...' : 'Create Movie'}
             </Button>
             {createMovie.error && (
               <Alert variant="destructive">
                 <AlertDescription>
                   {createMovie.error instanceof Error
                     ? createMovie.error.message
-                    : "Failed to create movie"}
+                    : 'Failed to create movie'}
                 </AlertDescription>
               </Alert>
             )}
@@ -321,24 +321,24 @@ function MoviesTestPanel({ isAdmin }: { isAdmin: boolean }) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 function RoomsTestPanel({ isAdmin }: { isAdmin: boolean }) {
-  const { data: rooms, isLoading, error } = useRooms();
-  const createRoom = useCreateRoom();
-  const deleteRoom = useDeleteRoom();
+  const { data: rooms, isLoading, error } = useRooms()
+  const createRoom = useCreateRoom()
+  const deleteRoom = useDeleteRoom()
 
   const [formData, setFormData] = React.useState({
-    name: "",
-    capacity: "",
-    screen_type: "",
-    rows: "",
-    columns: "",
-  });
+    name: '',
+    capacity: '',
+    screen_type: '',
+    rows: '',
+    columns: '',
+  })
 
   const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       await createRoom.mutateAsync({
         name: formData.name,
@@ -348,28 +348,28 @@ function RoomsTestPanel({ isAdmin }: { isAdmin: boolean }) {
           rows: Number.parseInt(formData.rows),
           columns: Number.parseInt(formData.columns),
         },
-      });
+      })
       setFormData({
-        name: "",
-        capacity: "",
-        screen_type: "",
-        rows: "",
-        columns: "",
-      });
+        name: '',
+        capacity: '',
+        screen_type: '',
+        rows: '',
+        columns: '',
+      })
     } catch (err) {
-      console.error("Failed to create room:", err);
+      console.error('Failed to create room:', err)
     }
-  };
+  }
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this room?")) {
+    if (window.confirm('Are you sure you want to delete this room?')) {
       try {
-        await deleteRoom.mutateAsync(id);
+        await deleteRoom.mutateAsync(id)
       } catch (err) {
-        console.error("Failed to delete room:", err);
+        console.error('Failed to delete room:', err)
       }
     }
-  };
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -378,8 +378,8 @@ function RoomsTestPanel({ isAdmin }: { isAdmin: boolean }) {
           <CardTitle>Create Room (Admin Only)</CardTitle>
           <CardDescription>
             {isAdmin
-              ? "Fill out the form to create a new room"
-              : "This will fail with 403 Forbidden - Admin role required"}
+              ? 'Fill out the form to create a new room'
+              : 'This will fail with 403 Forbidden - Admin role required'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -448,14 +448,14 @@ function RoomsTestPanel({ isAdmin }: { isAdmin: boolean }) {
               disabled={createRoom.isPending}
               className="w-full"
             >
-              {createRoom.isPending ? "Creating..." : "Create Room"}
+              {createRoom.isPending ? 'Creating...' : 'Create Room'}
             </Button>
             {createRoom.error && (
               <Alert variant="destructive">
                 <AlertDescription>
                   {createRoom.error instanceof Error
                     ? createRoom.error.message
-                    : "Failed to create room"}
+                    : 'Failed to create room'}
                 </AlertDescription>
               </Alert>
             )}
@@ -495,7 +495,7 @@ function RoomsTestPanel({ isAdmin }: { isAdmin: boolean }) {
                       Capacity: {room.capacity} | Screen: {room.screen_type}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Layout: {room.layout_config.rows} rows ×{" "}
+                      Layout: {room.layout_config.rows} rows ×{' '}
                       {room.layout_config.columns} columns
                     </p>
                   </div>
@@ -514,24 +514,24 @@ function RoomsTestPanel({ isAdmin }: { isAdmin: boolean }) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 function ShowtimesTestPanel({ isAdmin }: { isAdmin: boolean }) {
-  const { data: showtimes, isLoading, error } = useShowtimes();
-  const createShowtime = useCreateShowtime();
-  const deleteShowtime = useDeleteShowtime();
+  const { data: showtimes, isLoading, error } = useShowtimes()
+  const createShowtime = useCreateShowtime()
+  const deleteShowtime = useDeleteShowtime()
 
   const [formData, setFormData] = React.useState({
-    movie_id: "",
-    room_id: "",
-    start_time: "",
-    endtime: "",
-    price: "",
-  });
+    movie_id: '',
+    room_id: '',
+    start_time: '',
+    endtime: '',
+    price: '',
+  })
 
   const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       await createShowtime.mutateAsync({
         movie_id: formData.movie_id,
@@ -539,28 +539,28 @@ function ShowtimesTestPanel({ isAdmin }: { isAdmin: boolean }) {
         start_time: formData.start_time,
         endtime: formData.endtime,
         price: Number.parseFloat(formData.price),
-      });
+      })
       setFormData({
-        movie_id: "",
-        room_id: "",
-        start_time: "",
-        endtime: "",
-        price: "",
-      });
+        movie_id: '',
+        room_id: '',
+        start_time: '',
+        endtime: '',
+        price: '',
+      })
     } catch (err) {
-      console.error("Failed to create showtime:", err);
+      console.error('Failed to create showtime:', err)
     }
-  };
+  }
 
   const handleDelete = async (movieId: string, startTime: string) => {
-    if (window.confirm("Are you sure you want to delete this showtime?")) {
+    if (window.confirm('Are you sure you want to delete this showtime?')) {
       try {
-        await deleteShowtime.mutateAsync({ movieId, startTime });
+        await deleteShowtime.mutateAsync({ movieId, startTime })
       } catch (err) {
-        console.error("Failed to delete showtime:", err);
+        console.error('Failed to delete showtime:', err)
       }
     }
-  };
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -569,8 +569,8 @@ function ShowtimesTestPanel({ isAdmin }: { isAdmin: boolean }) {
           <CardTitle>Create Showtime (Admin Only)</CardTitle>
           <CardDescription>
             {isAdmin
-              ? "Fill out the form to create a new showtime"
-              : "This will fail with 403 Forbidden - Admin role required"}
+              ? 'Fill out the form to create a new showtime'
+              : 'This will fail with 403 Forbidden - Admin role required'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -641,14 +641,14 @@ function ShowtimesTestPanel({ isAdmin }: { isAdmin: boolean }) {
               disabled={createShowtime.isPending}
               className="w-full"
             >
-              {createShowtime.isPending ? "Creating..." : "Create Showtime"}
+              {createShowtime.isPending ? 'Creating...' : 'Create Showtime'}
             </Button>
             {createShowtime.error && (
               <Alert variant="destructive">
                 <AlertDescription>
                   {createShowtime.error instanceof Error
                     ? createShowtime.error.message
-                    : "Failed to create showtime"}
+                    : 'Failed to create showtime'}
                 </AlertDescription>
               </Alert>
             )}
@@ -692,7 +692,7 @@ function ShowtimesTestPanel({ isAdmin }: { isAdmin: boolean }) {
                       Room: {showtime.room_id} | Price: ${showtime.price}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(showtime.start_time).toLocaleString()} -{" "}
+                      {new Date(showtime.start_time).toLocaleString()} -{' '}
                       {new Date(showtime.endtime).toLocaleString()}
                     </p>
                   </div>
@@ -713,5 +713,5 @@ function ShowtimesTestPanel({ isAdmin }: { isAdmin: boolean }) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

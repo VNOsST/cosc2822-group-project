@@ -39,7 +39,7 @@ rooms.get("/", async (c) => {
         ExpressionAttributeValues: {
           ":metadata": "METADATA",
         },
-      })
+      }),
     );
 
     return c.json({
@@ -62,7 +62,7 @@ rooms.get("/:id", async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: id, sk: "METADATA" },
-      })
+      }),
     );
 
     if (!result.Item) {
@@ -86,16 +86,11 @@ rooms.post("/", adminOnly(), async (c) => {
     const validationResult = createRoomSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json(
-        { success: false, error: validationResult.error.errors },
-        400
-      );
+      return c.json({ success: false, error: validationResult.error.errors }, 400);
     }
 
     const data = validationResult.data;
-    const roomId = `room-${Date.now()}-${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const roomId = `room-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     const room: Room = {
       room_id: roomId,
@@ -112,7 +107,7 @@ rooms.post("/", adminOnly(), async (c) => {
       new PutCommand({
         TableName: TABLE_NAMES.ROOMS,
         Item: room,
-      })
+      }),
     );
 
     return c.json(
@@ -121,7 +116,7 @@ rooms.post("/", adminOnly(), async (c) => {
         data: room,
         message: "Room created successfully",
       },
-      201
+      201,
     );
   } catch (error) {
     console.error("[rooms]", "Error creating room:", error);
@@ -138,10 +133,7 @@ rooms.put("/:id", adminOnly(), async (c) => {
     const validationResult = updateRoomSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json(
-        { success: false, error: validationResult.error.errors },
-        400
-      );
+      return c.json({ success: false, error: validationResult.error.errors }, 400);
     }
 
     const data = validationResult.data;
@@ -151,7 +143,7 @@ rooms.put("/:id", adminOnly(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: id, sk: "METADATA" },
-      })
+      }),
     );
 
     if (!existingRoom.Item) {
@@ -182,7 +174,7 @@ rooms.put("/:id", adminOnly(), async (c) => {
         UpdateExpression: `SET ${updateExpressions.join(", ")}`,
         ExpressionAttributeNames: expressionAttributeNames,
         ExpressionAttributeValues: expressionAttributeValues,
-      })
+      }),
     );
 
     // Fetch updated room
@@ -190,7 +182,7 @@ rooms.put("/:id", adminOnly(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: id, sk: "METADATA" },
-      })
+      }),
     );
 
     return c.json({
@@ -214,7 +206,7 @@ rooms.delete("/:id", adminOnly(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: id, sk: "METADATA" },
-      })
+      }),
     );
 
     if (!existingRoom.Item) {
@@ -230,7 +222,7 @@ rooms.delete("/:id", adminOnly(), async (c) => {
         ExpressionAttributeValues: {
           ":roomId": id,
         },
-      })
+      }),
     );
 
     if (showtimesCheck.Items && showtimesCheck.Items.length > 0) {
@@ -239,7 +231,7 @@ rooms.delete("/:id", adminOnly(), async (c) => {
           success: false,
           error: "Cannot delete room with existing showtimes",
         },
-        409
+        409,
       );
     }
 
@@ -248,7 +240,7 @@ rooms.delete("/:id", adminOnly(), async (c) => {
       new DeleteCommand({
         TableName: TABLE_NAMES.ROOMS,
         Key: { room_id: id, sk: "METADATA" },
-      })
+      }),
     );
 
     return c.json({
