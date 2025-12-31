@@ -17,8 +17,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as UserReviewsRouteImport } from './routes/user/reviews'
 import { Route as UserProfileRouteImport } from './routes/user/profile'
 import { Route as UserBookingsRouteImport } from './routes/user/bookings'
-import { Route as PublicShowtimesRouteImport } from './routes/public/showtimes'
-import { Route as PublicMoviesRouteImport } from './routes/public/movies'
 import { Route as AdminShowtimesRouteImport } from './routes/admin/showtimes'
 import { Route as AdminRoomsRouteImport } from './routes/admin/rooms'
 import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
@@ -26,6 +24,10 @@ import { Route as AdminRbacTestRouteImport } from './routes/admin/rbac-test'
 import { Route as AdminMoviesRouteImport } from './routes/admin/movies'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
+import { Route as PublicShowtimesIndexRouteImport } from './routes/public/showtimes.index'
+import { Route as PublicMoviesIndexRouteImport } from './routes/public/movies.index'
+import { Route as PublicShowtimesIdRouteImport } from './routes/public/showtimes.$id'
+import { Route as PublicMoviesIdRouteImport } from './routes/public/movies.$id'
 
 const UserRoute = UserRouteImport.update({
   id: '/user',
@@ -67,16 +69,6 @@ const UserBookingsRoute = UserBookingsRouteImport.update({
   path: '/bookings',
   getParentRoute: () => UserRoute,
 } as any)
-const PublicShowtimesRoute = PublicShowtimesRouteImport.update({
-  id: '/showtimes',
-  path: '/showtimes',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicMoviesRoute = PublicMoviesRouteImport.update({
-  id: '/movies',
-  path: '/movies',
-  getParentRoute: () => PublicRoute,
-} as any)
 const AdminShowtimesRoute = AdminShowtimesRouteImport.update({
   id: '/showtimes',
   path: '/showtimes',
@@ -112,6 +104,26 @@ const AdminBookingsRoute = AdminBookingsRouteImport.update({
   path: '/bookings',
   getParentRoute: () => AdminRoute,
 } as any)
+const PublicShowtimesIndexRoute = PublicShowtimesIndexRouteImport.update({
+  id: '/showtimes/',
+  path: '/showtimes/',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicMoviesIndexRoute = PublicMoviesIndexRouteImport.update({
+  id: '/movies/',
+  path: '/movies/',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicShowtimesIdRoute = PublicShowtimesIdRouteImport.update({
+  id: '/showtimes/$id',
+  path: '/showtimes/$id',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicMoviesIdRoute = PublicMoviesIdRouteImport.update({
+  id: '/movies/$id',
+  path: '/movies/$id',
+  getParentRoute: () => PublicRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -126,11 +138,13 @@ export interface FileRoutesByFullPath {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
-  '/public/movies': typeof PublicMoviesRoute
-  '/public/showtimes': typeof PublicShowtimesRoute
   '/user/bookings': typeof UserBookingsRoute
   '/user/profile': typeof UserProfileRoute
   '/user/reviews': typeof UserReviewsRoute
+  '/public/movies/$id': typeof PublicMoviesIdRoute
+  '/public/showtimes/$id': typeof PublicShowtimesIdRoute
+  '/public/movies': typeof PublicMoviesIndexRoute
+  '/public/showtimes': typeof PublicShowtimesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -145,11 +159,13 @@ export interface FileRoutesByTo {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
-  '/public/movies': typeof PublicMoviesRoute
-  '/public/showtimes': typeof PublicShowtimesRoute
   '/user/bookings': typeof UserBookingsRoute
   '/user/profile': typeof UserProfileRoute
   '/user/reviews': typeof UserReviewsRoute
+  '/public/movies/$id': typeof PublicMoviesIdRoute
+  '/public/showtimes/$id': typeof PublicShowtimesIdRoute
+  '/public/movies': typeof PublicMoviesIndexRoute
+  '/public/showtimes': typeof PublicShowtimesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -165,11 +181,13 @@ export interface FileRoutesById {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
-  '/public/movies': typeof PublicMoviesRoute
-  '/public/showtimes': typeof PublicShowtimesRoute
   '/user/bookings': typeof UserBookingsRoute
   '/user/profile': typeof UserProfileRoute
   '/user/reviews': typeof UserReviewsRoute
+  '/public/movies/$id': typeof PublicMoviesIdRoute
+  '/public/showtimes/$id': typeof PublicShowtimesIdRoute
+  '/public/movies/': typeof PublicMoviesIndexRoute
+  '/public/showtimes/': typeof PublicShowtimesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -186,11 +204,13 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
-    | '/public/movies'
-    | '/public/showtimes'
     | '/user/bookings'
     | '/user/profile'
     | '/user/reviews'
+    | '/public/movies/$id'
+    | '/public/showtimes/$id'
+    | '/public/movies'
+    | '/public/showtimes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -205,11 +225,13 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
-    | '/public/movies'
-    | '/public/showtimes'
     | '/user/bookings'
     | '/user/profile'
     | '/user/reviews'
+    | '/public/movies/$id'
+    | '/public/showtimes/$id'
+    | '/public/movies'
+    | '/public/showtimes'
   id:
     | '__root__'
     | '/'
@@ -224,11 +246,13 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
-    | '/public/movies'
-    | '/public/showtimes'
     | '/user/bookings'
     | '/user/profile'
     | '/user/reviews'
+    | '/public/movies/$id'
+    | '/public/showtimes/$id'
+    | '/public/movies/'
+    | '/public/showtimes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -297,20 +321,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserBookingsRouteImport
       parentRoute: typeof UserRoute
     }
-    '/public/showtimes': {
-      id: '/public/showtimes'
-      path: '/showtimes'
-      fullPath: '/public/showtimes'
-      preLoaderRoute: typeof PublicShowtimesRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/public/movies': {
-      id: '/public/movies'
-      path: '/movies'
-      fullPath: '/public/movies'
-      preLoaderRoute: typeof PublicMoviesRouteImport
-      parentRoute: typeof PublicRoute
-    }
     '/admin/showtimes': {
       id: '/admin/showtimes'
       path: '/showtimes'
@@ -360,6 +370,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBookingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/public/showtimes/': {
+      id: '/public/showtimes/'
+      path: '/showtimes'
+      fullPath: '/public/showtimes'
+      preLoaderRoute: typeof PublicShowtimesIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/public/movies/': {
+      id: '/public/movies/'
+      path: '/movies'
+      fullPath: '/public/movies'
+      preLoaderRoute: typeof PublicMoviesIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/public/showtimes/$id': {
+      id: '/public/showtimes/$id'
+      path: '/showtimes/$id'
+      fullPath: '/public/showtimes/$id'
+      preLoaderRoute: typeof PublicShowtimesIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/public/movies/$id': {
+      id: '/public/movies/$id'
+      path: '/movies/$id'
+      fullPath: '/public/movies/$id'
+      preLoaderRoute: typeof PublicMoviesIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
   }
 }
 
@@ -386,13 +424,17 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface PublicRouteChildren {
-  PublicMoviesRoute: typeof PublicMoviesRoute
-  PublicShowtimesRoute: typeof PublicShowtimesRoute
+  PublicMoviesIdRoute: typeof PublicMoviesIdRoute
+  PublicShowtimesIdRoute: typeof PublicShowtimesIdRoute
+  PublicMoviesIndexRoute: typeof PublicMoviesIndexRoute
+  PublicShowtimesIndexRoute: typeof PublicShowtimesIndexRoute
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
-  PublicMoviesRoute: PublicMoviesRoute,
-  PublicShowtimesRoute: PublicShowtimesRoute,
+  PublicMoviesIdRoute: PublicMoviesIdRoute,
+  PublicShowtimesIdRoute: PublicShowtimesIdRoute,
+  PublicMoviesIndexRoute: PublicMoviesIndexRoute,
+  PublicShowtimesIndexRoute: PublicShowtimesIndexRoute,
 }
 
 const PublicRouteWithChildren =
