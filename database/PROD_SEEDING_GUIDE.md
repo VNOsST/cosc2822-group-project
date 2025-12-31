@@ -21,6 +21,7 @@ bun install
 Create a temporary script or set environment variables in your terminal. For example, if your environment is `prod`:
 
 ### Windows (PowerShell)
+
 ```powershell
 $env:DYNAMODB_REGION = "us-east-1" # Replace with your region
 $env:MOVIES_TABLE = "cinecloud-movies-prod"
@@ -30,10 +31,11 @@ $env:ROOMS_TABLE = "cinecloud-rooms-prod"
 $env:RATINGS_TABLE = "cinecloud-ratings-prod"
 # The following tables are optional/extra in the seed script:
 $env:USERS_TABLE = "Users" # Or actual prod name if it exists
-$env:NOTIFICATIONS_TABLE = "Notifications" 
+$env:NOTIFICATIONS_TABLE = "Notifications"
 ```
 
 ### macOS / Linux
+
 ```bash
 export DYNAMODB_REGION="us-east-1"
 export MOVIES_TABLE="cinecloud-movies-prod"

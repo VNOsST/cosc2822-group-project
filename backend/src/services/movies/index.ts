@@ -22,7 +22,7 @@ app.use(
     origin: "*",
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 // Health check
@@ -42,7 +42,7 @@ app.onError((err, c) => {
       message: err.message,
       service: "movies",
     },
-    500
+    500,
   );
 });
 
@@ -55,7 +55,7 @@ app.notFound((c) => {
       path: c.req.path,
       service: "movies",
     },
-    404
+    404,
   );
 });
 

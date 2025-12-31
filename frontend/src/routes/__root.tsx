@@ -4,47 +4,49 @@ import {
   Outlet,
   Scripts,
   createRootRoute,
-} from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import amplifyCss from "@aws-amplify/ui-react/styles.css?url";
-import type { ReactNode } from "react";
-import appCss from "@/styles.css?url";
-import { configureAmplify } from "@/lib/amplify-config";
-import { AuthProvider } from "@/lib/auth-context";
-import { Toaster } from "@/components/ui/sonner";
-import { QueryClient } from "@tanstack/react-query";
-import { QueryClientProvider } from "@tanstack/react-query";
+} from '@tanstack/react-router'
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import amplifyCss from '@aws-amplify/ui-react/styles.css?url'
+import type { ReactNode } from 'react'
+import appCss from '@/styles.css?url'
+import { configureAmplify } from '@/lib/amplify-config'
+import { AuthProvider } from '@/lib/auth-context'
+import { Toaster } from '@/components/ui/sonner'
+import { QueryClient } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 
 // Initialize Amplify
-configureAmplify();
+configureAmplify()
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "CineCloud" },
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { title: 'CineCloud' },
     ],
     links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "stylesheet", href: amplifyCss },
+      { rel: 'stylesheet', href: appCss },
+      { rel: 'stylesheet', href: amplifyCss },
     ],
   }),
   component: RootComponent,
-});
+})
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 10000),
+      retryDelay: (attemptIndex) =>
+        Math.min(1000 * Math.pow(2, attemptIndex), 10000),
     },
     mutations: {
       retry: 2,
-      retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 10000),
+      retryDelay: (attemptIndex) =>
+        Math.min(1000 * Math.pow(2, attemptIndex), 10000),
     },
   },
-});
+})
 
 function RootComponent() {
   return (
@@ -59,7 +61,7 @@ function RootComponent() {
         </QueryClientProvider>
       </AuthProvider>
     </RootDocument>
-  );
+  )
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
@@ -73,5 +75,5 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <Scripts />
       </body>
     </html>
-  );
+  )
 }

@@ -39,15 +39,13 @@ ratings.get("/movie/:movieId", async (c) => {
         ExpressionAttributeValues: {
           ":movieId": movieId,
         },
-      })
+      }),
     );
 
     // Calculate average rating
     const items = result.Items as MovieRating[];
     const avgRating =
-      items.length > 0
-        ? items.reduce((sum, r) => sum + r.rating, 0) / items.length
-        : 0;
+      items.length > 0 ? items.reduce((sum, r) => sum + r.rating, 0) / items.length : 0;
 
     return c.json({
       success: true,
@@ -74,7 +72,7 @@ ratings.get("/user/:userId", async (c) => {
         ExpressionAttributeValues: {
           ":userId": userId,
         },
-      })
+      }),
     );
 
     return c.json({
@@ -95,16 +93,11 @@ ratings.post("/", requireAuth(), async (c) => {
     const validationResult = createRatingSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json(
-        { success: false, error: validationResult.error.errors },
-        400
-      );
+      return c.json({ success: false, error: validationResult.error.errors }, 400);
     }
 
     const data = validationResult.data;
-    const ratingId = `rating-${Date.now()}-${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const ratingId = `rating-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     const rating: MovieRating = {
       id: ratingId,
@@ -119,7 +112,7 @@ ratings.post("/", requireAuth(), async (c) => {
       new PutCommand({
         TableName: TABLE_NAMES.MOVIE_RATINGS,
         Item: rating,
-      })
+      }),
     );
 
     // Update movie's average rating (simplified - in production, use a more robust approach)
@@ -132,12 +125,11 @@ ratings.post("/", requireAuth(), async (c) => {
         ExpressionAttributeValues: {
           ":movieId": data.movie_id,
         },
-      })
+      }),
     );
 
     const allRatings = movieRatings.Items as MovieRating[];
-    const newAvg =
-      allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
+    const newAvg = allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
 
     await docClient.send(
       new UpdateCommand({
@@ -148,7 +140,7 @@ ratings.post("/", requireAuth(), async (c) => {
           ":rating": Math.round(newAvg * 10) / 10,
           ":updated": new Date().toISOString(),
         },
-      })
+      }),
     );
 
     return c.json(
@@ -157,7 +149,7 @@ ratings.post("/", requireAuth(), async (c) => {
         data: rating,
         message: "Rating submitted successfully",
       },
-      201
+      201,
     );
   } catch (error) {
     console.error("[ratings]", "Error creating rating:", error);
@@ -174,10 +166,7 @@ ratings.put("/:id", requireAuth(), async (c) => {
     const validationResult = updateRatingSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json(
-        { success: false, error: validationResult.error.errors },
-        400
-      );
+      return c.json({ success: false, error: validationResult.error.errors }, 400);
     }
 
     const data = validationResult.data;
@@ -187,7 +176,7 @@ ratings.put("/:id", requireAuth(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.MOVIE_RATINGS,
         Key: { id },
-      })
+      }),
     );
 
     if (!existingRating.Item) {
@@ -220,7 +209,7 @@ ratings.put("/:id", requireAuth(), async (c) => {
         UpdateExpression: `SET ${updateExpressions.join(", ")}`,
         ExpressionAttributeNames: expressionAttributeNames,
         ExpressionAttributeValues: expressionAttributeValues,
-      })
+      }),
     );
 
     // Recalculate movie average rating if rating value changed
@@ -233,7 +222,7 @@ ratings.put("/:id", requireAuth(), async (c) => {
           ExpressionAttributeValues: {
             ":movieId": oldRating.movie_id,
           },
-        })
+        }),
       );
 
       const allRatings = movieRatings.Items as MovieRating[];
@@ -254,7 +243,7 @@ ratings.put("/:id", requireAuth(), async (c) => {
             ":rating": Math.round(newAvg * 10) / 10,
             ":updated": new Date().toISOString(),
           },
-        })
+        }),
       );
     }
 
@@ -263,7 +252,7 @@ ratings.put("/:id", requireAuth(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.MOVIE_RATINGS,
         Key: { id },
-      })
+      }),
     );
 
     return c.json({
@@ -287,7 +276,7 @@ ratings.delete("/:id", requireAuth(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.MOVIE_RATINGS,
         Key: { id },
-      })
+      }),
     );
 
     if (!existingRating.Item) {
@@ -301,7 +290,7 @@ ratings.delete("/:id", requireAuth(), async (c) => {
       new DeleteCommand({
         TableName: TABLE_NAMES.MOVIE_RATINGS,
         Key: { id },
-      })
+      }),
     );
 
     // Recalculate movie average rating
@@ -313,7 +302,7 @@ ratings.delete("/:id", requireAuth(), async (c) => {
         ExpressionAttributeValues: {
           ":movieId": rating.movie_id,
         },
-      })
+      }),
     );
 
     const allRatings = movieRatings.Items as MovieRating[];
@@ -331,7 +320,7 @@ ratings.delete("/:id", requireAuth(), async (c) => {
           ":rating": Math.round(newAvg * 10) / 10,
           ":updated": new Date().toISOString(),
         },
-      })
+      }),
     );
 
     return c.json({
@@ -357,7 +346,7 @@ ratings.get("/movie/:movieId/stats", async (c) => {
         ExpressionAttributeValues: {
           ":movieId": movieId,
         },
-      })
+      }),
     );
 
     const ratings = result.Items as MovieRating[];
@@ -397,10 +386,7 @@ ratings.get("/movie/:movieId/stats", async (c) => {
     });
   } catch (error) {
     console.error("[ratings]", "Error fetching rating statistics:", error);
-    return c.json(
-      { success: false, error: "Failed to fetch rating statistics" },
-      500
-    );
+    return c.json({ success: false, error: "Failed to fetch rating statistics" }, 500);
   }
 });
 

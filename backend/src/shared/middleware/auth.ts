@@ -3,11 +3,11 @@
  * Provides elegant RBAC for protecting routes with Cognito JWT tokens
  */
 
-import { createMiddleware } from 'hono/factory';
-import type { Context, Next } from 'hono';
+import { createMiddleware } from "hono/factory";
+import type { Context, Next } from "hono";
 
 // Role types matching Cognito groups
-export type UserRole = 'Admins' | 'Users';
+export type UserRole = "Admins" | "Users";
 
 // User context from Cognito JWT (passed by API Gateway)
 export interface AuthUser {
@@ -27,7 +27,7 @@ export function getAuthUser(c: Context): AuthUser | null {
 
   if (!claims) return null;
 
-  const groups = claims['cognito:groups'];
+  const groups = claims["cognito:groups"];
   return {
     sub: claims.sub,
     email: claims.email,
@@ -51,14 +51,14 @@ export const requireAuth = () => {
       return c.json(
         {
           success: false,
-          error: 'Authentication required',
+          error: "Authentication required",
         },
         401,
       );
     }
 
     // Attach user to context for downstream handlers
-    c.set('user', user);
+    c.set("user", user);
     await next();
   });
 };
@@ -84,7 +84,7 @@ export const requireRole = (roles: UserRole | UserRole[]) => {
       return c.json(
         {
           success: false,
-          error: 'Authentication required',
+          error: "Authentication required",
         },
         401,
       );
@@ -96,14 +96,14 @@ export const requireRole = (roles: UserRole | UserRole[]) => {
       return c.json(
         {
           success: false,
-          error: 'Insufficient permissions',
+          error: "Insufficient permissions",
           required: allowedRoles,
         },
         403,
       );
     }
 
-    c.set('user', user);
+    c.set("user", user);
     await next();
   });
 };
@@ -114,7 +114,7 @@ export const requireRole = (roles: UserRole | UserRole[]) => {
  * @example
  * app.delete('/movies/:id', adminOnly(), (c) => { ... })
  */
-export const adminOnly = () => requireRole('Admins');
+export const adminOnly = () => requireRole("Admins");
 
 /**
  * Helper: Get typed user from context
@@ -127,7 +127,7 @@ export const adminOnly = () => requireRole('Admins');
  * })
  */
 export function getUser(c: Context): AuthUser {
-  const user = c.get('user') as AuthUser;
-  if (!user) throw new Error('User not found - did you forget requireAuth()?');
+  const user = c.get("user") as AuthUser;
+  if (!user) throw new Error("User not found - did you forget requireAuth()?");
   return user;
 }
