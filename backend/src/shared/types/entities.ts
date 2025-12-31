@@ -97,3 +97,9 @@ export interface Notification {
   message: string;
   sent_at: string;
 }
+
+// Extended types with nested entities
+export interface ShowtimeWithDetails extends Showtime {
+  movie: Movie;
+  room: Room;
+}

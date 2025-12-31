@@ -97,12 +97,12 @@ function PublicShowtimesPage() {
                             params={{ id: showtime.movie_id }}
                             className="hover:text-amber-400 transition-colors"
                           >
-                            Movie ID: {showtime.movie_id}
+                            {showtime.movie?.title || 'Unknown Movie'}
                           </Link>
                         </CardTitle>
                         <div className="flex items-center gap-2 text-sm text-slate-400">
                           <MapPin className="h-4 w-4" />
-                          Room: {showtime.room_id}
+                          {showtime.room?.name || `Room ${showtime.room_id}`}
                         </div>
                       </CardHeader>
                       <CardContent>
@@ -115,8 +115,8 @@ function PublicShowtimesPage() {
                               asChild
                             >
                               <Link
-                                to="/login"
-                                search={{ redirect: '/user/bookings' }}
+                                to="/public/showtimes/$id"
+                                params={{ id: showtime.showtime_id }}
                               >
                                 <Clock className="mr-1 h-3 w-3" />
                                 {new Date(showtime.start_time).toLocaleTimeString(

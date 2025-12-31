@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useShowtime } from '@/hooks/use-showtimes-api'
-import { useMovie } from '@/hooks/use-movies-api'
 
 export const Route = createFileRoute('/public/showtimes/$id')({
   component: ShowtimeDetailPage,
@@ -22,11 +21,10 @@ function ShowtimeDetailPage() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
   const { data: showtime, isLoading, error } = useShowtime(id)
-  const {
-    data: movie,
-    isLoading: movieLoading,
-    error: movieError,
-  } = useMovie(showtime?.movie_id || '')
+  
+  // Movie and room are now nested in the showtime response
+  const movie = showtime?.movie
+  const room = showtime?.room
 
   if (isLoading) {
     return (
@@ -133,7 +131,7 @@ function ShowtimeDetailPage() {
                   <div>
                     <p className="text-xs text-slate-400">Room</p>
                     <p className="font-semibold text-white">
-                      {showtime.room_id}
+                      {room?.name || `Room ${showtime.room_id}`}
                     </p>
                   </div>
                 </div>
@@ -174,19 +172,6 @@ function ShowtimeDetailPage() {
           </Card>
 
           {/* Movie Details */}
-          {movieLoading && (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
-            </div>
-          )}
-
-          {movieError && (
-            <Card className="border-slate-700/50 bg-slate-800/50">
-              <CardContent className="py-8 text-center">
-                <p className="text-slate-400">Failed to load movie details</p>
-              </CardContent>
-            </Card>
-          )}
 
           {movie && (
             <Card className="border-slate-700/50 bg-slate-800/50">
@@ -269,7 +254,7 @@ function ShowtimeDetailPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Room</span>
-                  <span className="text-white">{showtime.room_id}</span>
+                  <span className="text-white">{room?.name || `Room ${showtime.room_id}`}</span>
                 </div>
                 <div className="flex justify-between text-sm font-semibold">
                   <span className="text-slate-400">Price</span>

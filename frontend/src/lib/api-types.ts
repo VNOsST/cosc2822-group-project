@@ -46,6 +46,11 @@ export interface Showtime {
   occupied_seats: string[]
 }
 
+export interface ShowtimeWithDetails extends Showtime {
+  movie: Movie
+  room: Room
+}
+
 export interface Booking {
   user_email: string
   booking_id: string

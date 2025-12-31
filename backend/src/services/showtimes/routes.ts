@@ -10,7 +10,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
 import { adminOnly } from "../../shared/middleware";
-import type { Showtime, Room } from "../../shared/types/entities";
+import type { Showtime, Room, Movie, ShowtimeWithDetails } from "../../shared/types/entities";
 
 const showtimes = new Hono();
 
@@ -64,10 +64,37 @@ showtimes.get("/", async (c) => {
     // Sort by start_time
     items.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
+    // Fetch movie and room details for each showtime
+    const showtimesWithDetails: ShowtimeWithDetails[] = await Promise.all(
+      items.map(async (showtime) => {
+        // Fetch movie details
+        const movieResult = await docClient.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.MOVIES,
+            Key: { id: showtime.movie_id },
+          }),
+        );
+
+        // Fetch room details
+        const roomResult = await docClient.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.ROOMS,
+            Key: { room_id: showtime.room_id, sk: "METADATA" },
+          }),
+        );
+
+        return {
+          ...showtime,
+          movie: movieResult.Item as Movie,
+          room: roomResult.Item as Room,
+        };
+      }),
+    );
+
     return c.json({
       success: true,
-      data: items,
-      count: items.length,
+      data: showtimesWithDetails,
+      count: showtimesWithDetails.length,
     });
   } catch (error) {
     console.error("[showtimes]", "Error fetching showtimes:", error);
@@ -98,6 +125,14 @@ showtimes.get("/:id", async (c) => {
 
     const showtime = result.Items[0] as Showtime;
 
+    // Fetch movie details
+    const movieResult = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAMES.MOVIES,
+        Key: { id: showtime.movie_id },
+      }),
+    );
+
     // Fetch room details for seat layout
     const roomResult = await docClient.send(
       new GetCommand({
@@ -106,6 +141,7 @@ showtimes.get("/:id", async (c) => {
       }),
     );
 
+    const movie = movieResult.Item as Movie | undefined;
     const room = roomResult.Item as Room | undefined;
 
     // Generate seat map
@@ -140,6 +176,7 @@ showtimes.get("/:id", async (c) => {
       success: true,
       data: {
         ...showtime,
+        movie,
         room,
         seatMap,
       },

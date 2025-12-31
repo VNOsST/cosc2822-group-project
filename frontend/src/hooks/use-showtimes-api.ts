@@ -5,7 +5,7 @@
 
 import { useApiQuery, useApiMutation, useInvalidateQueries } from './use-api'
 import { apiClient } from '@/lib/api-client'
-import type { Showtime } from '@/lib/api-types'
+import type { Showtime, ShowtimeWithDetails } from '@/lib/api-types'
 
 const QUERY_KEYS = {
   all: ['showtimes'] as const,
@@ -32,11 +32,11 @@ export function useShowtimes(params?: { date?: string; room_id?: string }) {
     queryKey = ['showtimes']
   }
 
-  return useApiQuery<Showtime[]>(queryKey, url)
+  return useApiQuery<ShowtimeWithDetails[]>(queryKey, url)
 }
 
 export function useShowtime(id: string) {
-  return useApiQuery<Showtime>([...QUERY_KEYS.detail(id)], `/showtimes/${id}`, {
+  return useApiQuery<ShowtimeWithDetails>([...QUERY_KEYS.detail(id)], `/showtimes/${id}`, {
     enabled: !!id,
   })
 }
