@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { AlertTriangle, Copy, Pencil, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,23 +13,64 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { movies, rooms, showtimes } from '@/data/dummy-data'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useShowtimes, useDeleteShowtime } from '@/hooks/use-showtimes-api'
+import { CreateShowtimeDialog } from '@/components/showtimes/create-showtime-dialog'
+import { CreateBulkShowtimesDialog } from '@/components/showtimes/create-bulk-showtimes-dialog'
+import { EditShowtimeDialog } from '@/components/showtimes/edit-showtime-dialog'
+import { useState } from 'react'
 
 export const Route = createFileRoute('/admin/showtimes')({
   component: ShowtimesPage,
 })
 
 function ShowtimesPage() {
-  const handleEdit = (id: string) => {
-    toast.info(`Edit showtime ${id} - Feature coming soon`)
+  const { data: showtimes, isLoading } = useShowtimes()
+  const deleteShowtime = useDeleteShowtime()
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [showtimeToDelete, setShowtimeToDelete] = useState<{
+    movieId: string
+    startTime: string
+    title: string
+  } | null>(null)
+
+  const handleDeleteClick = (movieId: string, startTime: string, title: string) => {
+    setShowtimeToDelete({ movieId, startTime, title })
+    setDeleteDialogOpen(true)
   }
 
-  const handleDelete = (id: string) => {
-    toast.info(`Delete showtime ${id} - Feature coming soon`)
+  const handleDeleteConfirm = async () => {
+    if (!showtimeToDelete) return
+
+    try {
+      await deleteShowtime.mutateAsync({
+        movieId: showtimeToDelete.movieId,
+        startTime: showtimeToDelete.startTime,
+      })
+      toast.success('Showtime deleted successfully')
+      setDeleteDialogOpen(false)
+      setShowtimeToDelete(null)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete showtime')
+    }
   }
 
-  const handleBulkCreate = () => {
-    toast.info('Bulk schedule creation - Feature coming soon')
+  // Calculate available seats
+  const getAvailableSeats = (showtime: any) => {
+    if (!showtime.room) return 0
+    const totalSeats = showtime.room.capacity
+    const occupiedSeats = showtime.occupied_seats?.length || 0
+    return totalSeats - occupiedSeats
   }
 
   return (
@@ -42,14 +83,8 @@ function ShowtimesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleBulkCreate}>
-            <Copy className="mr-2 h-4 w-4" />
-            Bulk Create
-          </Button>
-          <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Showtime
-          </Button>
+          <CreateBulkShowtimesDialog />
+          <CreateShowtimeDialog />
         </div>
       </div>
 
@@ -69,74 +104,123 @@ function ShowtimesPage() {
           <CardTitle>All Showtimes</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Movie</TableHead>
-                <TableHead>Room</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Available</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {showtimes.map((showtime) => {
-                const movie = movies.find((m) => m.id === showtime.movieId)
-                const room = rooms.find((r) => r.id === showtime.roomId)
-                const startDate = new Date(showtime.startTime)
-                const endDate = new Date(showtime.endTime)
-
-                return (
-                  <TableRow key={showtime.id}>
-                    <TableCell className="font-medium">
-                      {movie?.title}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{room?.name}</Badge>
-                    </TableCell>
-                    <TableCell>{format(startDate, 'MMM d, yyyy')}</TableCell>
-                    <TableCell>
-                      {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
-                    </TableCell>
-                    <TableCell>${showtime.price}</TableCell>
-                    <TableCell>
-                      <span
-                        className={
-                          showtime.availableSeats < 50
-                            ? 'text-red-500'
-                            : showtime.availableSeats < 100
-                              ? 'text-amber-500'
-                              : 'text-green-500'
-                        }
-                      >
-                        {showtime.availableSeats} seats
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(showtime.id)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(showtime.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </TableCell>
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : !showtimes || showtimes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-lg font-medium text-muted-foreground">
+                No showtimes scheduled
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Create your first showtime to get started
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Movie</TableHead>
+                    <TableHead>Room</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Available</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {showtimes.map((showtime) => {
+                    const startDate = new Date(showtime.start_time)
+                    const endDate = new Date(showtime.endtime)
+                    const availableSeats = getAvailableSeats(showtime)
+                    const totalSeats = showtime.room?.capacity || 0
+                    const occupancyRate = totalSeats > 0 ? (totalSeats - availableSeats) / totalSeats : 0
+
+                    return (
+                      <TableRow key={showtime.showtime_id}>
+                        <TableCell className="font-medium">
+                          {showtime.movie?.title || 'Unknown Movie'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{showtime.room?.name || 'Unknown Room'}</Badge>
+                        </TableCell>
+                        <TableCell>{format(startDate, 'MMM d, yyyy')}</TableCell>
+                        <TableCell>
+                          {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
+                        </TableCell>
+                        <TableCell>${showtime.price.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <span
+                            className={
+                              occupancyRate > 0.8
+                                ? 'text-red-500'
+                                : occupancyRate > 0.5
+                                  ? 'text-amber-500'
+                                  : 'text-green-500'
+                            }
+                          >
+                            {availableSeats} / {totalSeats} seats
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <EditShowtimeDialog showtime={showtime} />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                handleDeleteClick(
+                                  showtime.movie_id,
+                                  showtime.start_time,
+                                  showtime.movie?.title || 'Unknown Movie'
+                                )
+                              }
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Showtime</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the showtime for{' '}
+              <strong>{showtimeToDelete?.title}</strong>? This action cannot be undone.
+              {deleteShowtime.isPending && ' Deleting...'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteShowtime.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteShowtime.isPending}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {deleteShowtime.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
+

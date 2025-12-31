@@ -19,7 +19,6 @@ const createShowtimeSchema = z.object({
   movie_id: z.string(),
   room_id: z.string(),
   start_time: z.string(),
-  endtime: z.string(),
   price: z.number().positive(),
 });
 
@@ -212,6 +211,8 @@ showtimes.post("/", adminOnly(), async (c) => {
       return c.json({ success: false, error: "Movie not found" }, 404);
     }
 
+    const movie = movieResult.Item as Movie;
+
     // Verify room exists
     const roomResult = await docClient.send(
       new GetCommand({
@@ -223,6 +224,11 @@ showtimes.post("/", adminOnly(), async (c) => {
     if (!roomResult.Item) {
       return c.json({ success: false, error: "Room not found" }, 404);
     }
+
+    // Calculate end time based on movie runtime
+    const startTime = new Date(data.start_time);
+    const endTime = new Date(startTime.getTime() + movie.runtime * 60000); // runtime is in minutes
+    const endTimeISO = endTime.toISOString();
 
     // Check for time conflicts in the same room
     const conflictCheck = await docClient.send(
@@ -236,16 +242,16 @@ showtimes.post("/", adminOnly(), async (c) => {
       }),
     );
 
-    const startTime = new Date(data.start_time).getTime();
-    const endTime = new Date(data.endtime).getTime();
+    const startTimeMs = startTime.getTime();
+    const endTimeMs = endTime.getTime();
 
     const hasConflict = (conflictCheck.Items || []).some((item) => {
       const existingStart = new Date(item.start_time).getTime();
       const existingEnd = new Date(item.endtime).getTime();
       return (
-        (startTime >= existingStart && startTime < existingEnd) ||
-        (endTime > existingStart && endTime <= existingEnd) ||
-        (startTime <= existingStart && endTime >= existingEnd)
+        (startTimeMs >= existingStart && startTimeMs < existingEnd) ||
+        (endTimeMs > existingStart && endTimeMs <= existingEnd) ||
+        (startTimeMs <= existingStart && endTimeMs >= existingEnd)
       );
     });
 
@@ -264,7 +270,7 @@ showtimes.post("/", adminOnly(), async (c) => {
       start_time: data.start_time,
       showtime_id: showtimeId,
       room_id: data.room_id,
-      endtime: data.endtime,
+      endtime: endTimeISO,
       price: data.price,
       occupied_seats: [],
     };
@@ -287,6 +293,212 @@ showtimes.post("/", adminOnly(), async (c) => {
   } catch (error) {
     console.error("[showtimes]", "Error creating showtime:", error);
     return c.json({ success: false, error: "Failed to create showtime" }, 500);
+  }
+});
+
+// POST /showtimes/bulk - Create multiple showtimes (admin)
+showtimes.post("/bulk", adminOnly(), async (c) => {
+  try {
+    const body = await c.req.json();
+    
+    // Validate that body is an array
+    if (!Array.isArray(body)) {
+      return c.json({ success: false, error: "Request body must be an array of showtimes" }, 400);
+    }
+
+    // Validate each showtime
+    const validationResults = body.map(item => createShowtimeSchema.safeParse(item));
+    const hasErrors = validationResults.some(result => !result.success);
+    
+    if (hasErrors) {
+      const errors = validationResults
+        .map((result, index) => result.success ? null : { index, errors: result.error.errors })
+        .filter(Boolean);
+      return c.json({ success: false, error: "Validation failed", details: errors }, 400);
+    }
+
+    const showtimesData = validationResults.map(result => result.data!);
+
+    // Verify all movies and rooms exist
+    const movieIds = [...new Set(showtimesData.map(s => s.movie_id))];
+    const roomIds = [...new Set(showtimesData.map(s => s.room_id))];
+
+    // Check movies in parallel
+    const movieChecks = await Promise.all(
+      movieIds.map(id => 
+        docClient.send(new GetCommand({
+          TableName: TABLE_NAMES.MOVIES,
+          Key: { id },
+        }))
+      )
+    );
+
+    const missingMovies = movieIds.filter((id, index) => !movieChecks[index].Item);
+    if (missingMovies.length > 0) {
+      return c.json({ 
+        success: false, 
+        error: `Movies not found: ${missingMovies.join(", ")}` 
+      }, 404);
+    }
+
+    // Check rooms in parallel
+    const roomChecks = await Promise.all(
+      roomIds.map(id => 
+        docClient.send(new GetCommand({
+          TableName: TABLE_NAMES.ROOMS,
+          Key: { room_id: id, sk: "METADATA" },
+        }))
+      )
+    );
+
+    const missingRooms = roomIds.filter((id, index) => !roomChecks[index].Item);
+    if (missingRooms.length > 0) {
+      return c.json({ 
+        success: false, 
+        error: `Rooms not found: ${missingRooms.join(", ")}` 
+      }, 404);
+    }
+
+    // Get existing showtimes for each room to check conflicts
+    const existingShowtimesByRoom = new Map<string, Array<{ start_time: string; endtime: string }>>();
+    
+    for (const roomId of roomIds) {
+      const result = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAMES.SHOWTIMES,
+          IndexName: "room_id-start_time-index",
+          KeyConditionExpression: "room_id = :roomId",
+          ExpressionAttributeValues: {
+            ":roomId": roomId,
+          },
+        }),
+      );
+      existingShowtimesByRoom.set(
+        roomId, 
+        (result.Items || []).map(item => ({ 
+          start_time: item.start_time, 
+          endtime: item.endtime 
+        }))
+      );
+    }
+
+    // Get movie data to calculate end times
+    const movieDataMap = new Map<string, Movie>();
+    movieChecks.forEach((check, index) => {
+      if (check.Item) {
+        movieDataMap.set(movieIds[index], check.Item as Movie);
+      }
+    });
+
+    // Calculate end times for each showtime
+    const showtimesWithEndTimes = showtimesData.map(data => {
+      const movie = movieDataMap.get(data.movie_id)!;
+      const startTime = new Date(data.start_time);
+      const endTime = new Date(startTime.getTime() + movie.runtime * 60000);
+      return {
+        ...data,
+        endtime: endTime.toISOString(),
+      };
+    });
+
+    // Check for conflicts (both with existing and within the batch)
+    const conflicts: Array<{ index: number; reason: string }> = [];
+    const newShowtimesByRoom = new Map<string, Array<{ start_time: string; endtime: string }>>();
+
+    showtimesWithEndTimes.forEach((data, index) => {
+      const startTime = new Date(data.start_time).getTime();
+      const endTime = new Date(data.endtime).getTime();
+
+      // Check against existing showtimes
+      const existingShowtimes = existingShowtimesByRoom.get(data.room_id) || [];
+      const hasExistingConflict = existingShowtimes.some(existing => {
+        const existingStart = new Date(existing.start_time).getTime();
+        const existingEnd = new Date(existing.endtime).getTime();
+        return (
+          (startTime >= existingStart && startTime < existingEnd) ||
+          (endTime > existingStart && endTime <= existingEnd) ||
+          (startTime <= existingStart && endTime >= existingEnd)
+        );
+      });
+
+      if (hasExistingConflict) {
+        conflicts.push({ index, reason: "Conflicts with existing showtime" });
+        return;
+      }
+
+      // Check against new showtimes in the same batch
+      const newShowtimes = newShowtimesByRoom.get(data.room_id) || [];
+      const hasNewConflict = newShowtimes.some(newShowtime => {
+        const newStart = new Date(newShowtime.start_time).getTime();
+        const newEnd = new Date(newShowtime.endtime).getTime();
+        return (
+          (startTime >= newStart && startTime < newEnd) ||
+          (endTime > newStart && endTime <= newEnd) ||
+          (startTime <= newStart && endTime >= newEnd)
+        );
+      });
+
+      if (hasNewConflict) {
+        conflicts.push({ index, reason: "Conflicts with another showtime in this batch" });
+        return;
+      }
+
+      // Add to tracking
+      if (!newShowtimesByRoom.has(data.room_id)) {
+        newShowtimesByRoom.set(data.room_id, []);
+      }
+      newShowtimesByRoom.get(data.room_id)!.push({
+        start_time: data.start_time,
+        endtime: data.endtime,
+      });
+    });
+
+    if (conflicts.length > 0) {
+      return c.json({ 
+        success: false, 
+        error: "Time conflicts detected",
+        conflicts,
+      }, 409);
+    }
+
+    // Create all showtimes
+    const createdShowtimes: Showtime[] = [];
+    
+    for (const data of showtimesWithEndTimes) {
+      const showtimeId = `showtime-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      const showtime: Showtime = {
+        movie_id: data.movie_id,
+        start_time: data.start_time,
+        showtime_id: showtimeId,
+        room_id: data.room_id,
+        endtime: data.endtime,
+        price: data.price,
+        occupied_seats: [],
+      };
+
+      await docClient.send(
+        new PutCommand({
+          TableName: TABLE_NAMES.SHOWTIMES,
+          Item: showtime,
+        }),
+      );
+
+      createdShowtimes.push(showtime);
+    }
+
+    return c.json(
+      {
+        success: true,
+        data: createdShowtimes,
+        message: `Successfully created ${createdShowtimes.length} showtimes`,
+        count: createdShowtimes.length,
+      },
+      201,
+    );
+  } catch (error) {
+    console.error("[showtimes]", "Error creating bulk showtimes:", error);
+    return c.json({ success: false, error: "Failed to create bulk showtimes" }, 500);
   }
 });
 
@@ -319,52 +531,186 @@ showtimes.put("/:id/schedule/:startTime", adminOnly(), async (c) => {
       return c.json({ success: false, error: "Showtime not found" }, 404);
     }
 
-    // Build update expression
-    const updateExpressions: string[] = [];
-    const expressionAttributeNames: Record<string, string> = {};
-    const expressionAttributeValues: Record<string, any> = {};
+    const existingData = existingShowtime.Item as Showtime;
 
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined) {
-        updateExpressions.push(`#${key} = :${key}`);
-        expressionAttributeNames[`#${key}`] = key;
-        expressionAttributeValues[`:${key}`] = value;
+    // Check if primary keys are being changed
+    const isPrimaryKeyChange = 
+      (data.movie_id && data.movie_id !== id) || 
+      (data.start_time && data.start_time !== decodeURIComponent(startTime));
+
+    if (isPrimaryKeyChange) {
+      // Need to delete old item and create new one
+      const newMovieId = data.movie_id || id;
+      const newStartTime = data.start_time || decodeURIComponent(startTime);
+      const newRoomId = data.room_id || existingData.room_id;
+      const newPrice = data.price !== undefined ? data.price : existingData.price;
+
+      // Verify new movie exists if changed
+      if (data.movie_id && data.movie_id !== id) {
+        const movieResult = await docClient.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.MOVIES,
+            Key: { id: data.movie_id },
+          }),
+        );
+
+        if (!movieResult.Item) {
+          return c.json({ success: false, error: "Movie not found" }, 404);
+        }
       }
-    });
 
-    if (updateExpressions.length === 0) {
-      return c.json({ success: false, error: "No fields to update" }, 400);
+      // Verify new room exists if changed
+      if (data.room_id && data.room_id !== existingData.room_id) {
+        const roomResult = await docClient.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.ROOMS,
+            Key: { room_id: data.room_id, sk: "METADATA" },
+          }),
+        );
+
+        if (!roomResult.Item) {
+          return c.json({ success: false, error: "Room not found" }, 404);
+        }
+      }
+
+      // Get movie for runtime calculation
+      const movieResult = await docClient.send(
+        new GetCommand({
+          TableName: TABLE_NAMES.MOVIES,
+          Key: { id: newMovieId },
+        }),
+      );
+
+      const movie = movieResult.Item as Movie;
+      const startTimeDate = new Date(newStartTime);
+      const endTime = new Date(startTimeDate.getTime() + movie.runtime * 60000);
+      const endTimeISO = endTime.toISOString();
+
+      // Check for conflicts with the new time/room
+      const conflictCheck = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAMES.SHOWTIMES,
+          IndexName: "room_id-start_time-index",
+          KeyConditionExpression: "room_id = :roomId",
+          ExpressionAttributeValues: {
+            ":roomId": newRoomId,
+          },
+        }),
+      );
+
+      const startTimeMs = startTimeDate.getTime();
+      const endTimeMs = endTime.getTime();
+
+      const hasConflict = (conflictCheck.Items || []).some((item) => {
+        // Skip the current showtime being updated
+        if (item.movie_id === id && item.start_time === decodeURIComponent(startTime)) {
+          return false;
+        }
+
+        const existingStart = new Date(item.start_time).getTime();
+        const existingEnd = new Date(item.endtime).getTime();
+        return (
+          (startTimeMs >= existingStart && startTimeMs < existingEnd) ||
+          (endTimeMs > existingStart && endTimeMs <= existingEnd) ||
+          (startTimeMs <= existingStart && endTimeMs >= existingEnd)
+        );
+      });
+
+      if (hasConflict) {
+        return c.json(
+          {
+            success: false,
+            error: "Time conflict with existing showtime in this room",
+          },
+          409,
+        );
+      }
+
+      // Delete old showtime
+      await docClient.send(
+        new DeleteCommand({
+          TableName: TABLE_NAMES.SHOWTIMES,
+          Key: {
+            movie_id: id,
+            start_time: decodeURIComponent(startTime),
+          },
+        }),
+      );
+
+      // Create new showtime with preserved data
+      const newShowtime: Showtime = {
+        movie_id: newMovieId,
+        start_time: newStartTime,
+        showtime_id: existingData.showtime_id, // Preserve showtime_id
+        room_id: newRoomId,
+        endtime: endTimeISO,
+        price: newPrice,
+        occupied_seats: existingData.occupied_seats || [], // Preserve bookings
+      };
+
+      await docClient.send(
+        new PutCommand({
+          TableName: TABLE_NAMES.SHOWTIMES,
+          Item: newShowtime,
+        }),
+      );
+
+      return c.json({
+        success: true,
+        data: newShowtime,
+        message: "Showtime updated successfully",
+      });
+    } else {
+      // Simple update - no primary key change
+      const updateExpressions: string[] = [];
+      const expressionAttributeNames: Record<string, string> = {};
+      const expressionAttributeValues: Record<string, any> = {};
+
+      // If room_id or price is being updated, we need to recalculate endtime if movie changed
+      if (data.room_id || data.price) {
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== undefined) {
+            updateExpressions.push(`#${key} = :${key}`);
+            expressionAttributeNames[`#${key}`] = key;
+            expressionAttributeValues[`:${key}`] = value;
+          }
+        });
+      }
+
+      if (updateExpressions.length === 0) {
+        return c.json({ success: false, error: "No fields to update" }, 400);
+      }
+
+      await docClient.send(
+        new UpdateCommand({
+          TableName: TABLE_NAMES.SHOWTIMES,
+          Key: {
+            movie_id: id,
+            start_time: decodeURIComponent(startTime),
+          },
+          UpdateExpression: `SET ${updateExpressions.join(", ")}`,
+          ExpressionAttributeNames: expressionAttributeNames,
+          ExpressionAttributeValues: expressionAttributeValues,
+        }),
+      );
+
+      // Fetch updated showtime
+      const updatedShowtime = await docClient.send(
+        new GetCommand({
+          TableName: TABLE_NAMES.SHOWTIMES,
+          Key: {
+            movie_id: id,
+            start_time: decodeURIComponent(startTime),
+          },
+        }),
+      );
+
+      return c.json({
+        success: true,
+        data: updatedShowtime.Item as Showtime,
+        message: "Showtime updated successfully",
+      });
     }
-
-    await docClient.send(
-      new UpdateCommand({
-        TableName: TABLE_NAMES.SHOWTIMES,
-        Key: {
-          movie_id: id,
-          start_time: decodeURIComponent(startTime),
-        },
-        UpdateExpression: `SET ${updateExpressions.join(", ")}`,
-        ExpressionAttributeNames: expressionAttributeNames,
-        ExpressionAttributeValues: expressionAttributeValues,
-      }),
-    );
-
-    // Fetch updated showtime
-    const updatedShowtime = await docClient.send(
-      new GetCommand({
-        TableName: TABLE_NAMES.SHOWTIMES,
-        Key: {
-          movie_id: id,
-          start_time: decodeURIComponent(startTime),
-        },
-      }),
-    );
-
-    return c.json({
-      success: true,
-      data: updatedShowtime.Item as Showtime,
-      message: "Showtime updated successfully",
-    });
   } catch (error) {
     console.error("[showtimes]", "Error updating showtime:", error);
     return c.json({ success: false, error: "Failed to update showtime" }, 500);

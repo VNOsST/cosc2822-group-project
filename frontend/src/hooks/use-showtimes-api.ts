@@ -50,9 +50,24 @@ export function useCreateShowtime() {
       movie_id: string
       room_id: string
       start_time: string
-      endtime: string
       price: number
     }) => apiClient.post<Showtime>('/showtimes', data),
+    {
+      onSuccess: () => invalidate([...QUERY_KEYS.all]),
+    },
+  )
+}
+
+export function useCreateBulkShowtimes() {
+  const { invalidate } = useInvalidateQueries()
+
+  return useApiMutation(
+    (data: Array<{
+      movie_id: string
+      room_id: string
+      start_time: string
+      price: number
+    }>) => apiClient.post<Showtime[]>('/showtimes/bulk', data),
     {
       onSuccess: () => invalidate([...QUERY_KEYS.all]),
     },
@@ -69,7 +84,7 @@ export function useUpdateShowtime() {
       ...data
     }: { movieId: string; startTime: string } & Partial<Showtime>) =>
       apiClient.put<Showtime>(
-        `/showtimes/${movieId}/${encodeURIComponent(startTime)}`,
+        `/showtimes/${movieId}/schedule/${encodeURIComponent(startTime)}`,
         data,
       ),
     {
@@ -84,7 +99,7 @@ export function useDeleteShowtime() {
   return useApiMutation(
     ({ movieId, startTime }: { movieId: string; startTime: string }) =>
       apiClient.delete(
-        `/showtimes/${movieId}/${encodeURIComponent(startTime)}`,
+        `/showtimes/${movieId}/schedule/${encodeURIComponent(startTime)}`,
       ),
     {
       onSuccess: () => invalidate([...QUERY_KEYS.all]),
