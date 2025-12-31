@@ -34,7 +34,16 @@ export const Route = createRootRoute({
 });
 
 const queryClient = new QueryClient({
-  defaultOptions: {},
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 10000),
+    },
+    mutations: {
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 10000),
+    },
+  },
 });
 
 function RootComponent() {
