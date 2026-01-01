@@ -3,7 +3,7 @@
  * TanStack Query hooks for ratings service endpoints
  */
 
-import { useApiQuery, useApiMutation, useInvalidateQueries } from './use-api'
+import { useApiMutation, useApiQuery, useInvalidateQueries } from './use-api'
 import { apiClient } from '@/lib/api-client'
 import type { MovieRating } from '@/lib/api-types'
 
@@ -15,7 +15,7 @@ const QUERY_KEYS = {
 
 // Queries
 export function useMovieRatings(movieId: string) {
-  return useApiQuery<MovieRating[]>(
+  return useApiQuery<Array<MovieRating>>(
     [...QUERY_KEYS.movie(movieId)],
     `/ratings/movie/${movieId}`,
     {
@@ -25,13 +25,18 @@ export function useMovieRatings(movieId: string) {
 }
 
 export function useUserRatings(userId: string) {
-  return useApiQuery<MovieRating[]>(
+  return useApiQuery<Array<MovieRating>>(
     [...QUERY_KEYS.user(userId)],
     `/ratings/user/${userId}`,
     {
       enabled: !!userId,
     },
   )
+}
+
+// Admin-only: Fetch all ratings
+export function useAllRatings() {
+  return useApiQuery<Array<MovieRating>>([...QUERY_KEYS.all], '/ratings/all')
 }
 
 // Mutations

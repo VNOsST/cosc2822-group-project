@@ -6,12 +6,50 @@ import {
   UpdateCommand,
   DeleteCommand,
   GetCommand,
+  ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
-import { requireAuth } from "../../shared/middleware";
+import { requireAuth, adminOnly } from "../../shared/middleware";
 import type { MovieRating } from "../../shared/types/entities";
 
 const ratings = new Hono();
+
+// Spam detection utility
+function detectSpam(review?: string): boolean {
+  if (!review) return false;
+
+  const text = review.toLowerCase();
+  const spamKeywords = [
+    "buy now",
+    "click here",
+    "visit",
+    "free money",
+    "discount",
+    "cheap",
+    "scam",
+    "piratemovies",
+    "watch free",
+    "no virus",
+    "best deals",
+  ];
+
+  // Check for spam keywords
+  const hasSpamKeywords = spamKeywords.some((keyword) => text.includes(keyword));
+
+  // Check for excessive caps (>50% uppercase)
+  const uppercaseCount = (review.match(/[A-Z]/g) || []).length;
+  const letterCount = (review.match(/[a-zA-Z]/g) || []).length;
+  const hasExcessiveCaps = letterCount > 0 && uppercaseCount / letterCount > 0.5;
+
+  // Check for excessive exclamation marks (3+ in a row or 5+ total)
+  const hasExcessiveExclamation =
+    /!!!+/.test(review) || (review.match(/!/g) || []).length >= 5;
+
+  // Check for URLs
+  const hasUrl = /(https?:\/\/|www\.|\.com|\.net|\.org)/i.test(review);
+
+  return hasSpamKeywords || hasExcessiveCaps || hasExcessiveExclamation || hasUrl;
+}
 
 // Validation schema
 const createRatingSchema = z.object({
@@ -19,6 +57,32 @@ const createRatingSchema = z.object({
   movie_id: z.string(),
   rating: z.number().min(1).max(10),
   review: z.string().optional(),
+});
+
+// GET /ratings/all - Get all ratings (admin-only)
+ratings.get("/all", adminOnly(), async (c) => {
+  try {
+    const result = await docClient.send(
+      new ScanCommand({
+        TableName: TABLE_NAMES.MOVIE_RATINGS,
+      }),
+    );
+
+    // Add spam detection to each rating
+    const ratingsWithSpamDetection = (result.Items as MovieRating[]).map((rating) => ({
+      ...rating,
+      is_spam: detectSpam(rating.review),
+    }));
+
+    return c.json({
+      success: true,
+      data: ratingsWithSpamDetection,
+      count: result.Count || 0,
+    });
+  } catch (error) {
+    console.error("[ratings]", "Error fetching all ratings:", error);
+    return c.json({ success: false, error: "Failed to fetch ratings" }, 500);
+  }
 });
 
 const updateRatingSchema = z.object({
@@ -42,8 +106,11 @@ ratings.get("/movie/:movieId", async (c) => {
       }),
     );
 
-    // Calculate average rating
-    const items = result.Items as MovieRating[];
+    // Calculate average rating and add spam detection
+    const items = (result.Items as MovieRating[]).map((rating) => ({
+      ...rating,
+      is_spam: detectSpam(rating.review),
+    }));
     const avgRating =
       items.length > 0 ? items.reduce((sum, r) => sum + r.rating, 0) / items.length : 0;
 
@@ -75,9 +142,14 @@ ratings.get("/user/:userId", async (c) => {
       }),
     );
 
+    const items = (result.Items as MovieRating[]).map((rating) => ({
+      ...rating,
+      is_spam: detectSpam(rating.review),
+    }));
+
     return c.json({
       success: true,
-      data: result.Items as MovieRating[],
+      data: items,
       count: result.Count || 0,
     });
   } catch (error) {
@@ -266,8 +338,8 @@ ratings.put("/:id", requireAuth(), async (c) => {
   }
 });
 
-// DELETE /ratings/:id - Delete a rating
-ratings.delete("/:id", requireAuth(), async (c) => {
+// DELETE /ratings/:id - Delete a rating (admin-only)
+ratings.delete("/:id", adminOnly(), async (c) => {
   const { id } = c.req.param();
 
   try {

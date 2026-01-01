@@ -262,10 +262,7 @@ function MovieDetailPage() {
                           ${showtime.price.toFixed(2)}
                         </Badge>
                       </div>
-                      <Link
-                        to="/login"
-                        search={{ redirect: '/user/bookings' }}
-                      >
+                      <Link to="/login" search={{ redirect: '/user/bookings' }}>
                         <Button
                           size="sm"
                           className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400"

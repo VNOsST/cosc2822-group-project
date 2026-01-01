@@ -25,9 +25,9 @@ export interface Movie {
   runtime: number
   release_date: string
   poster_url: string
-  image_urls: string[]
-  genres: string[]
-  cast: string[]
+  image_urls: Array<string>
+  genres: Array<string>
+  cast: Array<string>
   rating: number
   tmdb_popularity_score: number
   created_at: string
@@ -39,12 +39,12 @@ export interface Room {
   name: string
   capacity: number
   screen_type: string
-  room_image_urls: string[]
+  room_image_urls: Array<string>
   layout_config: {
     rows: number
     columns: number
   }
-  unavailable: string[]
+  unavailable: Array<string>
 }
 
 export interface Showtime {
@@ -54,7 +54,7 @@ export interface Showtime {
   room_id: string
   endtime: string
   price: number
-  occupied_seats: string[]
+  occupied_seats: Array<string>
 }
 
 export interface ShowtimeWithDetails extends Showtime {
@@ -68,7 +68,7 @@ export interface Booking {
   user_id: string
   showtime_id: string
   movie_id: string
-  seats: string[]
+  seats: Array<string>
   total_amount: number
   status: BookingStatus
   booking_date: string
@@ -88,6 +88,7 @@ export interface MovieRating {
   rating: number
   review?: string
   created_at: string
+  is_spam?: boolean
 }
 
 // API Response wrapper

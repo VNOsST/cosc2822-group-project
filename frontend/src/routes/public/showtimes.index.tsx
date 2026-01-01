@@ -119,13 +119,12 @@ function PublicShowtimesPage() {
                                 params={{ id: showtime.showtime_id }}
                               >
                                 <Clock className="mr-1 h-3 w-3" />
-                                {new Date(showtime.start_time).toLocaleTimeString(
-                                  'en-US',
-                                  {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  },
-                                )}
+                                {new Date(
+                                  showtime.start_time,
+                                ).toLocaleTimeString('en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
                               </Link>
                             </Button>
                           </div>
@@ -152,4 +151,3 @@ function PublicShowtimesPage() {
     </div>
   )
 }
-

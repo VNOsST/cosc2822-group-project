@@ -29,7 +29,12 @@ interface RoomDialogProps {
   mode: 'create' | 'edit'
 }
 
-export function RoomDialog({ open, onOpenChange, room, mode }: RoomDialogProps) {
+export function RoomDialog({
+  open,
+  onOpenChange,
+  room,
+  mode,
+}: RoomDialogProps) {
   const [name, setName] = useState('')
   const [screenType, setScreenType] = useState('Standard')
   const [rows, setRows] = useState(8)
@@ -101,7 +106,9 @@ export function RoomDialog({ open, onOpenChange, room, mode }: RoomDialogProps) 
       }
       onOpenChange(false)
     } catch (error) {
-      toast.error(mode === 'create' ? 'Failed to create room' : 'Failed to update room')
+      toast.error(
+        mode === 'create' ? 'Failed to create room' : 'Failed to update room',
+      )
     }
   }
 
@@ -109,7 +116,9 @@ export function RoomDialog({ open, onOpenChange, room, mode }: RoomDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Create New Room' : 'Edit Room'}</DialogTitle>
+          <DialogTitle>
+            {mode === 'create' ? 'Create New Room' : 'Edit Room'}
+          </DialogTitle>
           <DialogDescription>
             Configure the screening room details and seating layout.
           </DialogDescription>
@@ -185,7 +194,8 @@ export function RoomDialog({ open, onOpenChange, room, mode }: RoomDialogProps) 
           <div className="space-y-2">
             <Label>Seating Layout</Label>
             <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-4">
-              Click on seats to mark them as unavailable (e.g., wheelchair spaces, aisles)
+              Click on seats to mark them as unavailable (e.g., wheelchair
+              spaces, aisles)
             </p>
             <SeatLayoutEditor
               rows={rows}

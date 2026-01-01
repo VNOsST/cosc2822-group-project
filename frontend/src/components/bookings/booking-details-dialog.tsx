@@ -8,7 +8,16 @@ import {
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Calendar, Clock, MapPin, User, Mail, CreditCard, Armchair, Phone } from 'lucide-react'
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  Mail,
+  CreditCard,
+  Armchair,
+  Phone,
+} from 'lucide-react'
 import type { BookingWithDetails } from '@/lib/api-types'
 
 interface BookingDetailsDialogProps {
@@ -194,7 +203,10 @@ export function BookingDetailsDialog({
                     <div>
                       <p className="text-sm font-medium">Time</p>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(booking.showtime.start_time), 'h:mm a')}{' '}
+                        {format(
+                          new Date(booking.showtime.start_time),
+                          'h:mm a',
+                        )}{' '}
                         - {format(new Date(booking.showtime.endtime), 'h:mm a')}
                       </p>
                     </div>
@@ -224,7 +236,11 @@ export function BookingDetailsDialog({
             </h3>
             <div className="flex flex-wrap gap-2">
               {booking.seats.map((seat) => (
-                <Badge key={seat} variant="outline" className="text-base px-3 py-1">
+                <Badge
+                  key={seat}
+                  variant="outline"
+                  className="text-base px-3 py-1"
+                >
                   {seat}
                 </Badge>
               ))}
@@ -244,7 +260,9 @@ export function BookingDetailsDialog({
                 <span className="text-sm text-muted-foreground">
                   Number of Seats
                 </span>
-                <span className="text-sm font-medium">{booking.seats.length}</span>
+                <span className="text-sm font-medium">
+                  {booking.seats.length}
+                </span>
               </div>
               {booking.showtime && (
                 <div className="flex justify-between">

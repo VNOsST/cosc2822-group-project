@@ -36,9 +36,13 @@ export function useShowtimes(params?: { date?: string; room_id?: string }) {
 }
 
 export function useShowtime(id: string) {
-  return useApiQuery<ShowtimeWithDetails>([...QUERY_KEYS.detail(id)], `/showtimes/${id}`, {
-    enabled: !!id,
-  })
+  return useApiQuery<ShowtimeWithDetails>(
+    [...QUERY_KEYS.detail(id)],
+    `/showtimes/${id}`,
+    {
+      enabled: !!id,
+    },
+  )
 }
 
 // Mutations (Admin only - backend enforces this)
@@ -62,12 +66,14 @@ export function useCreateBulkShowtimes() {
   const { invalidate } = useInvalidateQueries()
 
   return useApiMutation(
-    (data: Array<{
-      movie_id: string
-      room_id: string
-      start_time: string
-      price: number
-    }>) => apiClient.post<Showtime[]>('/showtimes/bulk', data),
+    (
+      data: Array<{
+        movie_id: string
+        room_id: string
+        start_time: string
+        price: number
+      }>,
+    ) => apiClient.post<Showtime[]>('/showtimes/bulk', data),
     {
       onSuccess: () => invalidate([...QUERY_KEYS.all]),
     },

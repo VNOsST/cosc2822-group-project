@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Pencil, Calendar, Clock, DollarSign, Film, Building2 } from 'lucide-react'
+import {
+  Pencil,
+  Calendar,
+  Clock,
+  DollarSign,
+  Film,
+  Building2,
+} from 'lucide-react'
 import { format, addMinutes } from 'date-fns'
 import {
   Dialog,
@@ -31,14 +38,17 @@ interface EditShowtimeDialogProps {
   trigger?: React.ReactNode
 }
 
-export function EditShowtimeDialog({ showtime, trigger }: EditShowtimeDialogProps) {
+export function EditShowtimeDialog({
+  showtime,
+  trigger,
+}: EditShowtimeDialogProps) {
   const [open, setOpen] = useState(false)
-  
+
   // Parse the existing start_time to get date and time
   const existingStartTime = new Date(showtime.start_time)
   const initialDate = format(existingStartTime, 'yyyy-MM-dd')
   const initialTime = format(existingStartTime, 'HH:mm')
-  
+
   const [formData, setFormData] = useState({
     movie_id: showtime.movie_id,
     room_id: showtime.room_id,
@@ -53,26 +63,35 @@ export function EditShowtimeDialog({ showtime, trigger }: EditShowtimeDialogProp
 
   // Calculate end time based on movie runtime
   const selectedMovie = movies?.find((m) => m.id === formData.movie_id)
-  const endTime = selectedMovie && formData.date && formData.time
-    ? format(
-        addMinutes(
-          new Date(`${formData.date}T${formData.time}`),
-          selectedMovie.runtime
-        ),
-        'HH:mm'
-      )
-    : ''
+  const endTime =
+    selectedMovie && formData.date && formData.time
+      ? format(
+          addMinutes(
+            new Date(`${formData.date}T${formData.time}`),
+            selectedMovie.runtime,
+          ),
+          'HH:mm',
+        )
+      : ''
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.movie_id || !formData.room_id || !formData.date || !formData.time || !formData.price) {
+    if (
+      !formData.movie_id ||
+      !formData.room_id ||
+      !formData.date ||
+      !formData.time ||
+      !formData.price
+    ) {
       toast.error('Please fill in all fields')
       return
     }
 
     // Create ISO timestamp from date and time inputs
-    const startDateTime = new Date(`${formData.date}T${formData.time}:00`).toISOString()
+    const startDateTime = new Date(
+      `${formData.date}T${formData.time}:00`,
+    ).toISOString()
 
     try {
       await updateShowtime.mutateAsync({
@@ -255,32 +274,43 @@ export function EditShowtimeDialog({ showtime, trigger }: EditShowtimeDialogProp
           </div>
 
           {/* Summary Box */}
-          {formData.movie_id && formData.room_id && formData.date && formData.time && (
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
-              <h4 className="mb-2 font-semibold text-amber-500">Updated Screening Summary</h4>
-              <div className="space-y-1 text-sm">
-                <p>
-                  <strong>Movie:</strong> {selectedMovie?.title}
-                </p>
-                <p>
-                  <strong>Room:</strong>{' '}
-                  {rooms?.find((r) => r.room_id === formData.room_id)?.name}
-                </p>
-                <p>
-                  <strong>Date & Time:</strong> {format(new Date(formData.date), 'MMM d, yyyy')}{' '}
-                  at {formData.time}
-                </p>
-                {endTime && (
+          {formData.movie_id &&
+            formData.room_id &&
+            formData.date &&
+            formData.time && (
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+                <h4 className="mb-2 font-semibold text-amber-500">
+                  Updated Screening Summary
+                </h4>
+                <div className="space-y-1 text-sm">
                   <p>
-                    <strong>Duration:</strong> {selectedMovie?.runtime} mins (ends at {endTime})
+                    <strong>Movie:</strong> {selectedMovie?.title}
                   </p>
-                )}
+                  <p>
+                    <strong>Room:</strong>{' '}
+                    {rooms?.find((r) => r.room_id === formData.room_id)?.name}
+                  </p>
+                  <p>
+                    <strong>Date & Time:</strong>{' '}
+                    {format(new Date(formData.date), 'MMM d, yyyy')} at{' '}
+                    {formData.time}
+                  </p>
+                  {endTime && (
+                    <p>
+                      <strong>Duration:</strong> {selectedMovie?.runtime} mins
+                      (ends at {endTime})
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button

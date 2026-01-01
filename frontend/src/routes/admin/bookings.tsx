@@ -380,7 +380,10 @@ function BookingsPage() {
                       <TableCell>
                         <div>
                           <p className="text-sm">
-                            {format(new Date(booking.booking_date), 'MMM d, yyyy')}
+                            {format(
+                              new Date(booking.booking_date),
+                              'MMM d, yyyy',
+                            )}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {format(new Date(booking.booking_date), 'h:mm a')}

@@ -18,7 +18,11 @@ interface DeleteRoomDialogProps {
   room: Room | null
 }
 
-export function DeleteRoomDialog({ open, onOpenChange, room }: DeleteRoomDialogProps) {
+export function DeleteRoomDialog({
+  open,
+  onOpenChange,
+  room,
+}: DeleteRoomDialogProps) {
   const deleteRoom = useDeleteRoom()
 
   const handleDelete = async () => {
@@ -41,22 +45,25 @@ export function DeleteRoomDialog({ open, onOpenChange, room }: DeleteRoomDialogP
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete <strong>{room?.name}</strong>. This action cannot be
-            undone.
+            This will permanently delete <strong>{room?.name}</strong>. This
+            action cannot be undone.
             {room && (
               <div className="mt-4 p-3 bg-muted rounded-md text-sm">
                 <div className="font-medium mb-1">Room Details:</div>
                 <div>Capacity: {room.capacity} seats</div>
                 <div>Screen Type: {room.screen_type}</div>
                 <div>
-                  Layout: {room.layout_config.rows} rows × {room.layout_config.columns} seats
+                  Layout: {room.layout_config.rows} rows ×{' '}
+                  {room.layout_config.columns} seats
                 </div>
               </div>
             )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteRoom.isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteRoom.isPending}>
+            Cancel
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={deleteRoom.isPending}

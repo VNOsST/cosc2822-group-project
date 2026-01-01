@@ -49,7 +49,7 @@ const navigationItems = [
     title: 'Reviews',
     href: '/admin/reviews',
     icon: MessageSquare,
-  }
+  },
 ]
 
 export function AdminSidebar() {

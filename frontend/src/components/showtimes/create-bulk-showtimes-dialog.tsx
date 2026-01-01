@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Copy, Calendar, Clock, DollarSign, Film, Building2, Plus, Trash2 } from 'lucide-react'
+import {
+  Copy,
+  Calendar,
+  Clock,
+  DollarSign,
+  Film,
+  Building2,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 import { format, addDays, addMinutes } from 'date-fns'
 import {
   Dialog,
@@ -39,10 +48,12 @@ interface TimeSlot {
   time: string
 }
 
-export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialogProps) {
+export function CreateBulkShowtimesDialog({
+  trigger,
+}: CreateBulkShowtimesDialogProps) {
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<RecurrenceType>('daily')
-  
+
   // Common fields
   const [formData, setFormData] = useState({
     movie_id: '',
@@ -59,7 +70,7 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
 
   // Custom dates fields
   const [customDates, setCustomDates] = useState([
-    { id: '1', date: '', time: '' }
+    { id: '1', date: '', time: '' },
   ])
 
   const { data: movies, isLoading: moviesLoading } = useMovies()
@@ -70,7 +81,12 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
 
   // Generate preview of showtimes to be created
   const generateShowtimesPreview = () => {
-    if (!formData.movie_id || !formData.room_id || !formData.price || !selectedMovie) {
+    if (
+      !formData.movie_id ||
+      !formData.room_id ||
+      !formData.price ||
+      !selectedMovie
+    ) {
       return []
     }
 
@@ -83,17 +99,17 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
 
     if (activeTab === 'daily') {
       if (!dailyData.start_date || !dailyData.end_date) return []
-      
+
       const startDate = new Date(dailyData.start_date)
       const endDate = new Date(dailyData.end_date)
-      
+
       for (let d = new Date(startDate); d <= endDate; d = addDays(d, 1)) {
         dailyData.time_slots.forEach((slot) => {
           if (slot.time) {
             const dateStr = format(d, 'yyyy-MM-dd')
             const startDateTime = new Date(`${dateStr}T${slot.time}:00`)
             const endDateTime = addMinutes(startDateTime, selectedMovie.runtime)
-            
+
             showtimes.push({
               date: dateStr,
               time: slot.time,
@@ -108,7 +124,7 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
         if (custom.date && custom.time) {
           const startDateTime = new Date(`${custom.date}T${custom.time}:00`)
           const endDateTime = addMinutes(startDateTime, selectedMovie.runtime)
-          
+
           showtimes.push({
             date: custom.date,
             time: custom.time,
@@ -142,7 +158,7 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
     setDailyData((prev) => ({
       ...prev,
       time_slots: prev.time_slots.map((slot) =>
-        slot.id === id ? { ...slot, time } : slot
+        slot.id === id ? { ...slot, time } : slot,
       ),
     }))
   }
@@ -158,9 +174,13 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
     setCustomDates((prev) => prev.filter((item) => item.id !== id))
   }
 
-  const handleCustomDateChange = (id: string, field: 'date' | 'time', value: string) => {
+  const handleCustomDateChange = (
+    id: string,
+    field: 'date' | 'time',
+    value: string,
+  ) => {
     setCustomDates((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
     )
   }
 
@@ -193,7 +213,7 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to create bulk showtimes'
       toast.error(errorMessage)
-      
+
       // Show detailed conflict information if available
       if (error.response?.conflicts) {
         error.response.conflicts.forEach((conflict: any) => {
@@ -237,7 +257,7 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
             Create multiple showtimes at once for recurring screenings
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Common Fields */}
           <div className="grid gap-4 md:grid-cols-3">
@@ -311,7 +331,10 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
           </div>
 
           {/* Recurrence Type Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RecurrenceType)}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as RecurrenceType)}
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="daily">Daily Recurrence</TabsTrigger>
               <TabsTrigger value="custom">Custom Dates</TabsTrigger>
@@ -321,7 +344,10 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
             <TabsContent value="daily" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="start-date" className="flex items-center gap-2">
+                  <Label
+                    htmlFor="start-date"
+                    className="flex items-center gap-2"
+                  >
                     <Calendar className="h-4 w-4 text-amber-500" />
                     Start Date
                   </Label>
@@ -330,7 +356,10 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
                     type="date"
                     value={dailyData.start_date}
                     onChange={(e) =>
-                      setDailyData((prev) => ({ ...prev, start_date: e.target.value }))
+                      setDailyData((prev) => ({
+                        ...prev,
+                        start_date: e.target.value,
+                      }))
                     }
                     min={format(new Date(), 'yyyy-MM-dd')}
                   />
@@ -346,9 +375,14 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
                     type="date"
                     value={dailyData.end_date}
                     onChange={(e) =>
-                      setDailyData((prev) => ({ ...prev, end_date: e.target.value }))
+                      setDailyData((prev) => ({
+                        ...prev,
+                        end_date: e.target.value,
+                      }))
                     }
-                    min={dailyData.start_date || format(new Date(), 'yyyy-MM-dd')}
+                    min={
+                      dailyData.start_date || format(new Date(), 'yyyy-MM-dd')
+                    }
                   />
                 </div>
               </div>
@@ -374,7 +408,9 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
                       <Input
                         type="time"
                         value={slot.time}
-                        onChange={(e) => handleTimeSlotChange(slot.id, e.target.value)}
+                        onChange={(e) =>
+                          handleTimeSlotChange(slot.id, e.target.value)
+                        }
                         className="flex-1"
                       />
                       {dailyData.time_slots.length > 1 && (
@@ -415,7 +451,11 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
                         type="date"
                         value={custom.date}
                         onChange={(e) =>
-                          handleCustomDateChange(custom.id, 'date', e.target.value)
+                          handleCustomDateChange(
+                            custom.id,
+                            'date',
+                            e.target.value,
+                          )
                         }
                         min={format(new Date(), 'yyyy-MM-dd')}
                         className="flex-1"
@@ -424,7 +464,11 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
                         type="time"
                         value={custom.time}
                         onChange={(e) =>
-                          handleCustomDateChange(custom.id, 'time', e.target.value)
+                          handleCustomDateChange(
+                            custom.id,
+                            'time',
+                            e.target.value,
+                          )
                         }
                         className="flex-1"
                       />
@@ -450,7 +494,9 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h4 className="font-semibold text-amber-500">Preview</h4>
-                <Badge variant="secondary">{showtimesPreview.length} showtimes</Badge>
+                <Badge variant="secondary">
+                  {showtimesPreview.length} showtimes
+                </Badge>
               </div>
               <ScrollArea className="h-[200px]">
                 <div className="space-y-2 pr-4">
@@ -480,12 +526,18 @@ export function CreateBulkShowtimesDialog({ trigger }: CreateBulkShowtimesDialog
           )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={createBulkShowtimes.isPending || showtimesPreview.length === 0}
+              disabled={
+                createBulkShowtimes.isPending || showtimesPreview.length === 0
+              }
               className="bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
             >
               {createBulkShowtimes.isPending

@@ -128,10 +128,10 @@ export const apiClient = {
         options: {
           body: body as FormData,
           queryParams: options?.queryParams,
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
-            ...authHeaders, 
-            ...options?.headers 
+            ...authHeaders,
+            ...options?.headers,
           },
         },
       })
@@ -155,10 +155,10 @@ export const apiClient = {
         options: {
           body: body as FormData,
           queryParams: options?.queryParams,
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
-            ...authHeaders, 
-            ...options?.headers 
+            ...authHeaders,
+            ...options?.headers,
           },
         },
       })

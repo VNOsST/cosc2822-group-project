@@ -77,7 +77,7 @@ export function SeatLayoutEditor({
                         'shrink-0',
                         isUnavailable
                           ? 'bg-red-500/20 border-red-500 text-red-400 hover:bg-red-500/30'
-                          : 'bg-emerald-500/20 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30'
+                          : 'bg-emerald-500/20 border-emerald-500 text-emerald-400 hover:bg-emerald-500/30',
                       )}
                       title={`${seatId} - ${isUnavailable ? 'Unavailable' : 'Available'}`}
                     >
@@ -117,8 +117,8 @@ export function SeatLayoutEditor({
 
       {/* Stats */}
       <div className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-muted-foreground">
-        {unavailableSeats.length} seat{unavailableSeats.length !== 1 ? 's' : ''} marked as
-        unavailable
+        {unavailableSeats.length} seat{unavailableSeats.length !== 1 ? 's' : ''}{' '}
+        marked as unavailable
       </div>
     </div>
   )

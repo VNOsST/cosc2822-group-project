@@ -119,16 +119,20 @@ function RoomsPage() {
                   <TableRow key={room.room_id}>
                     <TableCell className="font-medium">{room.name}</TableCell>
                     <TableCell>
-                      <Badge variant={getScreenTypeBadgeVariant(room.screen_type)}>
+                      <Badge
+                        variant={getScreenTypeBadgeVariant(room.screen_type)}
+                      >
                         {room.screen_type}
                       </Badge>
                     </TableCell>
                     <TableCell>{room.capacity} seats</TableCell>
                     <TableCell>
-                      {room.layout_config.rows} rows × {room.layout_config.columns} seats
+                      {room.layout_config.rows} rows ×{' '}
+                      {room.layout_config.columns} seats
                     </TableCell>
                     <TableCell>
-                      {room.unavailable?.length || 0} seat{room.unavailable?.length !== 1 ? 's' : ''}
+                      {room.unavailable?.length || 0} seat
+                      {room.unavailable?.length !== 1 ? 's' : ''}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">

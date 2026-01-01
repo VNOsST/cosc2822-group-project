@@ -415,6 +415,12 @@ Resources:
             Method: GET
             Auth:
               Authorizer: NONE
+        GetAllRatings:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/all
+            Method: GET
         # Authenticated routes (require Cognito auth)
         CreateRating:
           Type: Api

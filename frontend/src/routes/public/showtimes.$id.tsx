@@ -21,7 +21,7 @@ function ShowtimeDetailPage() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
   const { data: showtime, isLoading, error } = useShowtime(id)
-  
+
   // Movie and room are now nested in the showtime response
   const movie = showtime?.movie
   const room = showtime?.room
@@ -38,7 +38,9 @@ function ShowtimeDetailPage() {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <p className="text-lg text-red-400">Failed to load showtime details</p>
+          <p className="text-lg text-red-400">
+            Failed to load showtime details
+          </p>
           <p className="mt-2 text-sm text-slate-400">
             {error?.message || 'Showtime not found'}
           </p>
@@ -254,7 +256,9 @@ function ShowtimeDetailPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Room</span>
-                  <span className="text-white">{room?.name || `Room ${showtime.room_id}`}</span>
+                  <span className="text-white">
+                    {room?.name || `Room ${showtime.room_id}`}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm font-semibold">
                   <span className="text-slate-400">Price</span>

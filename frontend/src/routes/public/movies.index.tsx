@@ -87,7 +87,11 @@ function PublicMoviesPage() {
                 {movie.synopsis}
               </p>
               <div className="flex gap-2">
-                <Link to="/public/movies/$id" params={{ id: movie.id }} className="flex-1">
+                <Link
+                  to="/public/movies/$id"
+                  params={{ id: movie.id }}
+                  className="flex-1"
+                >
                   <Button
                     variant="outline"
                     size="sm"
@@ -112,7 +116,9 @@ function PublicMoviesPage() {
 
       {movies?.length === 0 && (
         <div className="py-12 text-center">
-          <p className="text-lg text-slate-400">No movies available at the moment</p>
+          <p className="text-lg text-slate-400">
+            No movies available at the moment
+          </p>
         </div>
       )}
     </div>

@@ -29,9 +29,9 @@ export function useAllBookings(params?: {
   search?: string
 }) {
   const queryString = new URLSearchParams(
-    Object.entries(params || {}).filter(([_, v]) => v != null && v !== 'all' && v !== '') as Array<
-      [string, string]
-    >,
+    Object.entries(params || {}).filter(
+      ([_, v]) => v != null && v !== 'all' && v !== '',
+    ) as Array<[string, string]>,
   ).toString()
   const url = `/bookings/admin/all${queryString ? `?${queryString}` : ''}`
 

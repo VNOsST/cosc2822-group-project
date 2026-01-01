@@ -44,7 +44,11 @@ function ShowtimesPage() {
     title: string
   } | null>(null)
 
-  const handleDeleteClick = (movieId: string, startTime: string, title: string) => {
+  const handleDeleteClick = (
+    movieId: string,
+    startTime: string,
+    title: string,
+  ) => {
     setShowtimeToDelete({ movieId, startTime, title })
     setDeleteDialogOpen(true)
   }
@@ -139,7 +143,10 @@ function ShowtimesPage() {
                     const endDate = new Date(showtime.endtime)
                     const availableSeats = getAvailableSeats(showtime)
                     const totalSeats = showtime.room?.capacity || 0
-                    const occupancyRate = totalSeats > 0 ? (totalSeats - availableSeats) / totalSeats : 0
+                    const occupancyRate =
+                      totalSeats > 0
+                        ? (totalSeats - availableSeats) / totalSeats
+                        : 0
 
                     return (
                       <TableRow key={showtime.showtime_id}>
@@ -147,11 +154,16 @@ function ShowtimesPage() {
                           {showtime.movie?.title || 'Unknown Movie'}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{showtime.room?.name || 'Unknown Room'}</Badge>
+                          <Badge variant="outline">
+                            {showtime.room?.name || 'Unknown Room'}
+                          </Badge>
                         </TableCell>
-                        <TableCell>{format(startDate, 'MMM d, yyyy')}</TableCell>
                         <TableCell>
-                          {format(startDate, 'HH:mm')} - {format(endDate, 'HH:mm')}
+                          {format(startDate, 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell>
+                          {format(startDate, 'HH:mm')} -{' '}
+                          {format(endDate, 'HH:mm')}
                         </TableCell>
                         <TableCell>${showtime.price.toFixed(2)}</TableCell>
                         <TableCell>
@@ -177,7 +189,7 @@ function ShowtimesPage() {
                                 handleDeleteClick(
                                   showtime.movie_id,
                                   showtime.start_time,
-                                  showtime.movie?.title || 'Unknown Movie'
+                                  showtime.movie?.title || 'Unknown Movie',
                                 )
                               }
                             >
@@ -202,7 +214,8 @@ function ShowtimesPage() {
             <AlertDialogTitle>Delete Showtime</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete the showtime for{' '}
-              <strong>{showtimeToDelete?.title}</strong>? This action cannot be undone.
+              <strong>{showtimeToDelete?.title}</strong>? This action cannot be
+              undone.
               {deleteShowtime.isPending && ' Deleting...'}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -223,4 +236,3 @@ function ShowtimesPage() {
     </div>
   )
 }
-
