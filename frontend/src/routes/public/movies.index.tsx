@@ -7,17 +7,17 @@ import { ErrorState } from '@/components/error-state'
 import { serverApiClient } from '@/lib/server-api-client'
 import type { Movie } from '@/lib/api-types'
 
-export const Route = createFileRoute('/public/movies/')({ 
-  ssr: 'data-only', 
+export const Route = createFileRoute('/public/movies/')({
+  ssr: 'data-only',
   loader: async () => {
     try {
       const movies = await serverApiClient.get<Movie[]>('/movies')
       return { movies, error: null }
     } catch (error) {
       console.error('Failed to load movies on server:', error)
-      return { 
-        movies: [], 
-        error: error instanceof Error ? error.message : 'Failed to load movies' 
+      return {
+        movies: [],
+        error: error instanceof Error ? error.message : 'Failed to load movies',
       }
     }
   },

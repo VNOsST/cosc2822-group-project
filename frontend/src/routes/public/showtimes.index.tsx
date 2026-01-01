@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Calendar, Clock, MapPin} from 'lucide-react'
+import { Calendar, Clock, MapPin } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,16 +8,18 @@ import { serverApiClient } from '@/lib/server-api-client'
 import type { ShowtimeWithDetails } from '@/lib/api-types'
 
 export const Route = createFileRoute('/public/showtimes/')({
-  ssr: 'data-only', 
+  ssr: 'data-only',
   loader: async () => {
     try {
-      const showtimes = await serverApiClient.get<ShowtimeWithDetails[]>('/showtimes')
+      const showtimes =
+        await serverApiClient.get<ShowtimeWithDetails[]>('/showtimes')
       return { showtimes, error: null }
     } catch (error) {
       console.error('Failed to load showtimes on server:', error)
-      return { 
-        showtimes: [], 
-        error: error instanceof Error ? error.message : 'Failed to load showtimes' 
+      return {
+        showtimes: [],
+        error:
+          error instanceof Error ? error.message : 'Failed to load showtimes',
       }
     }
   },

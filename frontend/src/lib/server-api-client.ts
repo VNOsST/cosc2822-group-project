@@ -20,23 +20,23 @@ function getApiEndpoint(): string {
 // Helper to build full URL
 function buildUrl(path: string, queryParams?: Record<string, string>): string {
   const baseUrl = getApiEndpoint()
-  
+
   // Remove leading slash from path if present
   const cleanPath = path.startsWith('/') ? path.slice(1) : path
-  
+
   // Ensure base URL ends with /
   const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
-  
+
   // Construct full URL
   const url = new URL(cleanPath, normalizedBase)
-  
+
   // Add query parameters
   if (queryParams) {
     Object.entries(queryParams).forEach(([key, value]) => {
       url.searchParams.append(key, value)
     })
   }
-  
+
   return url.toString()
 }
 
@@ -72,7 +72,6 @@ export const serverApiClient = {
           ...options?.headers,
         },
       })
-
 
       if (!response.ok) {
         const errorText = await response.text()
