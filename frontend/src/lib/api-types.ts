@@ -5,6 +5,17 @@
 
 // Re-export backend entity types for frontend use
 export type BookingStatus = 'confirmed' | 'cancelled' | 'pending'
+export type UserRole = 'admin' | 'staff' | 'customer'
+
+export interface User {
+  id: string
+  name: string
+  email: string
+  phone: string
+  role: UserRole
+  profile_image_url?: string
+  created_at: string
+}
 
 export interface Movie {
   id: string
@@ -61,6 +72,13 @@ export interface Booking {
   total_amount: number
   status: BookingStatus
   booking_date: string
+}
+
+export interface BookingWithDetails extends Booking {
+  user?: User
+  showtime?: Showtime
+  movie?: Movie
+  room?: Room
 }
 
 export interface MovieRating {

@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   MessageSquare,
   Ticket,
-  Shield,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -50,12 +49,7 @@ const navigationItems = [
     title: 'Reviews',
     href: '/admin/reviews',
     icon: MessageSquare,
-  },
-  {
-    title: 'RBAC Test',
-    href: '/admin/rbac-test',
-    icon: Shield,
-  },
+  }
 ]
 
 export function AdminSidebar() {

@@ -5,7 +5,7 @@
 
 import { useApiQuery, useApiMutation, useInvalidateQueries } from './use-api'
 import { apiClient } from '@/lib/api-client'
-import type { Booking } from '@/lib/api-types'
+import type { Booking, BookingWithDetails } from '@/lib/api-types'
 
 const QUERY_KEYS = {
   all: ['bookings'] as const,
@@ -21,6 +21,26 @@ export function useUserBookings() {
   return useApiQuery<Booking[]>([...QUERY_KEYS.all], '/bookings')
 }
 
+// Admin: Get all bookings with optional filters
+export function useAllBookings(params?: {
+  status?: string
+  date?: string
+  movie_id?: string
+  search?: string
+}) {
+  const queryString = new URLSearchParams(
+    Object.entries(params || {}).filter(([_, v]) => v != null && v !== 'all' && v !== '') as Array<
+      [string, string]
+    >,
+  ).toString()
+  const url = `/bookings/admin/all${queryString ? `?${queryString}` : ''}`
+
+  return useApiQuery<BookingWithDetails[]>(
+    [...QUERY_KEYS.all, 'admin', JSON.stringify(params || {})],
+    url,
+  )
+}
+
 export function useShowtimeBookings(showtimeId: string) {
   return useApiQuery<Booking[]>(
     [...QUERY_KEYS.showtime(showtimeId)],
@@ -32,7 +52,7 @@ export function useShowtimeBookings(showtimeId: string) {
 }
 
 export function useBooking(email: string, bookingId: string) {
-  return useApiQuery<Booking>(
+  return useApiQuery<BookingWithDetails>(
     [...QUERY_KEYS.detail(email, bookingId)],
     `/bookings/${email}/${bookingId}`,
     {
