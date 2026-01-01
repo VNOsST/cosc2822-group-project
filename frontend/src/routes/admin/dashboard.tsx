@@ -8,39 +8,65 @@ import {
   Users,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { bookings, movies, reviews, rooms, showtimes } from '@/data/dummy-data'
+import { useRooms } from '@/hooks/use-rooms-api'
+import { useMovies } from '@/hooks/use-movies-api'
+import { useShowtimes } from '@/hooks/use-showtimes-api'
+import { useAllBookings } from '@/hooks/use-bookings-api'
+import { useAllRatings } from '@/hooks/use-ratings-api'
 
 export const Route = createFileRoute('/admin/dashboard')({
   component: DashboardPage,
 })
 
 function DashboardPage() {
-  const confirmedBookings = bookings.filter(
-    (b) => b.status === 'confirmed',
-  ).length
-  const pendingBookings = bookings.filter((b) => b.status === 'pending').length
-  const spamReviews = reviews.filter((r) => r.isSpam).length
-  const activeRooms = rooms.filter((r) => r.isActive).length
-  const nowShowingMovies = movies.filter((m) => m.isNowShowing).length
+  const { data: rooms, isLoading: roomsLoading } = useRooms()
+  const { data: movies, isLoading: moviesLoading } = useMovies()
+  const { data: showtimes, isLoading: showtimesLoading } = useShowtimes()
+  const { data: bookings, isLoading: bookingsLoading } = useAllBookings()
+  const { data: ratings, isLoading: ratingsLoading } = useAllRatings()
+
+  const isLoading =
+    roomsLoading ||
+    moviesLoading ||
+    showtimesLoading ||
+    bookingsLoading ||
+    ratingsLoading
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  const confirmedBookings =
+    bookings?.filter((b) => b.status === 'confirmed').length ?? 0
+  const pendingBookings =
+    bookings?.filter((b) => b.status === 'pending').length ?? 0
+  const spamReviews =
+    ratings?.filter((r) => r.review && (r.review.includes('http') || r.is_spam))
+      .length ?? 0
+  const totalCapacity = rooms?.reduce((sum, r) => sum + r.capacity, 0) ?? 0
 
   const stats = [
     {
       title: 'Active Rooms',
-      value: activeRooms,
-      total: rooms.length,
+      value: rooms?.length ?? 0,
+      total: rooms?.length ?? 0,
       icon: DoorOpen,
       color: 'from-blue-500 to-blue-600',
     },
     {
       title: 'Now Showing',
-      value: nowShowingMovies,
-      total: movies.length,
+      value: movies?.length ?? 0,
+      total: movies?.length ?? 0,
       icon: Film,
       color: 'from-purple-500 to-purple-600',
     },
     {
       title: 'Showtimes',
-      value: showtimes.length,
+      value: showtimes?.length ?? 0,
       icon: Calendar,
       color: 'from-green-500 to-green-600',
     },
@@ -53,14 +79,14 @@ function DashboardPage() {
     },
     {
       title: 'Reviews',
-      value: reviews.length - spamReviews,
+      value: (ratings?.length ?? 0) - spamReviews,
       subtitle: `${spamReviews} spam`,
       icon: MessageSquare,
       color: 'from-pink-500 to-rose-500',
     },
     {
       title: 'Total Capacity',
-      value: rooms.reduce((sum, r) => sum + r.capacity, 0),
+      value: totalCapacity,
       icon: Users,
       color: 'from-teal-500 to-cyan-500',
     },
@@ -113,15 +139,15 @@ function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {bookings.slice(0, 4).map((booking) => (
+              {bookings?.slice(0, 4).map((booking) => (
                 <div
-                  key={booking.id}
+                  key={booking.booking_id}
                   className="flex items-center justify-between border-b pb-2 last:border-0"
                 >
                   <div>
-                    <p className="font-medium">{booking.customerName}</p>
+                    <p className="font-medium">{booking.user_email}</p>
                     <p className="text-sm text-muted-foreground">
-                      {booking.seats.join(', ')}
+                      {booking.seats?.join(', ')}
                     </p>
                   </div>
                   <span
@@ -147,34 +173,31 @@ function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {showtimes.slice(0, 4).map((showtime) => {
-                const movie = movies.find((m) => m.id === showtime.movieId)
-                const room = rooms.find((r) => r.id === showtime.roomId)
-                return (
-                  <div
-                    key={showtime.id}
-                    className="flex items-center justify-between border-b pb-2 last:border-0"
-                  >
-                    <div>
-                      <p className="font-medium">{movie?.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {room?.name}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">
-                        {new Date(showtime.startTime).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {showtime.availableSeats} seats left
-                      </p>
-                    </div>
+              {showtimes?.slice(0, 4).map((showtime) => (
+                <div
+                  key={showtime.showtime_id}
+                  className="flex items-center justify-between border-b pb-2 last:border-0"
+                >
+                  <div>
+                    <p className="font-medium">{showtime.movie?.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {showtime.room?.name}
+                    </p>
                   </div>
-                )
-              })}
+                  <div className="text-right">
+                    <p className="text-sm font-medium">
+                      {new Date(showtime.start_time).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {showtime.occupied_seats?.length ?? 0} /{' '}
+                      {showtime.room?.capacity ?? 0} seats
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
