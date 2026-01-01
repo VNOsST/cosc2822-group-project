@@ -42,8 +42,7 @@ function detectSpam(review?: string): boolean {
   const hasExcessiveCaps = letterCount > 0 && uppercaseCount / letterCount > 0.5;
 
   // Check for excessive exclamation marks (3+ in a row or 5+ total)
-  const hasExcessiveExclamation =
-    /!!!+/.test(review) || (review.match(/!/g) || []).length >= 5;
+  const hasExcessiveExclamation = /!!!+/.test(review) || (review.match(/!/g) || []).length >= 5;
 
   // Check for URLs
   const hasUrl = /(https?:\/\/|www\.|\.com|\.net|\.org)/i.test(review);

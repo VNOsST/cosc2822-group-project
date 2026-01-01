@@ -1,12 +1,5 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  Star,
-  Users,
-  Film,
-} from 'lucide-react'
+import { ArrowLeft, Calendar, Clock, Star, Users, Film } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,10 +19,13 @@ export const Route = createFileRoute('/public/movies/$id')({
       return { movie, showtimes, error: null }
     } catch (error) {
       console.error('Failed to load movie details on server:', error)
-      return { 
-        movie: null, 
-        showtimes: [], 
-        error: error instanceof Error ? error.message : 'Failed to load movie details' 
+      return {
+        movie: null,
+        showtimes: [],
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to load movie details',
       }
     }
   },
@@ -209,14 +205,11 @@ function MovieDetailPage() {
               >
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base text-white">
-                    {new Date(showtime.start_time).toLocaleDateString(
-                      'en-US',
-                      {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                      },
-                    )}
+                    {new Date(showtime.start_time).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">

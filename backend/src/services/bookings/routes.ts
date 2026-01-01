@@ -9,7 +9,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
 import { requireAuth, requireRole, getUser } from "../../shared/middleware";
-import type { Booking, Showtime, Movie,User } from "../../shared/types/entities";
+import type { Booking, Showtime, Movie, User } from "../../shared/types/entities";
 
 const bookings = new Hono();
 

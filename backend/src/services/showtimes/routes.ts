@@ -300,68 +300,81 @@ showtimes.post("/", adminOnly(), async (c) => {
 showtimes.post("/bulk", adminOnly(), async (c) => {
   try {
     const body = await c.req.json();
-    
+
     // Validate that body is an array
     if (!Array.isArray(body)) {
       return c.json({ success: false, error: "Request body must be an array of showtimes" }, 400);
     }
 
     // Validate each showtime
-    const validationResults = body.map(item => createShowtimeSchema.safeParse(item));
-    const hasErrors = validationResults.some(result => !result.success);
-    
+    const validationResults = body.map((item) => createShowtimeSchema.safeParse(item));
+    const hasErrors = validationResults.some((result) => !result.success);
+
     if (hasErrors) {
       const errors = validationResults
-        .map((result, index) => result.success ? null : { index, errors: result.error.errors })
+        .map((result, index) => (result.success ? null : { index, errors: result.error.errors }))
         .filter(Boolean);
       return c.json({ success: false, error: "Validation failed", details: errors }, 400);
     }
 
-    const showtimesData = validationResults.map(result => result.data!);
+    const showtimesData = validationResults.map((result) => result.data!);
 
     // Verify all movies and rooms exist
-    const movieIds = [...new Set(showtimesData.map(s => s.movie_id))];
-    const roomIds = [...new Set(showtimesData.map(s => s.room_id))];
+    const movieIds = [...new Set(showtimesData.map((s) => s.movie_id))];
+    const roomIds = [...new Set(showtimesData.map((s) => s.room_id))];
 
     // Check movies in parallel
     const movieChecks = await Promise.all(
-      movieIds.map(id => 
-        docClient.send(new GetCommand({
-          TableName: TABLE_NAMES.MOVIES,
-          Key: { id },
-        }))
-      )
+      movieIds.map((id) =>
+        docClient.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.MOVIES,
+            Key: { id },
+          }),
+        ),
+      ),
     );
 
     const missingMovies = movieIds.filter((id, index) => !movieChecks[index].Item);
     if (missingMovies.length > 0) {
-      return c.json({ 
-        success: false, 
-        error: `Movies not found: ${missingMovies.join(", ")}` 
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          error: `Movies not found: ${missingMovies.join(", ")}`,
+        },
+        404,
+      );
     }
 
     // Check rooms in parallel
     const roomChecks = await Promise.all(
-      roomIds.map(id => 
-        docClient.send(new GetCommand({
-          TableName: TABLE_NAMES.ROOMS,
-          Key: { room_id: id, sk: "METADATA" },
-        }))
-      )
+      roomIds.map((id) =>
+        docClient.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.ROOMS,
+            Key: { room_id: id, sk: "METADATA" },
+          }),
+        ),
+      ),
     );
 
     const missingRooms = roomIds.filter((id, index) => !roomChecks[index].Item);
     if (missingRooms.length > 0) {
-      return c.json({ 
-        success: false, 
-        error: `Rooms not found: ${missingRooms.join(", ")}` 
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          error: `Rooms not found: ${missingRooms.join(", ")}`,
+        },
+        404,
+      );
     }
 
     // Get existing showtimes for each room to check conflicts
-    const existingShowtimesByRoom = new Map<string, Array<{ start_time: string; endtime: string }>>();
-    
+    const existingShowtimesByRoom = new Map<
+      string,
+      Array<{ start_time: string; endtime: string }>
+    >();
+
     for (const roomId of roomIds) {
       const result = await docClient.send(
         new QueryCommand({
@@ -374,11 +387,11 @@ showtimes.post("/bulk", adminOnly(), async (c) => {
         }),
       );
       existingShowtimesByRoom.set(
-        roomId, 
-        (result.Items || []).map(item => ({ 
-          start_time: item.start_time, 
-          endtime: item.endtime 
-        }))
+        roomId,
+        (result.Items || []).map((item) => ({
+          start_time: item.start_time,
+          endtime: item.endtime,
+        })),
       );
     }
 
@@ -391,7 +404,7 @@ showtimes.post("/bulk", adminOnly(), async (c) => {
     });
 
     // Calculate end times for each showtime
-    const showtimesWithEndTimes = showtimesData.map(data => {
+    const showtimesWithEndTimes = showtimesData.map((data) => {
       const movie = movieDataMap.get(data.movie_id)!;
       const startTime = new Date(data.start_time);
       const endTime = new Date(startTime.getTime() + movie.runtime * 60000);
@@ -411,7 +424,7 @@ showtimes.post("/bulk", adminOnly(), async (c) => {
 
       // Check against existing showtimes
       const existingShowtimes = existingShowtimesByRoom.get(data.room_id) || [];
-      const hasExistingConflict = existingShowtimes.some(existing => {
+      const hasExistingConflict = existingShowtimes.some((existing) => {
         const existingStart = new Date(existing.start_time).getTime();
         const existingEnd = new Date(existing.endtime).getTime();
         return (
@@ -428,7 +441,7 @@ showtimes.post("/bulk", adminOnly(), async (c) => {
 
       // Check against new showtimes in the same batch
       const newShowtimes = newShowtimesByRoom.get(data.room_id) || [];
-      const hasNewConflict = newShowtimes.some(newShowtime => {
+      const hasNewConflict = newShowtimes.some((newShowtime) => {
         const newStart = new Date(newShowtime.start_time).getTime();
         const newEnd = new Date(newShowtime.endtime).getTime();
         return (
@@ -454,19 +467,22 @@ showtimes.post("/bulk", adminOnly(), async (c) => {
     });
 
     if (conflicts.length > 0) {
-      return c.json({ 
-        success: false, 
-        error: "Time conflicts detected",
-        conflicts,
-      }, 409);
+      return c.json(
+        {
+          success: false,
+          error: "Time conflicts detected",
+          conflicts,
+        },
+        409,
+      );
     }
 
     // Create all showtimes
     const createdShowtimes: Showtime[] = [];
-    
+
     for (const data of showtimesWithEndTimes) {
       const showtimeId = `showtime-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+
       const showtime: Showtime = {
         movie_id: data.movie_id,
         start_time: data.start_time,
@@ -534,8 +550,8 @@ showtimes.put("/:id/schedule/:startTime", adminOnly(), async (c) => {
     const existingData = existingShowtime.Item as Showtime;
 
     // Check if primary keys are being changed
-    const isPrimaryKeyChange = 
-      (data.movie_id && data.movie_id !== id) || 
+    const isPrimaryKeyChange =
+      (data.movie_id && data.movie_id !== id) ||
       (data.start_time && data.start_time !== decodeURIComponent(startTime));
 
     if (isPrimaryKeyChange) {

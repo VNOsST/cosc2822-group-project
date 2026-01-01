@@ -24,9 +24,12 @@ export const Route = createFileRoute('/public/showtimes/$id')({
       return { showtime, error: null }
     } catch (error) {
       console.error('Failed to load showtime details on server:', error)
-      return { 
-        showtime: null, 
-        error: error instanceof Error ? error.message : 'Failed to load showtime details' 
+      return {
+        showtime: null,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to load showtime details',
       }
     }
   },
