@@ -4,53 +4,60 @@ import {
   Calendar,
   Clock,
   MapPin,
-  Loader2,
   Users,
   DollarSign,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useShowtime } from '@/hooks/use-showtimes-api'
+import { ErrorState } from '@/components/error-state'
+import { serverApiClient } from '@/lib/server-api-client'
+import type { ShowtimeWithDetails } from '@/lib/api-types'
 
 export const Route = createFileRoute('/public/showtimes/$id')({
+  // Server-side data loading
+  loader: async ({ params }) => {
+    try {
+      const showtime = await serverApiClient.get<ShowtimeWithDetails>(
+        `/showtimes/${params.id}`,
+      )
+      return { showtime, error: null }
+    } catch (error) {
+      console.error('Failed to load showtime details on server:', error)
+      return { 
+        showtime: null, 
+        error: error instanceof Error ? error.message : 'Failed to load showtime details' 
+      }
+    }
+  },
   component: ShowtimeDetailPage,
 })
 
 function ShowtimeDetailPage() {
-  const { id } = Route.useParams()
   const navigate = useNavigate()
-  const { data: showtime, isLoading, error } = useShowtime(id)
+  const { showtime, error } = Route.useLoaderData()
 
   // Movie and room are now nested in the showtime response
   const movie = showtime?.movie
   const room = showtime?.room
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-      </div>
-    )
-  }
-
   if (error || !showtime) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-red-400">
-            Failed to load showtime details
-          </p>
-          <p className="mt-2 text-sm text-slate-400">
-            {error?.message || 'Showtime not found'}
-          </p>
-          <Button
-            onClick={() => navigate({ to: '/public/showtimes' })}
-            className="mt-4 bg-amber-500 text-slate-900 hover:bg-amber-400"
-          >
-            Back to Showtimes
-          </Button>
-        </div>
+      <div className="space-y-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate({ to: '/public/showtimes' })}
+          className="text-slate-400 hover:text-white"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Showtimes
+        </Button>
+        <ErrorState
+          title="Failed to Load Showtime"
+          message={error || 'Showtime not found'}
+          actionLabel="Back to Showtimes"
+          onAction={() => navigate({ to: '/public/showtimes' })}
+        />
       </div>
     )
   }

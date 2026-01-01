@@ -5,51 +5,59 @@ import {
   Clock,
   Star,
   Users,
-  Loader2,
   Film,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useMovie, useMovieShowtimes } from '@/hooks/use-movies-api'
+import { ErrorState } from '@/components/error-state'
+import { serverApiClient } from '@/lib/server-api-client'
+import type { Movie, Showtime } from '@/lib/api-types'
 
 export const Route = createFileRoute('/public/movies/$id')({
+  ssr: 'data-only',
+  // Server-side data loading
+  loader: async ({ params }) => {
+    try {
+      const [movie, showtimes] = await Promise.all([
+        serverApiClient.get<Movie>(`/movies/${params.id}`),
+        serverApiClient.get<Showtime[]>(`/movies/${params.id}/showtimes`),
+      ])
+      return { movie, showtimes, error: null }
+    } catch (error) {
+      console.error('Failed to load movie details on server:', error)
+      return { 
+        movie: null, 
+        showtimes: [], 
+        error: error instanceof Error ? error.message : 'Failed to load movie details' 
+      }
+    }
+  },
   component: MovieDetailPage,
 })
 
 function MovieDetailPage() {
-  const { id } = Route.useParams()
   const navigate = useNavigate()
-  const { data: movie, isLoading, error } = useMovie(id)
-  const {
-    data: showtimes,
-    isLoading: showtimesLoading,
-    error: showtimesError,
-  } = useMovieShowtimes(id)
+  const { movie, showtimes, error } = Route.useLoaderData()
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-      </div>
-    )
-  }
-
+  // Show error state if movie failed to load
   if (error || !movie) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-red-400">Failed to load movie details</p>
-          <p className="mt-2 text-sm text-slate-400">
-            {error?.message || 'Movie not found'}
-          </p>
-          <Button
-            onClick={() => navigate({ to: '/public/movies' })}
-            className="mt-4 bg-amber-500 text-slate-900 hover:bg-amber-400"
-          >
-            Back to Movies
-          </Button>
-        </div>
+      <div className="space-y-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate({ to: '/public/movies' })}
+          className="text-slate-400 hover:text-white"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Movies
+        </Button>
+        <ErrorState
+          title="Failed to Load Movie"
+          message={error || 'Movie not found'}
+          actionLabel="Back to Movies"
+          onAction={() => navigate({ to: '/public/movies' })}
+        />
       </div>
     )
   }
@@ -192,90 +200,72 @@ function MovieDetailPage() {
           </h2>
         </div>
 
-        {showtimesLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
-          </div>
-        )}
-
-        {showtimesError && (
-          <Card className="border-slate-700/50 bg-slate-800/50">
-            <CardContent className="py-8 text-center">
-              <p className="text-slate-400">Failed to load showtimes</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {!showtimesLoading && !showtimesError && showtimes && (
-          <>
-            {showtimes.length === 0 ? (
-              <Card className="border-slate-700/50 bg-slate-800/50">
-                <CardContent className="py-8 text-center">
-                  <p className="text-slate-400">
-                    No showtimes available for this movie at the moment
-                  </p>
-                  <Link to="/public/showtimes">
-                    <Button
-                      className="mt-4 bg-amber-500 text-slate-900 hover:bg-amber-400"
-                      size="sm"
+        {showtimes && showtimes.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {showtimes.map((showtime) => (
+              <Card
+                key={showtime.showtime_id}
+                className="border-slate-700/50 bg-slate-800/50 transition-colors hover:border-amber-500/30"
+              >
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base text-white">
+                    {new Date(showtime.start_time).toLocaleDateString(
+                      'en-US',
+                      {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                      },
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <Clock className="h-4 w-4" />
+                      {new Date(showtime.start_time).toLocaleTimeString(
+                        'en-US',
+                        {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        },
+                      )}
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="bg-slate-700 text-slate-300"
                     >
-                      View All Showtimes
+                      ${showtime.price.toFixed(2)}
+                    </Badge>
+                  </div>
+                  <Link to="/login" search={{ redirect: '/user/bookings' }}>
+                    <Button
+                      size="sm"
+                      className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400"
+                    >
+                      Book Now
                     </Button>
                   </Link>
                 </CardContent>
               </Card>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {showtimes.map((showtime) => (
-                  <Card
-                    key={showtime.showtime_id}
-                    className="border-slate-700/50 bg-slate-800/50 transition-colors hover:border-amber-500/30"
-                  >
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base text-white">
-                        {new Date(showtime.start_time).toLocaleDateString(
-                          'en-US',
-                          {
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric',
-                          },
-                        )}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm text-slate-400">
-                          <Clock className="h-4 w-4" />
-                          {new Date(showtime.start_time).toLocaleTimeString(
-                            'en-US',
-                            {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            },
-                          )}
-                        </div>
-                        <Badge
-                          variant="secondary"
-                          className="bg-slate-700 text-slate-300"
-                        >
-                          ${showtime.price.toFixed(2)}
-                        </Badge>
-                      </div>
-                      <Link to="/login" search={{ redirect: '/user/bookings' }}>
-                        <Button
-                          size="sm"
-                          className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400"
-                        >
-                          Book Now
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </>
+            ))}
+          </div>
+        ) : (
+          <Card className="border-slate-700/50 bg-slate-800/50">
+            <CardContent className="py-8 text-center">
+              <p className="text-slate-400">
+                No showtimes available for this movie at the moment
+              </p>
+              <Link to="/public/showtimes">
+                <Button
+                  className="mt-4 bg-amber-500 text-slate-900 hover:bg-amber-400"
+                  size="sm"
+                >
+                  View All Showtimes
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

@@ -1,38 +1,31 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Calendar, Clock, MapPin, Loader2 } from 'lucide-react'
+import { Calendar, Clock, MapPin} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useShowtimes } from '@/hooks/use-showtimes-api'
+import { ErrorState } from '@/components/error-state'
+import { serverApiClient } from '@/lib/server-api-client'
+import type { ShowtimeWithDetails } from '@/lib/api-types'
 
 export const Route = createFileRoute('/public/showtimes/')({
+  ssr: 'data-only', 
+  loader: async () => {
+    try {
+      const showtimes = await serverApiClient.get<ShowtimeWithDetails[]>('/showtimes')
+      return { showtimes, error: null }
+    } catch (error) {
+      console.error('Failed to load showtimes on server:', error)
+      return { 
+        showtimes: [], 
+        error: error instanceof Error ? error.message : 'Failed to load showtimes' 
+      }
+    }
+  },
   component: PublicShowtimesPage,
 })
 
 function PublicShowtimesPage() {
-  const { data: showtimes, isLoading, error } = useShowtimes()
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-red-400">Failed to load showtimes</p>
-          <p className="mt-2 text-sm text-slate-400">
-            {error.message || 'Please try again later'}
-          </p>
-        </div>
-      </div>
-    )
-  }
-
+  const { showtimes, error } = Route.useLoaderData()
   // Group showtimes by date
   const showtimesByDate =
     showtimes?.reduce(
@@ -44,7 +37,7 @@ function PublicShowtimesPage() {
         acc[date].push(showtime)
         return acc
       },
-      {} as Record<string, typeof showtimes>,
+      {} as Record<string, ShowtimeWithDetails[]>,
     ) || {}
 
   return (
@@ -59,8 +52,18 @@ function PublicShowtimesPage() {
         </p>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <ErrorState
+          title="Failed to Load Showtimes"
+          message={error}
+          actionLabel="Refresh Page"
+          onAction={() => window.location.reload()}
+        />
+      )}
+
       {/* Showtimes by Date */}
-      {Object.keys(showtimesByDate).length === 0 ? (
+      {!error && Object.keys(showtimesByDate).length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-lg text-slate-400">
             No showtimes available at the moment

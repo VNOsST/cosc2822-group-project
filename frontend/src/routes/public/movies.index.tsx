@@ -1,37 +1,31 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Clock, Star, Loader2 } from 'lucide-react'
+import { Clock, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useMovies } from '@/hooks/use-movies-api'
+import { ErrorState } from '@/components/error-state'
+import { serverApiClient } from '@/lib/server-api-client'
+import type { Movie } from '@/lib/api-types'
 
-export const Route = createFileRoute('/public/movies/')({
+export const Route = createFileRoute('/public/movies/')({ 
+  ssr: 'data-only', 
+  loader: async () => {
+    try {
+      const movies = await serverApiClient.get<Movie[]>('/movies')
+      return { movies, error: null }
+    } catch (error) {
+      console.error('Failed to load movies on server:', error)
+      return { 
+        movies: [], 
+        error: error instanceof Error ? error.message : 'Failed to load movies' 
+      }
+    }
+  },
   component: PublicMoviesPage,
 })
 
 function PublicMoviesPage() {
-  const { data: movies, isLoading, error } = useMovies()
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-red-400">Failed to load movies</p>
-          <p className="mt-2 text-sm text-slate-400">
-            {error.message || 'Please try again later'}
-          </p>
-        </div>
-      </div>
-    )
-  }
+  const { movies, error } = Route.useLoaderData()
 
   return (
     <div className="space-y-8">
@@ -44,6 +38,16 @@ function PublicMoviesPage() {
           Discover the latest blockbusters and book your seats today
         </p>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <ErrorState
+          title="Failed to Load Movies"
+          message={error}
+          actionLabel="Refresh Page"
+          onAction={() => window.location.reload()}
+        />
+      )}
 
       {/* Movies Grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -114,7 +118,7 @@ function PublicMoviesPage() {
         ))}
       </div>
 
-      {movies?.length === 0 && (
+      {!error && movies?.length === 0 && (
         <div className="py-12 text-center">
           <p className="text-lg text-slate-400">
             No movies available at the moment
