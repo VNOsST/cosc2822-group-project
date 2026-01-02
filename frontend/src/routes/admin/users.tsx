@@ -31,7 +31,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useUsers, useUpdateUserRole } from '@/hooks/use-users-api'
+import { useUpdateUserRole, useUsers } from '@/hooks/use-users-api'
 import type { User, UserRole } from '@/lib/api-types'
 
 export const Route = createFileRoute('/admin/users')({
