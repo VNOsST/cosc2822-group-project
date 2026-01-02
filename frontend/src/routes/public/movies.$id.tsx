@@ -1,36 +1,36 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Calendar, Clock, Film, Star, Users } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ErrorState } from "@/components/error-state";
-import { serverApiClient } from "@/lib/server-api-client";
-import type { Movie, Showtime } from "@/lib/api-types";
+import { ArrowLeft, Calendar, Clock, Film, Star, Users } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ErrorState } from '@/components/error-state'
+import { serverApiClient } from '@/lib/server-api-client'
+import type { Movie, Showtime } from '@/lib/api-types'
 
-export const Route = createFileRoute("/public/movies/$id")({
-  ssr: "data-only",
+export const Route = createFileRoute('/public/movies/$id')({
+  ssr: 'data-only',
   // Server-side data loading
   loader: async ({ params }) => {
     try {
       const [movie, showtimes] = await Promise.all([
         serverApiClient.get<Movie>(`/movies/${params.id}`),
         serverApiClient.get<Array<Showtime>>(`/movies/${params.id}/showtimes`),
-      ]);
-      return { movie, showtimes, error: null };
+      ])
+      return { movie, showtimes, error: null }
     } catch (error) {
-      console.error("Failed to load movie details on server:", error);
+      console.error('Failed to load movie details on server:', error)
       return {
         movie: null,
         showtimes: [],
         error:
           error instanceof Error
             ? error.message
-            : "Failed to load movie details",
-      };
+            : 'Failed to load movie details',
+      }
     }
   },
   component: MovieDetailPage,
-});
+})
 
 function MovieDetailPage() {
   const navigate = useNavigate()

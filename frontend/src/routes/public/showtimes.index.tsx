@@ -12,7 +12,7 @@ export const Route = createFileRoute('/public/showtimes/')({
   loader: async () => {
     try {
       const showtimes =
-        await serverApiClient.get<Array<ShowtimeWithDetails>>("/showtimes");
+        await serverApiClient.get<Array<ShowtimeWithDetails>>('/showtimes')
       return { showtimes, error: null }
     } catch (error) {
       console.error('Failed to load showtimes on server:', error)

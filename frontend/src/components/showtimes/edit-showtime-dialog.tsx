@@ -7,7 +7,7 @@ import {
   DollarSign,
   Film,
   Pencil,
-} from "lucide-react";
+} from 'lucide-react'
 import { addMinutes, format } from 'date-fns'
 import {
   Dialog,

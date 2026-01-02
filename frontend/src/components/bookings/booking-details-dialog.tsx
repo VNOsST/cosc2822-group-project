@@ -17,7 +17,7 @@ import {
   MapPin,
   Phone,
   User,
-} from "lucide-react";
+} from 'lucide-react'
 import type { BookingWithDetails } from '@/lib/api-types'
 
 interface BookingDetailsDialogProps {

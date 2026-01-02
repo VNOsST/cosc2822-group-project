@@ -12,7 +12,7 @@ import appCss from '@/styles.css?url'
 import { configureAmplify } from '@/lib/amplify-config'
 import { AuthProvider } from '@/lib/auth-context'
 import { Toaster } from '@/components/ui/sonner'
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 // Initialize Amplify
 configureAmplify()

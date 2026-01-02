@@ -14,7 +14,7 @@ const QUERY_KEYS = {
 
 // Queries
 export function useRooms() {
-  return useApiQuery<Array<Room>>([...QUERY_KEYS.all], "/rooms");
+  return useApiQuery<Array<Room>>([...QUERY_KEYS.all], '/rooms')
 }
 
 export function useRoom(id: string) {

@@ -3,7 +3,7 @@
  * TanStack Query hooks for showtimes service endpoints
  */
 
-import { useApiMutation, useApiQuery, useInvalidateQueries } from "./use-api";
+import { useApiMutation, useApiQuery, useInvalidateQueries } from './use-api'
 import { apiClient } from '@/lib/api-client'
 import type { Showtime, ShowtimeWithDetails } from '@/lib/api-types'
 
