@@ -3,7 +3,7 @@
  * Uses AWS Amplify's native REST API module for automatic authentication
  */
 
-import { get, post, put, del } from 'aws-amplify/api'
+import { del, get, post, put } from 'aws-amplify/api'
 import { fetchAuthSession } from 'aws-amplify/auth'
 
 export class ApiError extends Error {

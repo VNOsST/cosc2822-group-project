@@ -13,7 +13,7 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
-import { adminOnly, requireAuth, getUser } from "../../shared/middleware";
+import { adminOnly } from "../../shared/middleware";
 import type { Movie, Showtime } from "../../shared/types/entities";
 
 const movies = new Hono();

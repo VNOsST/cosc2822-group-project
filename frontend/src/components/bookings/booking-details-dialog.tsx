@@ -9,15 +9,15 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
+  Armchair,
   Calendar,
   Clock,
-  MapPin,
-  User,
-  Mail,
   CreditCard,
-  Armchair,
+  Mail,
+  MapPin,
   Phone,
-} from 'lucide-react'
+  User,
+} from "lucide-react";
 import type { BookingWithDetails } from '@/lib/api-types'
 
 interface BookingDetailsDialogProps {

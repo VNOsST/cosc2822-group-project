@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react'
-import { toast } from 'sonner'
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
-  Copy,
+  Building2,
   Calendar,
   Clock,
+  Copy,
   DollarSign,
   Film,
-  Building2,
   Plus,
   Trash2,
-} from 'lucide-react'
-import { format, addDays, addMinutes } from 'date-fns'
+} from "lucide-react";
+import { addDays, addMinutes, format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -19,65 +19,65 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { useMovies } from '@/hooks/use-movies-api'
-import { useRooms } from '@/hooks/use-rooms-api'
-import { useCreateBulkShowtimes } from '@/hooks/use-showtimes-api'
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useMovies } from "@/hooks/use-movies-api";
+import { useRooms } from "@/hooks/use-rooms-api";
+import { useCreateBulkShowtimes } from "@/hooks/use-showtimes-api";
 
 interface CreateBulkShowtimesDialogProps {
-  trigger?: React.ReactNode
+  trigger?: React.ReactNode;
 }
 
-type RecurrenceType = 'daily' | 'custom'
+type RecurrenceType = "daily" | "custom";
 
 interface TimeSlot {
-  id: string
-  time: string
+  id: string;
+  time: string;
 }
 
 export function CreateBulkShowtimesDialog({
   trigger,
 }: CreateBulkShowtimesDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<RecurrenceType>('daily')
+  const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<RecurrenceType>("daily");
 
   // Common fields
   const [formData, setFormData] = useState({
-    movie_id: '',
-    room_id: '',
-    price: '',
-  })
+    movie_id: "",
+    room_id: "",
+    price: "",
+  });
 
   // Daily recurrence fields
   const [dailyData, setDailyData] = useState({
-    start_date: '',
-    end_date: '',
-    time_slots: [{ id: '1', time: '' }] as TimeSlot[],
-  })
+    start_date: "",
+    end_date: "",
+    time_slots: [{ id: "1", time: "" }] as TimeSlot[],
+  });
 
   // Custom dates fields
   const [customDates, setCustomDates] = useState([
-    { id: '1', date: '', time: '' },
-  ])
+    { id: "1", date: "", time: "" },
+  ]);
 
-  const { data: movies, isLoading: moviesLoading } = useMovies()
-  const { data: rooms, isLoading: roomsLoading } = useRooms()
-  const createBulkShowtimes = useCreateBulkShowtimes()
+  const { data: movies, isLoading: moviesLoading } = useMovies();
+  const { data: rooms, isLoading: roomsLoading } = useRooms();
+  const createBulkShowtimes = useCreateBulkShowtimes();
 
-  const selectedMovie = movies?.find((m) => m.id === formData.movie_id)
+  const selectedMovie = movies?.find((m) => m.id === formData.movie_id);
 
   // Generate preview of showtimes to be created
   const generateShowtimesPreview = () => {
@@ -87,114 +87,117 @@ export function CreateBulkShowtimesDialog({
       !formData.price ||
       !selectedMovie
     ) {
-      return []
+      return [];
     }
 
     const showtimes: Array<{
-      date: string
-      time: string
-      start_time: string
-      endtime: string
-    }> = []
+      date: string;
+      time: string;
+      start_time: string;
+      endtime: string;
+    }> = [];
 
-    if (activeTab === 'daily') {
-      if (!dailyData.start_date || !dailyData.end_date) return []
+    if (activeTab === "daily") {
+      if (!dailyData.start_date || !dailyData.end_date) return [];
 
-      const startDate = new Date(dailyData.start_date)
-      const endDate = new Date(dailyData.end_date)
+      const startDate = new Date(dailyData.start_date);
+      const endDate = new Date(dailyData.end_date);
 
       for (let d = new Date(startDate); d <= endDate; d = addDays(d, 1)) {
         dailyData.time_slots.forEach((slot) => {
           if (slot.time) {
-            const dateStr = format(d, 'yyyy-MM-dd')
-            const startDateTime = new Date(`${dateStr}T${slot.time}:00`)
-            const endDateTime = addMinutes(startDateTime, selectedMovie.runtime)
+            const dateStr = format(d, "yyyy-MM-dd");
+            const startDateTime = new Date(`${dateStr}T${slot.time}:00`);
+            const endDateTime = addMinutes(
+              startDateTime,
+              selectedMovie.runtime
+            );
 
             showtimes.push({
               date: dateStr,
               time: slot.time,
               start_time: startDateTime.toISOString(),
               endtime: endDateTime.toISOString(),
-            })
+            });
           }
-        })
+        });
       }
     } else {
       customDates.forEach((custom) => {
         if (custom.date && custom.time) {
-          const startDateTime = new Date(`${custom.date}T${custom.time}:00`)
-          const endDateTime = addMinutes(startDateTime, selectedMovie.runtime)
+          const startDateTime = new Date(`${custom.date}T${custom.time}:00`);
+          const endDateTime = addMinutes(startDateTime, selectedMovie.runtime);
 
           showtimes.push({
             date: custom.date,
             time: custom.time,
             start_time: startDateTime.toISOString(),
             endtime: endDateTime.toISOString(),
-          })
+          });
         }
-      })
+      });
     }
 
-    return showtimes
-  }
+    return showtimes;
+  };
 
-  const showtimesPreview = generateShowtimesPreview()
+  const showtimesPreview = generateShowtimesPreview();
 
   const handleAddTimeSlot = () => {
     setDailyData((prev) => ({
       ...prev,
-      time_slots: [...prev.time_slots, { id: Date.now().toString(), time: '' }],
-    }))
-  }
+      time_slots: [...prev.time_slots, { id: Date.now().toString(), time: "" }],
+    }));
+  };
 
   const handleRemoveTimeSlot = (id: string) => {
     setDailyData((prev) => ({
       ...prev,
       time_slots: prev.time_slots.filter((slot) => slot.id !== id),
-    }))
-  }
+    }));
+  };
 
   const handleTimeSlotChange = (id: string, time: string) => {
     setDailyData((prev) => ({
       ...prev,
       time_slots: prev.time_slots.map((slot) =>
-        slot.id === id ? { ...slot, time } : slot,
+        slot.id === id ? { ...slot, time } : slot
       ),
-    }))
-  }
+    }));
+  };
 
   const handleAddCustomDate = () => {
     setCustomDates((prev) => [
       ...prev,
-      { id: Date.now().toString(), date: '', time: '' },
-    ])
-  }
+      { id: Date.now().toString(), date: "", time: "" },
+    ]);
+  };
 
   const handleRemoveCustomDate = (id: string) => {
-    setCustomDates((prev) => prev.filter((item) => item.id !== id))
-  }
+    setCustomDates((prev) => prev.filter((item) => item.id !== id));
+  };
 
   const handleCustomDateChange = (
     id: string,
-    field: 'date' | 'time',
-    value: string,
+    field: "date" | "time",
+    value: string
   ) => {
     setCustomDates((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
-    )
-  }
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!formData.movie_id || !formData.room_id || !formData.price) {
-      toast.error('Please fill in movie, room, and price')
-      return
+      toast.error("Please fill in movie, room, and price");
+      return;
     }
 
     if (showtimesPreview.length === 0) {
-      toast.error('Please add at least one showtime')
-      return
+      toast.error("Please add at least one showtime");
+      return;
     }
 
     // Only send start_time, backend will calculate endtime
@@ -203,42 +206,44 @@ export function CreateBulkShowtimesDialog({
       room_id: formData.room_id,
       start_time: showtime.start_time,
       price: parseFloat(formData.price),
-    }))
+    }));
 
     try {
-      await createBulkShowtimes.mutateAsync(showtimesData)
-      toast.success(`Successfully created ${showtimesData.length} showtimes`)
-      setOpen(false)
-      resetForm()
+      await createBulkShowtimes.mutateAsync(showtimesData);
+      toast.success(`Successfully created ${showtimesData.length} showtimes`);
+      setOpen(false);
+      resetForm();
     } catch (error: any) {
-      const errorMessage = error.message || 'Failed to create bulk showtimes'
-      toast.error(errorMessage)
+      const errorMessage = error.message || "Failed to create bulk showtimes";
+      toast.error(errorMessage);
 
       // Show detailed conflict information if available
       if (error.response?.conflicts) {
         error.response.conflicts.forEach((conflict: any) => {
-          toast.error(`Conflict at index ${conflict.index}: ${conflict.reason}`)
-        })
+          toast.error(
+            `Conflict at index ${conflict.index}: ${conflict.reason}`
+          );
+        });
       }
     }
-  }
+  };
 
   const resetForm = () => {
-    setFormData({ movie_id: '', room_id: '', price: '' })
+    setFormData({ movie_id: "", room_id: "", price: "" });
     setDailyData({
-      start_date: '',
-      end_date: '',
-      time_slots: [{ id: '1', time: '' }],
-    })
-    setCustomDates([{ id: '1', date: '', time: '' }])
-    setActiveTab('daily')
-  }
+      start_date: "",
+      end_date: "",
+      time_slots: [{ id: "1", time: "" }],
+    });
+    setCustomDates([{ id: "1", date: "", time: "" }]);
+    setActiveTab("daily");
+  };
 
   useEffect(() => {
     if (!open) {
-      resetForm()
+      resetForm();
     }
-  }, [open])
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -361,7 +366,7 @@ export function CreateBulkShowtimesDialog({
                         start_date: e.target.value,
                       }))
                     }
-                    min={format(new Date(), 'yyyy-MM-dd')}
+                    min={format(new Date(), "yyyy-MM-dd")}
                   />
                 </div>
 
@@ -381,7 +386,7 @@ export function CreateBulkShowtimesDialog({
                       }))
                     }
                     min={
-                      dailyData.start_date || format(new Date(), 'yyyy-MM-dd')
+                      dailyData.start_date || format(new Date(), "yyyy-MM-dd")
                     }
                   />
                 </div>
@@ -453,11 +458,11 @@ export function CreateBulkShowtimesDialog({
                         onChange={(e) =>
                           handleCustomDateChange(
                             custom.id,
-                            'date',
-                            e.target.value,
+                            "date",
+                            e.target.value
                           )
                         }
-                        min={format(new Date(), 'yyyy-MM-dd')}
+                        min={format(new Date(), "yyyy-MM-dd")}
                         className="flex-1"
                       />
                       <Input
@@ -466,8 +471,8 @@ export function CreateBulkShowtimesDialog({
                         onChange={(e) =>
                           handleCustomDateChange(
                             custom.id,
-                            'time',
-                            e.target.value,
+                            "time",
+                            e.target.value
                           )
                         }
                         className="flex-1"
@@ -507,7 +512,7 @@ export function CreateBulkShowtimesDialog({
                     >
                       <div>
                         <span className="font-medium">
-                          {format(new Date(showtime.date), 'MMM d, yyyy')}
+                          {format(new Date(showtime.date), "MMM d, yyyy")}
                         </span>
                         <span className="mx-2 text-muted-foreground">•</span>
                         <span>{showtime.time}</span>
@@ -541,12 +546,12 @@ export function CreateBulkShowtimesDialog({
               className="bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
             >
               {createBulkShowtimes.isPending
-                ? 'Creating...'
+                ? "Creating..."
                 : `Create ${showtimesPreview.length} Showtimes`}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

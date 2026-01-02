@@ -3,7 +3,7 @@
  * TanStack Query hooks for rooms service endpoints
  */
 
-import { useApiQuery, useApiMutation, useInvalidateQueries } from './use-api'
+import { useApiMutation, useApiQuery, useInvalidateQueries } from './use-api'
 import { apiClient } from '@/lib/api-client'
 import type { Room } from '@/lib/api-types'
 
@@ -14,7 +14,7 @@ const QUERY_KEYS = {
 
 // Queries
 export function useRooms() {
-  return useApiQuery<Room[]>([...QUERY_KEYS.all], '/rooms')
+  return useApiQuery<Array<Room>>([...QUERY_KEYS.all], "/rooms");
 }
 
 export function useRoom(id: string) {

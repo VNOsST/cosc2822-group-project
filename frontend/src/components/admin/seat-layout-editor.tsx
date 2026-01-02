@@ -4,8 +4,8 @@ import { Monitor } from 'lucide-react'
 interface SeatLayoutEditorProps {
   rows: number
   columns: number
-  unavailableSeats: string[]
-  onUnavailableSeatsChange: (seats: string[]) => void
+  unavailableSeats: Array<string>
+  onUnavailableSeatsChange: (seats: Array<string>) => void
 }
 
 export function SeatLayoutEditor({

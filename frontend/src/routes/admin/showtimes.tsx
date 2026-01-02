@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useShowtimes, useDeleteShowtime } from '@/hooks/use-showtimes-api'
+import { useDeleteShowtime, useShowtimes } from '@/hooks/use-showtimes-api'
 import { CreateShowtimeDialog } from '@/components/showtimes/create-showtime-dialog'
 import { CreateBulkShowtimesDialog } from '@/components/showtimes/create-bulk-showtimes-dialog'
 import { EditShowtimeDialog } from '@/components/showtimes/edit-showtime-dialog'

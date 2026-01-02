@@ -3,7 +3,7 @@
  * TanStack Query hooks for showtimes service endpoints
  */
 
-import { useApiQuery, useApiMutation, useInvalidateQueries } from './use-api'
+import { useApiMutation, useApiQuery, useInvalidateQueries } from "./use-api";
 import { apiClient } from '@/lib/api-client'
 import type { Showtime, ShowtimeWithDetails } from '@/lib/api-types'
 
@@ -32,7 +32,7 @@ export function useShowtimes(params?: { date?: string; room_id?: string }) {
     queryKey = ['showtimes']
   }
 
-  return useApiQuery<ShowtimeWithDetails[]>(queryKey, url)
+  return useApiQuery<Array<ShowtimeWithDetails>>(queryKey, url)
 }
 
 export function useShowtime(id: string) {
@@ -73,7 +73,7 @@ export function useCreateBulkShowtimes() {
         start_time: string
         price: number
       }>,
-    ) => apiClient.post<Showtime[]>('/showtimes/bulk', data),
+    ) => apiClient.post<Array<Showtime>>('/showtimes/bulk', data),
     {
       onSuccess: () => invalidate([...QUERY_KEYS.all]),
     },

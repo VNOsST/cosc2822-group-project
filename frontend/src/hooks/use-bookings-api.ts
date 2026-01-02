@@ -3,7 +3,7 @@
  * TanStack Query hooks for bookings service endpoints
  */
 
-import { useApiQuery, useApiMutation, useInvalidateQueries } from './use-api'
+import { useApiMutation, useApiQuery, useInvalidateQueries } from './use-api'
 import { apiClient } from '@/lib/api-client'
 import type { Booking, BookingWithDetails } from '@/lib/api-types'
 
@@ -18,7 +18,7 @@ const QUERY_KEYS = {
 
 // Queries
 export function useUserBookings() {
-  return useApiQuery<Booking[]>([...QUERY_KEYS.all], '/bookings')
+  return useApiQuery<Array<Booking>>([...QUERY_KEYS.all], "/bookings");
 }
 
 // Admin: Get all bookings with optional filters
@@ -35,14 +35,14 @@ export function useAllBookings(params?: {
   ).toString()
   const url = `/bookings/admin/all${queryString ? `?${queryString}` : ''}`
 
-  return useApiQuery<BookingWithDetails[]>(
+  return useApiQuery<Array<BookingWithDetails>>(
     [...QUERY_KEYS.all, 'admin', JSON.stringify(params || {})],
     url,
   )
 }
 
 export function useShowtimeBookings(showtimeId: string) {
-  return useApiQuery<Booking[]>(
+  return useApiQuery<Array<Booking>>(
     [...QUERY_KEYS.showtime(showtimeId)],
     `/bookings/showtime/${showtimeId}`,
     {

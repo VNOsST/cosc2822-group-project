@@ -4,7 +4,7 @@
  */
 
 import { createMiddleware } from "hono/factory";
-import type { Context, Next } from "hono";
+import type { Context } from "hono";
 
 // Role types matching Cognito groups
 export type UserRole = "Admins" | "Users";

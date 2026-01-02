@@ -3,10 +3,10 @@ import {
   ArrowLeft,
   Calendar,
   Clock,
+  DollarSign,
   MapPin,
   Users,
-  DollarSign,
-} from 'lucide-react'
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

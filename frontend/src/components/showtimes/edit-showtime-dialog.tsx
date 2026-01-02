@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
-  Pencil,
+  Building2,
   Calendar,
   Clock,
   DollarSign,
   Film,
-  Building2,
-} from 'lucide-react'
-import { format, addMinutes } from 'date-fns'
+  Pencil,
+} from "lucide-react";
+import { addMinutes, format } from 'date-fns'
 import {
   Dialog,
   DialogContent,

@@ -11,7 +11,7 @@ export const Route = createFileRoute('/public/movies/')({
   ssr: 'data-only',
   loader: async () => {
     try {
-      const movies = await serverApiClient.get<Movie[]>('/movies')
+      const movies = await serverApiClient.get<Array<Movie>>("/movies");
       return { movies, error: null }
     } catch (error) {
       console.error('Failed to load movies on server:', error)
