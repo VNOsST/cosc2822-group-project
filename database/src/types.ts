@@ -3,8 +3,8 @@
  * Based on the DynamoDB schema for the cinema booking system
  */
 
-// User roles
-export type UserRole = 'admin' | 'staff' | 'customer'
+// User roles - must match Cognito User Pool Groups
+export type UserRole = 'Admins' | 'Users'
 
 // Booking status
 export type BookingStatus = 'confirmed' | 'cancelled' | 'pending'
@@ -23,9 +23,10 @@ export type NotificationType =
 
 export interface User {
   id: string // UUID - Partition Key
+  cognito_sub: string // Cognito user ID (sub claim)
   name: string
   email: string
-  phone: string
+  phone?: string // Optional - may not be available from Cognito
   role: UserRole
   profile_image_url?: string
   created_at: string // ISO datetime

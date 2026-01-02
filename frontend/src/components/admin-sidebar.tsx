@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Ticket,
+  Users,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -44,6 +45,11 @@ const navigationItems = [
     title: 'Bookings',
     href: '/admin/bookings',
     icon: Ticket,
+  },
+  {
+    title: 'Users',
+    href: '/admin/users',
+    icon: Users,
   },
   {
     title: 'Reviews',

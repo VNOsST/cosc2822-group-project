@@ -95,6 +95,8 @@ Resources:
           RequireNumbers: true
           RequireSymbols: false
           RequireUppercase: true
+      LambdaConfig:
+        PostConfirmation: !GetAtt PostConfirmationFunction.Arn
 
   # User Pool Client
   CineCloudUserPoolClient:
@@ -450,6 +452,77 @@ Resources:
           - src/services/ratings/index.ts
         External:
           - "@aws-sdk/*"
+
+# Users Service Lambda Function
+  UsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-users-${Environment}"
+      CodeUri: ./
+      Handler: services/users/index.handler
+      Description: CineCloud Users Service
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Environment:
+        Variables:
+          COGNITO_USER_POOL_ID: !Ref CineCloudUserPool
+      Events:
+        GetUsers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /users
+            Method: GET
+        GetUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /users/{id}
+            Method: GET
+        UpdateUserRole:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /users/{id}/role
+            Method: PUT
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+        - src/services/users/index.ts
+        External:
+        - "@aws-sdk/*"
+
+  # Post Confirmation Lambda Trigger
+  PostConfirmationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-post-confirmation-${Environment}"
+      CodeUri: ./
+      Handler: triggers/post-confirmation/index.handler
+      Description: CineCloud Post Confirmation Trigger - Registers users in DynamoDB
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+        - src/triggers/post-confirmation/index.ts
+        External:
+        - "@aws-sdk/*"
+
+  # Permission for Cognito to invoke PostConfirmation Lambda
+  PostConfirmationFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref PostConfirmationFunction
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt CineCloudUserPool.Arn
+      Action: lambda:InvokeFunction
 
   # DynamoDB Tables
   MoviesTable:

@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as UserReviewsRouteImport } from './routes/user/reviews'
 import { Route as UserProfileRouteImport } from './routes/user/profile'
 import { Route as UserBookingsRouteImport } from './routes/user/bookings'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminShowtimesRouteImport } from './routes/admin/showtimes'
 import { Route as AdminRoomsRouteImport } from './routes/admin/rooms'
 import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
@@ -67,6 +68,11 @@ const UserBookingsRoute = UserBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
   getParentRoute: () => UserRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminShowtimesRoute = AdminShowtimesRouteImport.update({
   id: '/showtimes',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
+  '/admin/users': typeof AdminUsersRoute
   '/user/bookings': typeof UserBookingsRoute
   '/user/profile': typeof UserProfileRoute
   '/user/reviews': typeof UserReviewsRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
+  '/admin/users': typeof AdminUsersRoute
   '/user/bookings': typeof UserBookingsRoute
   '/user/profile': typeof UserProfileRoute
   '/user/reviews': typeof UserReviewsRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
+  '/admin/users': typeof AdminUsersRoute
   '/user/bookings': typeof UserBookingsRoute
   '/user/profile': typeof UserProfileRoute
   '/user/reviews': typeof UserReviewsRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
+    | '/admin/users'
     | '/user/bookings'
     | '/user/profile'
     | '/user/reviews'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
+    | '/admin/users'
     | '/user/bookings'
     | '/user/profile'
     | '/user/reviews'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
+    | '/admin/users'
     | '/user/bookings'
     | '/user/profile'
     | '/user/reviews'
@@ -308,6 +320,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/user/bookings'
       preLoaderRoute: typeof UserBookingsRouteImport
       parentRoute: typeof UserRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/showtimes': {
       id: '/admin/showtimes'
@@ -389,6 +408,7 @@ interface AdminRouteChildren {
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminRoomsRoute: typeof AdminRoomsRoute
   AdminShowtimesRoute: typeof AdminShowtimesRoute
+  AdminUsersRoute: typeof AdminUsersRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -398,6 +418,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminReviewsRoute: AdminReviewsRoute,
   AdminRoomsRoute: AdminRoomsRoute,
   AdminShowtimesRoute: AdminShowtimesRoute,
+  AdminUsersRoute: AdminUsersRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

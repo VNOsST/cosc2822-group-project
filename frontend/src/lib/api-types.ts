@@ -5,13 +5,14 @@
 
 // Re-export backend entity types for frontend use
 export type BookingStatus = 'confirmed' | 'cancelled' | 'pending'
-export type UserRole = 'admin' | 'staff' | 'customer'
+export type UserRole = 'Admins' | 'Users'
 
 export interface User {
   id: string
+  cognito_sub: string
   name: string
   email: string
-  phone: string
+  phone?: string
   role: UserRole
   profile_image_url?: string
   created_at: string
