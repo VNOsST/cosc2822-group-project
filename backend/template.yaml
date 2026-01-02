@@ -453,7 +453,7 @@ Resources:
         External:
           - "@aws-sdk/*"
 
-# Users Service Lambda Function
+  # Users Service Lambda Function
   UsersFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -491,9 +491,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-        - src/services/users/index.ts
+          - src/services/users/index.ts
         External:
-        - "@aws-sdk/*"
+          - "@aws-sdk/*"
 
   # Post Confirmation Lambda Trigger
   PostConfirmationFunction:
@@ -511,9 +511,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-        - src/triggers/post-confirmation/index.ts
+          - src/triggers/post-confirmation/index.ts
         External:
-        - "@aws-sdk/*"
+          - "@aws-sdk/*"
 
   # Permission for Cognito to invoke PostConfirmation Lambda
   PostConfirmationFunctionPermission:

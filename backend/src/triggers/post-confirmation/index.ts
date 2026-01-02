@@ -11,10 +11,7 @@ import {
   AdminAddUserToGroupCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
-import type {
-  PostConfirmationTriggerHandler,
-  PostConfirmationTriggerEvent,
-} from "aws-lambda";
+import type { PostConfirmationTriggerHandler, PostConfirmationTriggerEvent } from "aws-lambda";
 
 // Initialize Cognito client
 const cognitoClient = new CognitoIdentityProviderClient({
@@ -26,7 +23,7 @@ const cognitoClient = new CognitoIdentityProviderClient({
  * Registers users in DynamoDB after email confirmation
  */
 export const handler: PostConfirmationTriggerHandler = async (
-  event: PostConfirmationTriggerEvent
+  event: PostConfirmationTriggerEvent,
 ) => {
   try {
     const cognitoSub = event.request.userAttributes.sub;
@@ -55,17 +52,14 @@ export const handler: PostConfirmationTriggerHandler = async (
           ExpressionAttributeValues: {
             ":email": email,
           },
-        })
+        }),
       );
 
       if (scanResult.Items && scanResult.Items.length > 0) {
         existingUser = scanResult.Items[0];
       }
     } catch (error) {
-      console.error(
-        "[post-confirmation] Error checking for existing user:",
-        error
-      );
+      console.error("[post-confirmation] Error checking for existing user:", error);
       // Continue anyway - we'll try to create the user
     }
 
@@ -89,11 +83,11 @@ export const handler: PostConfirmationTriggerHandler = async (
           new PutCommand({
             TableName: TABLE_NAMES.USERS,
             Item: newUser,
-          })
+          }),
         );
 
         console.log(
-          `[post-confirmation] Registered user: ${email} (${cognitoSub}) with role: ${defaultRole}`
+          `[post-confirmation] Registered user: ${email} (${cognitoSub}) with role: ${defaultRole}`,
         );
 
         // Add user to 'Users' Cognito group for RBAC
@@ -103,17 +97,12 @@ export const handler: PostConfirmationTriggerHandler = async (
               UserPoolId: event.userPoolId,
               Username: event.userName,
               GroupName: "Users",
-            })
+            }),
           );
 
-          console.log(
-            `[post-confirmation] Added user ${email} to 'Users' Cognito group`
-          );
+          console.log(`[post-confirmation] Added user ${email} to 'Users' Cognito group`);
         } catch (groupError) {
-          console.error(
-            "[post-confirmation] Error adding user to Cognito group:",
-            groupError
-          );
+          console.error("[post-confirmation] Error adding user to Cognito group:", groupError);
           // Don't fail confirmation if group assignment fails
           // User is still registered in DynamoDB
         }
@@ -123,9 +112,7 @@ export const handler: PostConfirmationTriggerHandler = async (
         // User will still be confirmed in Cognito
       }
     } else {
-      console.log(
-        `[post-confirmation] User already registered: ${email} (${cognitoSub})`
-      );
+      console.log(`[post-confirmation] User already registered: ${email} (${cognitoSub})`);
     }
 
     return event;

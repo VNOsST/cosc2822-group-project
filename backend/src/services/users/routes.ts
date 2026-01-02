@@ -34,7 +34,7 @@ users.get("/", adminOnly(), async (c) => {
     const result = await docClient.send(
       new ScanCommand({
         TableName: TABLE_NAMES.USERS,
-      })
+      }),
     );
 
     return c.json({
@@ -63,7 +63,7 @@ users.get("/:id", requireAuth(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.USERS,
         Key: { id },
-      })
+      }),
     );
 
     if (!result.Item) {
@@ -89,10 +89,7 @@ users.put("/:id/role", adminOnly(), async (c) => {
     const validationResult = updateRoleSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return c.json(
-        { success: false, error: validationResult.error.errors },
-        400
-      );
+      return c.json({ success: false, error: validationResult.error.errors }, 400);
     }
 
     const { role } = validationResult.data;
@@ -102,7 +99,7 @@ users.put("/:id/role", adminOnly(), async (c) => {
       new GetCommand({
         TableName: TABLE_NAMES.USERS,
         Key: { id },
-      })
+      }),
     );
 
     if (!userResult.Item) {
@@ -112,10 +109,7 @@ users.put("/:id/role", adminOnly(), async (c) => {
     const user = userResult.Item as User;
 
     if (!userPoolId) {
-      return c.json(
-        { success: false, error: "Cognito User Pool ID not configured" },
-        500
-      );
+      return c.json({ success: false, error: "Cognito User Pool ID not configured" }, 500);
     }
 
     // Get current groups from Cognito
@@ -125,11 +119,11 @@ users.put("/:id/role", adminOnly(), async (c) => {
         new AdminListGroupsForUserCommand({
           UserPoolId: userPoolId,
           Username: user.cognito_sub,
-        })
+        }),
       );
       currentGroups =
         groupsResult.Groups?.map((g) => g.GroupName || "").filter(
-          (name: string | undefined): name is string => !!name
+          (name: string | undefined): name is string => !!name,
         ) || [];
     } catch (error) {
       console.error("[users]", "Error fetching user groups:", error);
@@ -137,9 +131,7 @@ users.put("/:id/role", adminOnly(), async (c) => {
     }
 
     // Determine old role (default to Users if no group found)
-    const oldRole: "Admins" | "Users" = currentGroups.includes("Admins")
-      ? "Admins"
-      : "Users";
+    const oldRole: "Admins" | "Users" = currentGroups.includes("Admins") ? "Admins" : "Users";
 
     // Only update if role is actually changing
     if (oldRole !== role) {
@@ -151,14 +143,10 @@ users.put("/:id/role", adminOnly(), async (c) => {
               UserPoolId: userPoolId,
               Username: user.cognito_sub,
               GroupName: "Admins",
-            })
+            }),
           );
         } catch (error) {
-          console.error(
-            "[users]",
-            "Error removing user from Admins group:",
-            error
-          );
+          console.error("[users]", "Error removing user from Admins group:", error);
           // Continue - user might not be in the group
         }
       }
@@ -170,14 +158,11 @@ users.put("/:id/role", adminOnly(), async (c) => {
             UserPoolId: userPoolId,
             Username: user.cognito_sub,
             GroupName: role,
-          })
+          }),
         );
       } catch (error) {
         console.error("[users]", "Error adding user to group:", error);
-        return c.json(
-          { success: false, error: "Failed to update Cognito group" },
-          500
-        );
+        return c.json({ success: false, error: "Failed to update Cognito group" }, 500);
       }
     }
 
@@ -193,7 +178,7 @@ users.put("/:id/role", adminOnly(), async (c) => {
         ExpressionAttributeValues: {
           ":role": role,
         },
-      })
+      }),
     );
 
     return c.json({
