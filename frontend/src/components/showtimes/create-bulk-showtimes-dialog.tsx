@@ -65,7 +65,7 @@ export function CreateBulkShowtimesDialog({
   const [dailyData, setDailyData] = useState({
     start_date: "",
     end_date: "",
-    time_slots: [{ id: "1", time: "" }] as TimeSlot[],
+    time_slots: [{ id: "1", time: "" }] as Array<TimeSlot>,
   });
 
   // Custom dates fields
