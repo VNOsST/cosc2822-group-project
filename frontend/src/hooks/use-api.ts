@@ -3,13 +3,10 @@
  * Base hooks for integrating Amplify API client with React Query
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ApiError } from "@/lib/api-client";
-import { apiClient } from "@/lib/api-client";
-import type {
-  UseMutationOptions,
-  UseQueryOptions,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { ApiError } from '@/lib/api-client'
+import { apiClient } from '@/lib/api-client'
+import type { UseMutationOptions, UseQueryOptions } from '@tanstack/react-query'
 
 /**
  * Generic query hook factory
@@ -20,13 +17,13 @@ import type {
 export function useApiQuery<T>(
   queryKey: Array<string>,
   endpoint: string,
-  options?: Omit<UseQueryOptions<T, ApiError>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<T, ApiError>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery<T, ApiError>({
     queryKey,
     queryFn: () => apiClient.get<T>(endpoint),
     ...options,
-  });
+  })
 }
 
 /**
@@ -40,23 +37,23 @@ export function useApiQuery<T>(
  */
 export function useApiMutation<TData, TVariables>(
   mutationFn: (variables: TVariables) => Promise<TData>,
-  options?: Omit<UseMutationOptions<TData, ApiError, TVariables>, "mutationFn">
+  options?: Omit<UseMutationOptions<TData, ApiError, TVariables>, 'mutationFn'>,
 ) {
   return useMutation<TData, ApiError, TVariables>({
     mutationFn,
     ...options,
-  });
+  })
 }
 
 /**
  * Hook to invalidate queries after mutations
  */
 export function useInvalidateQueries() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return {
     invalidate: (queryKey: Array<string>) =>
       queryClient.invalidateQueries({ queryKey }),
     invalidateAll: () => queryClient.invalidateQueries(),
-  };
+  }
 }

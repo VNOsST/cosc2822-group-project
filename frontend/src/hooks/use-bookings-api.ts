@@ -18,7 +18,7 @@ const QUERY_KEYS = {
 
 // Queries
 export function useUserBookings() {
-  return useApiQuery<Array<Booking>>([...QUERY_KEYS.all], "/bookings");
+  return useApiQuery<Array<Booking>>([...QUERY_KEYS.all], '/bookings')
 }
 
 // Admin: Get all bookings with optional filters

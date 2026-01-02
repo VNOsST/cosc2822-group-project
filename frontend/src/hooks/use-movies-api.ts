@@ -3,7 +3,7 @@
  * TanStack Query hooks for movies service endpoints
  */
 
-import { useApiMutation, useApiQuery, useInvalidateQueries } from "./use-api";
+import { useApiMutation, useApiQuery, useInvalidateQueries } from './use-api'
 import { apiClient } from '@/lib/api-client'
 import type { Movie, Showtime } from '@/lib/api-types'
 
@@ -15,7 +15,7 @@ const QUERY_KEYS = {
 
 // Queries
 export function useMovies() {
-  return useApiQuery<Array<Movie>>([...QUERY_KEYS.all], "/movies");
+  return useApiQuery<Array<Movie>>([...QUERY_KEYS.all], '/movies')
 }
 
 export function useMovie(id: string) {
