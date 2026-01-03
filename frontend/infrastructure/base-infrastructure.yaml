@@ -1,11 +1,11 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Description: CineCloud Frontend - Shared Base Infrastructure (ECR Repository)
 
 Resources:
   # ========================================
   # Shared ECR Repository
   # ========================================
-  
+
   FrontendECRRepository:
     Type: AWS::ECR::Repository
     Properties:
