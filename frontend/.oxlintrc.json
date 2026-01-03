@@ -20,8 +20,8 @@
     "build/**",
     "*.config.js",
     "*.config.ts",
-    ".yaml",
-    ".yml"
+    "*.yaml",
+    "*.yml"
   ],
   "rules": {
     "sort-imports": [

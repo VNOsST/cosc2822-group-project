@@ -17,7 +17,7 @@
     ".vscode/",
     ".DS_Store",
     "Thumbs.db",
-    ".yaml",
-    ".yml"
+    "*.yaml",
+    "*.yml"
   ]
 }
