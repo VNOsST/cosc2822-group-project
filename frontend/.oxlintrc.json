@@ -19,7 +19,9 @@
     "dist/**",
     "build/**",
     "*.config.js",
-    "*.config.ts"
+    "*.config.ts",
+    ".yaml",
+    ".yml"
   ],
   "rules": {
     "sort-imports": [
