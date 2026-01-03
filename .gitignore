@@ -143,3 +143,4 @@ vite.config.ts.timestamp-*
 
 .output/
 frontend/infrastructure/parameters.json
+infrastructure/parameters.json
