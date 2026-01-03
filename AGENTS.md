@@ -24,7 +24,7 @@ bun check              # Format + lint (auto-fix)
 # Backend (backend/)
 bun dev                # Start all services
 bun dev:movies         # Single service (port 3002)
-bun build:lambda       # Build for AWS Lambda
+bun build              # Build for AWS Lambda
 
 # Database (database/)
 bun reset              # Full reset (teardown + setup + seed)
@@ -206,3 +206,34 @@ if (error instanceof ApiError) {
 - `frontend/src/hooks/use-{domain}-api.ts` - Domain-specific hooks
 - `frontend/src/lib/auth-context.tsx` - Authentication provider
 - `backend/src/shared/middleware/auth.ts` - RBAC middleware
+
+## Deployment
+
+### Backend (SAM/Lambda)
+See `backend/template.yaml` for serverless stack deployment.
+
+### Frontend (ECS on EC2)
+The frontend is deployed to AWS ECS using EC2 launch type with the following components:
+
+**Infrastructure**:
+- ECR for container images
+- ECS cluster with EC2 instances (t3.micro)
+- Application Load Balancer
+- SSM Parameter Store for environment config
+
+**Deployment**:
+1. **Initial Setup**: Deploy CloudFormation stack
+   ```bash
+   cd frontend/infrastructure
+   aws cloudformation deploy \
+     --template-file frontend-infrastructure.yaml \
+     --stack-name cinecloud-frontend-dev \
+     --parameter-overrides Environment=dev \
+     --capabilities CAPABILITY_NAMED_IAM
+   ```
+
+2. **CI/CD**: GitHub Actions auto-deploys on push to `main` (dev) or manual workflow dispatch (dev/staging/prod)
+
+3. **Configuration**: SSM parameters at `/cinecloud/{env}/*` for Cognito and API endpoints
+
+See [`frontend/infrastructure/README.md`](frontend/infrastructure/README.md) for detailed deployment guide.

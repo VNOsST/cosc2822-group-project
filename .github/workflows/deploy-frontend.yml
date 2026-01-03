@@ -1,0 +1,162 @@
+name: Deploy Frontend to ECS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: 'dev'
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  ECR_REPOSITORY: cinecloud-frontend  # Shared ECR repository for all environments
+
+jobs:
+  deploy:
+    name: Deploy to ECS
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "ENVIRONMENT=${{ inputs.environment }}" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Fetch configuration from SSM Parameter Store
+        id: fetch-config
+        run: |
+          ENV=${{ env.ENVIRONMENT }}
+          echo "Fetching configuration for environment: $ENV"
+          
+          VITE_AWS_REGION=$(aws ssm get-parameter --name /cinecloud/$ENV/cognito/region --query Parameter.Value --output text)
+          VITE_AWS_USER_POOL_ID=$(aws ssm get-parameter --name /cinecloud/$ENV/cognito/user-pool-id --query Parameter.Value --output text)
+          VITE_AWS_USER_POOL_CLIENT_ID=$(aws ssm get-parameter --name /cinecloud/$ENV/cognito/client-id --query Parameter.Value --output text)
+          VITE_API_ENDPOINT=$(aws ssm get-parameter --name /cinecloud/$ENV/api/endpoint --query Parameter.Value --output text)
+          
+          echo "VITE_AWS_REGION=$VITE_AWS_REGION" >> $GITHUB_ENV
+          echo "VITE_AWS_USER_POOL_ID=$VITE_AWS_USER_POOL_ID" >> $GITHUB_ENV
+          echo "VITE_AWS_USER_POOL_CLIENT_ID=$VITE_AWS_USER_POOL_CLIENT_ID" >> $GITHUB_ENV
+          echo "VITE_API_ENDPOINT=$VITE_API_ENDPOINT" >> $GITHUB_ENV
+          
+          echo "✅ Configuration fetched successfully"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ENV=${{ env.ENVIRONMENT }}
+          
+          echo "Building Docker image with environment variables..."
+          docker build \
+            --build-arg VITE_AWS_REGION=${{ env.VITE_AWS_REGION }} \
+            --build-arg VITE_AWS_USER_POOL_ID=${{ env.VITE_AWS_USER_POOL_ID }} \
+            --build-arg VITE_AWS_USER_POOL_CLIENT_ID=${{ env.VITE_AWS_USER_POOL_CLIENT_ID }} \
+            --build-arg VITE_API_ENDPOINT=${{ env.VITE_API_ENDPOINT }} \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$ENV-$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$ENV-latest \
+            -f frontend/Dockerfile \
+            .
+          
+          echo "Pushing image to ECR..."
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$ENV-$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$ENV-latest
+          
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$ENV-$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "✅ Image pushed successfully"
+
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition cinecloud-frontend-${{ env.ENVIRONMENT }} \
+            --query taskDefinition > task-definition.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: frontend
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: cinecloud-frontend-${{ env.ENVIRONMENT }}
+          cluster: cinecloud-frontend-${{ env.ENVIRONMENT }}
+          wait-for-service-stability: true
+
+      - name: Scale up ECS service if needed
+        run: |
+          ENV=${{ env.ENVIRONMENT }}
+          CLUSTER="cinecloud-frontend-$ENV"
+          SERVICE="cinecloud-frontend-$ENV"
+          
+          # Get current desired count
+          CURRENT_COUNT=$(aws ecs describe-services \
+            --cluster $CLUSTER \
+            --services $SERVICE \
+            --query 'services[0].desiredCount' \
+            --output text)
+          
+          # If service has 0 tasks, scale up to 1
+          if [ "$CURRENT_COUNT" == "0" ]; then
+            echo "Scaling up service from 0 to 1..."
+            aws ecs update-service \
+              --cluster $CLUSTER \
+              --service $SERVICE \
+              --desired-count 1
+            
+            echo "Waiting for service to stabilize..."
+            aws ecs wait services-stable \
+              --cluster $CLUSTER \
+              --services $SERVICE
+            echo "✅ Service scaled up successfully"
+          else
+            echo "Service already running with $CURRENT_COUNT task(s)"
+          fi
+
+      - name: Deployment summary
+        run: |
+          echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image:** \`${{ steps.build-image.outputs.image }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECS Cluster:** \`cinecloud-frontend-${{ env.ENVIRONMENT }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECS Service:** \`cinecloud-frontend-${{ env.ENVIRONMENT }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY

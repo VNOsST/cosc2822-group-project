@@ -1,0 +1,40 @@
+{
+  "family": "cinecloud-frontend-dev",
+  "networkMode": "bridge",
+  "requiresCompatibilities": ["EC2"],
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/LabRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/LabRole",
+  "containerDefinitions": [
+    {
+      "name": "frontend",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/cinecloud-frontend-dev:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/cinecloud-frontend-dev",
+          "awslogs-region": "REGION",
+          "awslogs-stream-prefix": "frontend"
+        }
+      },
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3000"
+        }
+      ],
+      "memory": 512
+    }
+  ]
+}

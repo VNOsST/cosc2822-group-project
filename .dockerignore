@@ -1,11 +1,11 @@
 # Dependencies
 node_modules
-bun.lockb
+**/node_modules
 
 # Build outputs
 .output
-dist
-build
+**/dist
+**/build
 
 # Development files
 .git

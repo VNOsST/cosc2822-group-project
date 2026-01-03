@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: CineCloud Frontend - Shared Base Infrastructure (ECR Repository)
+
+Resources:
+  # ========================================
+  # Shared ECR Repository
+  # ========================================
+  
+  FrontendECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: cinecloud-frontend
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 5 images per environment",
+                "selection": {
+                  "tagStatus": "tagged",
+                  "tagPrefixList": ["dev-", "staging-", "prod-"],
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              },
+              {
+                "rulePriority": 2,
+                "description": "Remove untagged images after 1 day",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 1
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      Tags:
+        - Key: Application
+          Value: cinecloud
+        - Key: Purpose
+          Value: shared-frontend-images
+
+Outputs:
+  ECRRepositoryName:
+    Description: Name of the shared ECR repository
+    Value: !Ref FrontendECRRepository
+    Export:
+      Name: cinecloud-frontend-ecr-name
+
+  ECRRepositoryUri:
+    Description: URI of the shared ECR repository
+    Value: !GetAtt FrontendECRRepository.RepositoryUri
+    Export:
+      Name: cinecloud-frontend-ecr-uri
+
+  ECRRepositoryArn:
+    Description: ARN of the shared ECR repository
+    Value: !GetAtt FrontendECRRepository.Arn
+    Export:
+      Name: cinecloud-frontend-ecr-arn

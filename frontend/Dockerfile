@@ -2,10 +2,14 @@
 FROM oven/bun:1 AS deps
 WORKDIR /app
 
-# Copy package files
-COPY package.json bun.lock* ./
+# Copy root workspace files
+COPY package.json bun.lock ./
+# Copy all workspace package.json files (needed for the workspace graph)
+COPY frontend/package.json ./frontend/
+COPY backend/package.json ./backend/
+COPY database/package.json ./database/
 
-# Install dependencies
+# Install dependencies from the root lockfile
 RUN bun install --frozen-lockfile
 
 # Stage 2: Builder
@@ -14,9 +18,13 @@ WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/frontend/node_modules ./frontend/node_modules
 
 # Copy source code
 COPY . .
+
+# Set working directory to frontend for the build
+WORKDIR /app/frontend
 
 # REQUIRED: Build-time arguments for Cognito config
 # These are embedded into the client bundle by Vite and cannot be changed at runtime
@@ -45,8 +53,8 @@ RUN groupadd --system --gid 1001 nodejs && \
     useradd --system --uid 1001 --gid nodejs tanstack
 
 # Copy built application from builder
-COPY --from=builder --chown=tanstack:nodejs /app/.output ./.output
-COPY --from=builder --chown=tanstack:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=tanstack:nodejs /app/frontend/.output ./.output
+COPY --from=builder --chown=tanstack:nodejs /app/frontend/package.json ./package.json
 
 # Switch to non-root user
 USER tanstack
@@ -56,3 +64,4 @@ EXPOSE 3000
 
 # Start the application
 CMD ["bun", "start"]
+
