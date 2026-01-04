@@ -59,6 +59,15 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Add node_modules to path
+        run: echo "${{ github.workspace }}/node_modules/.bin" >> $GITHUB_PATH
+
       - name: Cache SAM build
         uses: actions/cache@v4
         with:
@@ -106,7 +115,7 @@ jobs:
 
           API_URL=$(aws cloudformation describe-stacks \
             --stack-name $STACK_NAME \
-            --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" \
             --output text 2>/dev/null || echo "")
 
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
