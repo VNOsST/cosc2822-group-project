@@ -50,7 +50,7 @@ export function MovieDialog({
   const [imageUrls, setImageUrls] = useState<Array<string>>([])
   const [genres, setGenres] = useState('')
   const [cast, setCast] = useState('')
-  
+
   // Track the initial poster URL to identify if a new image was uploaded
   const initialPosterRef = useRef('')
   // Track the initial image_urls to identify new uploads
@@ -68,7 +68,7 @@ export function MovieDialog({
       // Reset saved state when dialog opens
       isSavedRef.current = false
       setShowCloseAlert(false)
-      
+
       if (movie && mode === 'edit') {
         setTitle(movie.title)
         setTmdbId(movie.tmdb_id)
@@ -103,19 +103,20 @@ export function MovieDialog({
       posterUrl &&
       posterUrl !== initialPosterRef.current &&
       !posterUrl.startsWith('http')
-    
+
     // Check if there are any new images in imageUrls
     const newImageUrls = imageUrls.filter(
-      (url) => !initialImageUrlsRef.current.includes(url) && !url.startsWith('http')
+      (url) =>
+        !initialImageUrlsRef.current.includes(url) && !url.startsWith('http'),
     )
     const hasUnsavedImages = newImageUrls.length > 0
-    
+
     return hasUnsavedPoster || hasUnsavedImages
   }
 
   const getUnsavedImages = (): Array<string> => {
     const unsaved: Array<string> = []
-    
+
     // Add poster if it's new and not an HTTP URL
     if (
       posterUrl &&
@@ -124,13 +125,14 @@ export function MovieDialog({
     ) {
       unsaved.push(posterUrl)
     }
-    
+
     // Add new images from imageUrls
     const newImageUrls = imageUrls.filter(
-      (url) => !initialImageUrlsRef.current.includes(url) && !url.startsWith('http')
+      (url) =>
+        !initialImageUrlsRef.current.includes(url) && !url.startsWith('http'),
     )
     unsaved.push(...newImageUrls)
-    
+
     return unsaved
   }
 
@@ -144,12 +146,12 @@ export function MovieDialog({
 
   const handleDiscardChanges = () => {
     const unsavedImages = getUnsavedImages()
-    
+
     if (unsavedImages.length > 0) {
       // Use batch delete for better performance
       deleteImages.mutate(unsavedImages)
     }
-    
+
     setShowCloseAlert(false)
     onOpenChange(false)
   }
@@ -197,7 +199,7 @@ export function MovieDialog({
         })
         toast.success('Movie updated successfully')
       }
-      
+
       // Mark as saved so we don't delete the image on close
       isSavedRef.current = true
       onOpenChange(false)
@@ -275,19 +277,18 @@ export function MovieDialog({
                 </div>
               </div>
             </div>
-          <div className="space-y-2">
-            <Label htmlFor="synopsis">Synopsis</Label>
-            <Textarea
-              id="synopsis"
-              value={synopsis}
-              onChange={(e) => setSynopsis(e.target.value)}
-              placeholder="Movie plot summary..."
-              rows={3}
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="synopsis">Synopsis</Label>
+              <Textarea
+                id="synopsis"
+                value={synopsis}
+                onChange={(e) => setSynopsis(e.target.value)}
+                placeholder="Movie plot summary..."
+                rows={3}
+              />
+            </div>
 
-          <div className="space-y-2">
-
+            <div className="space-y-2">
               <Label>Poster Image</Label>
               <ImageUpload
                 value={posterUrl}
@@ -347,7 +348,11 @@ export function MovieDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={hasUnsavedImage() ? handleDiscardChanges : () => onOpenChange(false)}
+              onClick={
+                hasUnsavedImage()
+                  ? handleDiscardChanges
+                  : () => onOpenChange(false)
+              }
               disabled={createMovie.isPending || updateMovie.isPending}
             >
               Cancel
@@ -375,7 +380,7 @@ export function MovieDialog({
               {(() => {
                 const unsavedCount = getUnsavedImages().length
                 return unsavedCount === 1
-                  ? 'You have uploaded an image but haven\'t saved the movie yet. Closing this dialog will discard your changes and delete the uploaded image.'
+                  ? "You have uploaded an image but haven't saved the movie yet. Closing this dialog will discard your changes and delete the uploaded image."
                   : `You have uploaded ${unsavedCount} images but haven't saved the movie yet. Closing this dialog will discard your changes and delete the uploaded images.`
               })()}
             </AlertDialogDescription>

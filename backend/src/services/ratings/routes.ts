@@ -162,35 +162,42 @@ ratings.get("/user/:userId", async (c) => {
     // For now, we'll assume a user doesn't have > 100 ratings, or we can handle it in chunks if needed
     // Actually, BatchGet requires primary keys.
     const movieIds = [...new Set(ratings.map((r) => r.movie_id))];
-    
+
     // Create chunks of 100 IDs if necessary, for now assuming < 100 unique movies reviewed
-    const movieKeys = movieIds.map(id => ({ id }));
-    
+    const movieKeys = movieIds.map((id) => ({ id }));
+
     let moviesMap: Record<string, Movie> = {};
-    
+
     if (movieKeys.length > 0) {
-      const moviesResult = await docClient.send(new BatchGetCommand({
-        RequestItems: {
-          [TABLE_NAMES.MOVIES]: {
-            Keys: movieKeys
-          }
-        }
-      }));
-      
+      const moviesResult = await docClient.send(
+        new BatchGetCommand({
+          RequestItems: {
+            [TABLE_NAMES.MOVIES]: {
+              Keys: movieKeys,
+            },
+          },
+        }),
+      );
+
       const movies = (moviesResult.Responses?.[TABLE_NAMES.MOVIES] as Movie[]) || [];
-      moviesMap = movies.reduce((acc, movie) => {
-        acc[movie.id] = movie;
-        return acc;
-      }, {} as Record<string, Movie>);
+      moviesMap = movies.reduce(
+        (acc, movie) => {
+          acc[movie.id] = movie;
+          return acc;
+        },
+        {} as Record<string, Movie>,
+      );
     }
 
     // Combine ratings with movie details
-    const ratingsWithMovies = ratings.map(rating => ({
+    const ratingsWithMovies = ratings.map((rating) => ({
       ...rating,
-      movie: moviesMap[rating.movie_id] ? {
-        title: moviesMap[rating.movie_id].title,
-        poster_url: moviesMap[rating.movie_id].poster_url
-      } : null
+      movie: moviesMap[rating.movie_id]
+        ? {
+            title: moviesMap[rating.movie_id].title,
+            poster_url: moviesMap[rating.movie_id].poster_url,
+          }
+        : null,
     }));
 
     return c.json({

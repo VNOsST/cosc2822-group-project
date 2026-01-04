@@ -54,7 +54,9 @@ export function RoomDialog({
   const [columns, setColumns] = useState(12)
   const [unavailableSeats, setUnavailableSeats] = useState<Array<string>>([])
   const [mainImageUrl, setMainImageUrl] = useState('')
-  const [additionalImageUrls, setAdditionalImageUrls] = useState<Array<string>>([])
+  const [additionalImageUrls, setAdditionalImageUrls] = useState<Array<string>>(
+    [],
+  )
 
   // Track the initial images to identify if new ones were uploaded
   const initialMainImageRef = useRef('')
@@ -79,11 +81,11 @@ export function RoomDialog({
         setRows(room.layout_config.rows)
         setColumns(room.layout_config.columns)
         setUnavailableSeats(room.unavailable || [])
-        
+
         const imageUrls = room.room_image_urls || []
         const main = imageUrls[0] || ''
         const additional = imageUrls.slice(1)
-        
+
         setMainImageUrl(main)
         setAdditionalImageUrls(additional)
         initialMainImageRef.current = main
@@ -108,18 +110,20 @@ export function RoomDialog({
       mainImageUrl &&
       mainImageUrl !== initialMainImageRef.current &&
       !mainImageUrl.startsWith('http')
-    
+
     const newAdditional = additionalImageUrls.filter(
-      (url) => !initialAdditionalImagesRef.current.includes(url) && !url.startsWith('http')
+      (url) =>
+        !initialAdditionalImagesRef.current.includes(url) &&
+        !url.startsWith('http'),
     )
     const hasUnsavedAdditional = newAdditional.length > 0
-    
+
     return hasUnsavedMain || hasUnsavedAdditional
   }
 
   const getUnsavedImages = (): Array<string> => {
     const unsaved: Array<string> = []
-    
+
     if (
       mainImageUrl &&
       mainImageUrl !== initialMainImageRef.current &&
@@ -127,12 +131,14 @@ export function RoomDialog({
     ) {
       unsaved.push(mainImageUrl)
     }
-    
+
     const newAdditional = additionalImageUrls.filter(
-      (url) => !initialAdditionalImagesRef.current.includes(url) && !url.startsWith('http')
+      (url) =>
+        !initialAdditionalImagesRef.current.includes(url) &&
+        !url.startsWith('http'),
     )
     unsaved.push(...newAdditional)
-    
+
     return unsaved
   }
 
@@ -146,11 +152,11 @@ export function RoomDialog({
 
   const handleDiscardChanges = () => {
     const unsavedImages = getUnsavedImages()
-    
+
     if (unsavedImages.length > 0) {
       deleteImages.mutate(unsavedImages)
     }
-    
+
     setShowCloseAlert(false)
     onOpenChange(false)
   }
@@ -198,7 +204,7 @@ export function RoomDialog({
         })
         toast.success('Room updated successfully')
       }
-      
+
       isSavedRef.current = true
       onOpenChange(false)
     } catch (error) {
@@ -337,7 +343,11 @@ export function RoomDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={hasUnsavedImage() ? handleDiscardChanges : () => onOpenChange(false)}
+              onClick={
+                hasUnsavedImage()
+                  ? handleDiscardChanges
+                  : () => onOpenChange(false)
+              }
               disabled={createRoom.isPending || updateRoom.isPending}
               className="w-full sm:w-auto"
             >
@@ -366,7 +376,7 @@ export function RoomDialog({
               {(() => {
                 const unsavedCount = getUnsavedImages().length
                 return unsavedCount === 1
-                  ? 'You have uploaded an image but haven\'t saved the room yet. Closing this dialog will discard your changes and delete the uploaded image.'
+                  ? "You have uploaded an image but haven't saved the room yet. Closing this dialog will discard your changes and delete the uploaded image."
                   : `You have uploaded ${unsavedCount} images but haven't saved the room yet. Closing this dialog will discard your changes and delete the uploaded images.`
               })()}
             </AlertDialogDescription>

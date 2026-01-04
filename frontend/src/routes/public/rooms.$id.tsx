@@ -62,8 +62,7 @@ function RoomDetailPage() {
   }
 
   // Generate seat map for floor plan visualization
-  const seatMap: Array<{ id: string; status: 'available' | 'unavailable' }> =
-    []
+  const seatMap: Array<{ id: string; status: 'available' | 'unavailable' }> = []
   const { rows, columns } = room.layout_config
   const unavailableSeats = new Set(room.unavailable || [])
 

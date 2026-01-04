@@ -69,7 +69,10 @@ export function RoomDetailsDialog({
               {galleryImages.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {galleryImages.map((url, idx) => (
-                    <div key={idx} className="aspect-video overflow-hidden rounded-md border bg-muted">
+                    <div
+                      key={idx}
+                      className="aspect-video overflow-hidden rounded-md border bg-muted"
+                    >
                       <RemoteImage
                         src={url}
                         alt={`${room.name} gallery ${idx + 1}`}
