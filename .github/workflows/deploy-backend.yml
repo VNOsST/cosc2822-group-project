@@ -1,0 +1,138 @@
+name: Deploy Backend to AWS Lambda
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: 'dev'
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "ENVIRONMENT=${{ inputs.environment }}" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache SAM build
+        uses: actions/cache@v4
+        with:
+          path: |
+            backend/.aws-sam
+          key: sam-build-${{ runner.os }}-${{ hashFiles('backend/template.yaml', 'backend/src/**/*.ts') }}
+          restore-keys: |
+            sam-build-${{ runner.os }}-
+
+      - name: Validate SAM template
+        working-directory: backend
+        run: sam validate --lint
+
+      - name: Build SAM application
+        working-directory: backend
+        run: sam build
+
+      - name: Deploy to AWS
+        working-directory: backend
+        run: |
+          ENV=${{ env.ENVIRONMENT }}
+          echo "Deploying to environment: $ENV"
+
+          if [ "$ENV" == "dev" ]; then
+            sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+          elif [ "$ENV" == "staging" ]; then
+            sam deploy --config-env staging --no-confirm-changeset --no-fail-on-empty-changeset
+          elif [ "$ENV" == "prod" ]; then
+            sam deploy --config-env prod --no-confirm-changeset --no-fail-on-empty-changeset
+          fi
+
+      - name: Get API Gateway URL
+        id: get-api-url
+        working-directory: backend
+        run: |
+          ENV=${{ env.ENVIRONMENT }}
+
+          if [ "$ENV" == "dev" ]; then
+            STACK_NAME="cinecloud-backend"
+          elif [ "$ENV" == "staging" ]; then
+            STACK_NAME="cinecloud-backend-staging"
+          elif [ "$ENV" == "prod" ]; then
+            STACK_NAME="cinecloud-backend-prod"
+          fi
+
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" \
+            --output text 2>/dev/null || echo "")
+
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+          echo "stack_name=$STACK_NAME" >> $GITHUB_OUTPUT
+
+      - name: Update SSM Parameter with API endpoint
+        if: steps.get-api-url.outputs.api_url != ''
+        run: |
+          ENV=${{ env.ENVIRONMENT }}
+          API_URL=${{ steps.get-api-url.outputs.api_url }}
+
+          echo "Updating SSM parameter /cinecloud/$ENV/api/endpoint"
+          aws ssm put-parameter \
+            --name "/cinecloud/$ENV/api/endpoint" \
+            --value "$API_URL" \
+            --type String \
+            --overwrite || echo "SSM parameter update skipped (parameter may not exist)"
+
+      - name: Deployment summary
+        run: |
+          echo "### 🚀 Backend Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stack Name:** \`${{ steps.get-api-url.outputs.stack_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **API URL:** \`${{ steps.get-api-url.outputs.api_url }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region:** \`${{ env.AWS_REGION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
