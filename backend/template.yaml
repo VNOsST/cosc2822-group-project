@@ -20,6 +20,7 @@ Globals:
         RATINGS_TABLE: !Ref RatingsTable
         NOTIFICATIONS_TABLE: !Ref NotificationsTable
         USERS_TABLE: !Ref UsersTable
+        IMAGES_BUCKET: !Ref ImagesBucket
 
 Parameters:
   Environment:
@@ -495,6 +496,57 @@ Resources:
         External:
           - "@aws-sdk/*"
 
+  # Images Service Lambda Function
+  ImagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-images-${Environment}"
+      CodeUri: ./
+      Handler: services/images/index.handler
+      Description: CineCloud Images Service
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Events:
+        # Public routes (for viewing images via signed URLs logic if needed publicly, but here we use authenticated endpoints usually, 
+        # however for getting a signed URL to view, we might want it open or protected. The plan said authenticated/public mix.)
+        # Based on plan:
+        # POST /images/upload-url (Auth required)
+        GetUploadUrl:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /images/upload-url
+            Method: POST
+        # GET /images/{key} (Public or Auth? Usually images are public for movies/rooms. But plan said "Private Bucket". 
+        # So we need an endpoint to get the signed URL. 
+        # Let's make viewing movies/rooms public, but maybe reviews are public too.)
+        GetImage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /images/{key+}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        # POST /images/batch (Public or Auth? Public for fetching movie lists)
+        GetImagesBatch:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /images/batch
+            Method: POST
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/services/images/index.ts
+        External:
+          - "@aws-sdk/*"
+
   # Post Confirmation Lambda Trigger
   PostConfirmationFunction:
     Type: AWS::Serverless::Function
@@ -745,6 +797,27 @@ Resources:
           Projection:
             ProjectionType: ALL
 
+  ImagesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "cinecloud-images-${Environment}-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - HEAD
+            AllowedOrigins:
+              - "*"
+            MaxAge: 3000
+
 Outputs:
   ApiEndpoint:
     Description: API Gateway endpoint URL
@@ -797,3 +870,7 @@ Outputs:
   UsersTableName:
     Description: Users DynamoDB Table Name
     Value: !Ref UsersTable
+
+  ImagesBucketName:
+    Description: Images S3 Bucket Name
+    Value: !Ref ImagesBucket

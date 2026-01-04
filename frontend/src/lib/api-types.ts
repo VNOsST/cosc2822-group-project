@@ -88,6 +88,7 @@ export interface MovieRating {
   movie_id: string
   rating: number
   review?: string
+  image_keys?: Array<string>
   created_at: string
   is_spam?: boolean
 }

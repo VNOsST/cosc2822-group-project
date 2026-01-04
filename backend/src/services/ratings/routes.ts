@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import {
+  BatchGetCommand,
   PutCommand,
   QueryCommand,
   UpdateCommand,
@@ -9,8 +10,8 @@ import {
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
-import { requireAuth, adminOnly } from "../../shared/middleware";
-import type { MovieRating } from "../../shared/types/entities";
+import { requireAuth, adminOnly, getUser } from "../../shared/middleware";
+import type { MovieRating, Movie } from "../../shared/types/entities";
 
 const ratings = new Hono();
 
@@ -56,6 +57,7 @@ const createRatingSchema = z.object({
   movie_id: z.string(),
   rating: z.number().min(1).max(10),
   review: z.string().optional(),
+  image_keys: z.array(z.string()).optional(),
 });
 
 // GET /ratings/all - Get all ratings (admin-only)
@@ -87,6 +89,7 @@ ratings.get("/all", adminOnly(), async (c) => {
 const updateRatingSchema = z.object({
   rating: z.number().min(1).max(10).optional(),
   review: z.string().optional(),
+  image_keys: z.array(z.string()).optional(),
 });
 
 // GET /ratings/movie/:movieId - Get ratings for a movie
@@ -141,14 +144,58 @@ ratings.get("/user/:userId", async (c) => {
       }),
     );
 
-    const items = (result.Items as MovieRating[]).map((rating) => ({
+    const ratings = (result.Items as MovieRating[]).map((rating) => ({
       ...rating,
       is_spam: detectSpam(rating.review),
     }));
 
+    if (ratings.length === 0) {
+      return c.json({
+        success: true,
+        data: [],
+        count: 0,
+      });
+    }
+
+    // Fetch movie details for each rating
+    // We use BatchGetItem for efficiency, but DynamoDB limits it to 100 items per request
+    // For now, we'll assume a user doesn't have > 100 ratings, or we can handle it in chunks if needed
+    // Actually, BatchGet requires primary keys.
+    const movieIds = [...new Set(ratings.map((r) => r.movie_id))];
+    
+    // Create chunks of 100 IDs if necessary, for now assuming < 100 unique movies reviewed
+    const movieKeys = movieIds.map(id => ({ id }));
+    
+    let moviesMap: Record<string, Movie> = {};
+    
+    if (movieKeys.length > 0) {
+      const moviesResult = await docClient.send(new BatchGetCommand({
+        RequestItems: {
+          [TABLE_NAMES.MOVIES]: {
+            Keys: movieKeys
+          }
+        }
+      }));
+      
+      const movies = (moviesResult.Responses?.[TABLE_NAMES.MOVIES] as Movie[]) || [];
+      moviesMap = movies.reduce((acc, movie) => {
+        acc[movie.id] = movie;
+        return acc;
+      }, {} as Record<string, Movie>);
+    }
+
+    // Combine ratings with movie details
+    const ratingsWithMovies = ratings.map(rating => ({
+      ...rating,
+      movie: moviesMap[rating.movie_id] ? {
+        title: moviesMap[rating.movie_id].title,
+        poster_url: moviesMap[rating.movie_id].poster_url
+      } : null
+    }));
+
     return c.json({
       success: true,
-      data: items,
+      data: ratingsWithMovies,
       count: result.Count || 0,
     });
   } catch (error) {
@@ -176,6 +223,7 @@ ratings.post("/", requireAuth(), async (c) => {
       movie_id: data.movie_id,
       rating: data.rating,
       review: data.review,
+      image_keys: data.image_keys,
       created_at: new Date().toISOString(),
     };
 
@@ -231,6 +279,7 @@ ratings.post("/", requireAuth(), async (c) => {
 // PUT /ratings/:id - Update a rating
 ratings.put("/:id", requireAuth(), async (c) => {
   const { id } = c.req.param();
+  const user = getUser(c);
 
   try {
     const body = await c.req.json();
@@ -255,6 +304,14 @@ ratings.put("/:id", requireAuth(), async (c) => {
     }
 
     const oldRating = existingRating.Item as MovieRating;
+
+    // Check ownership
+    const isOwner = oldRating.user_id === user.sub;
+    const isAdmin = user.groups.includes("Admins");
+
+    if (!isOwner && !isAdmin) {
+      return c.json({ success: false, error: "Unauthorized" }, 403);
+    }
 
     // Build update expression
     const updateExpressions: string[] = [];
@@ -337,9 +394,10 @@ ratings.put("/:id", requireAuth(), async (c) => {
   }
 });
 
-// DELETE /ratings/:id - Delete a rating (admin-only)
-ratings.delete("/:id", adminOnly(), async (c) => {
+// DELETE /ratings/:id - Delete a rating
+ratings.delete("/:id", requireAuth(), async (c) => {
   const { id } = c.req.param();
+  const user = getUser(c);
 
   try {
     // Get the rating first
@@ -355,6 +413,14 @@ ratings.delete("/:id", adminOnly(), async (c) => {
     }
 
     const rating = existingRating.Item as MovieRating;
+
+    // Check ownership
+    const isOwner = rating.user_id === user.sub;
+    const isAdmin = user.groups.includes("Admins");
+
+    if (!isOwner && !isAdmin) {
+      return c.json({ success: false, error: "Unauthorized" }, 403);
+    }
 
     // Delete the rating
     await docClient.send(
