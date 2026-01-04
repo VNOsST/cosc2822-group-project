@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Monitor } from 'lucide-react'
 import type { Room } from '@/lib/api-types'
 import { cn } from '@/lib/utils'
+import { RemoteImage } from '@/components/ui/remote-image'
 
 interface RoomDetailsDialogProps {
   open: boolean
@@ -41,6 +42,9 @@ export function RoomDetailsDialog({
     }
   }
 
+  const mainImage = room.room_image_urls?.[0]
+  const galleryImages = room.room_image_urls?.slice(1) || []
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
@@ -52,6 +56,32 @@ export function RoomDetailsDialog({
         </DialogHeader>
 
         <div className="space-y-4 sm:space-y-6">
+          {/* Room Images */}
+          {room.room_image_urls && room.room_image_urls.length > 0 && (
+            <div className="space-y-4">
+              <div className="aspect-video w-full overflow-hidden rounded-lg border bg-muted">
+                <RemoteImage
+                  src={mainImage}
+                  alt={room.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              {galleryImages.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {galleryImages.map((url, idx) => (
+                    <div key={idx} className="aspect-video overflow-hidden rounded-md border bg-muted">
+                      <RemoteImage
+                        src={url}
+                        alt={`${room.name} gallery ${idx + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Room Details */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div className="space-y-1">
