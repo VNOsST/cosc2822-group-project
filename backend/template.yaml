@@ -536,6 +536,20 @@ Resources:
             Method: POST
             Auth:
               Authorizer: NONE
+        # DELETE /images/{key} (Auth required)
+        DeleteImage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /images/{key+}
+            Method: DELETE
+        # DELETE /images/batch (Auth required)
+        DeleteImagesBatch:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /images/batch-delete
+            Method: POST
     Metadata:
       BuildMethod: esbuild
       BuildProperties:

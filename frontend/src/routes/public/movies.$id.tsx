@@ -3,6 +3,7 @@ import { ArrowLeft, Calendar, Clock, Film, Star, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { RemoteImage } from '@/components/ui/remote-image'
 import { ErrorState } from '@/components/error-state'
 import { serverApiClient } from '@/lib/server-api-client'
 import type { Movie, Showtime } from '@/lib/api-types'
@@ -75,7 +76,7 @@ function MovieDetailPage() {
         {/* Poster */}
         <div className="lg:col-span-1">
           <div className="relative overflow-hidden rounded-lg">
-            <img
+            <RemoteImage
               src={movie.poster_url}
               alt={movie.title}
               className="h-full w-full object-cover"
@@ -176,7 +177,7 @@ function MovieDetailPage() {
                 key={index}
                 className="overflow-hidden rounded-lg border border-slate-700/50"
               >
-                <img
+                <RemoteImage
                   src={url}
                   alt={`${movie.title} - Image ${index + 1}`}
                   className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"

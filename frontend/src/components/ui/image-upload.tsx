@@ -22,7 +22,7 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [isHovering, setIsHovering] = useState(false)
   const { mutate: uploadImage, isPending: isUploading } = useUploadImage()
-  
+
   // Resolve the current value (key) to a URL
   const imageUrl = useImage(value)
 
@@ -35,7 +35,8 @@ export function ImageUpload({
       return
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB limit
       toast.error('Image must be less than 5MB')
       return
     }
@@ -50,7 +51,7 @@ export function ImageUpload({
         onError: () => {
           toast.error('Failed to upload image')
         },
-      }
+      },
     )
   }
 
@@ -65,21 +66,27 @@ export function ImageUpload({
   }
 
   return (
-    <div className={cn('relative overflow-hidden rounded-md border border-dashed border-slate-700 bg-slate-900/50', aspectRatioClasses[aspectRatio], className)}>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-md border border-dashed border-slate-700 bg-slate-900/50',
+        aspectRatioClasses[aspectRatio],
+        className,
+      )}
+    >
       {value ? (
         <div className="group relative h-full w-full">
           {imageUrl ? (
             <img
-            src={imageUrl}
-            alt="Uploaded"
-            className="h-full w-full object-cover transition-opacity group-hover:opacity-75"
-          />
+              src={imageUrl}
+              alt="Uploaded"
+              className="h-full w-full object-cover transition-opacity group-hover:opacity-75"
+            />
           ) : (
-             <div className="flex h-full w-full items-center justify-center bg-slate-800">
-                <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-             </div>
+            <div className="flex h-full w-full items-center justify-center bg-slate-800">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            </div>
           )}
-          
+
           <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
             <Button
               type="button"
@@ -101,7 +108,12 @@ export function ImageUpload({
           {isUploading ? (
             <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
           ) : (
-            <Upload className={cn("h-8 w-8 text-slate-400 transition-colors", isHovering && "text-primary")} />
+            <Upload
+              className={cn(
+                'h-8 w-8 text-slate-400 transition-colors',
+                isHovering && 'text-primary',
+              )}
+            />
           )}
           <span className="text-sm font-medium text-slate-400">
             {isUploading ? 'Uploading...' : 'Click to upload'}

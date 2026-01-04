@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Calendar, Edit2, Film, Loader2, Plus, Star, Trash2 } from 'lucide-react'
+import {
+  Calendar,
+  Edit2,
+  Film,
+  Loader2,
+  Plus,
+  Star,
+  Trash2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -42,7 +50,12 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageUpload } from '@/components/ui/image-upload'
-import { useCreateRating, useDeleteRating, useUpdateRating, useUserRatings } from '@/hooks/use-ratings-api'
+import {
+  useCreateRating,
+  useDeleteRating,
+  useUpdateRating,
+  useUserRatings,
+} from '@/hooks/use-ratings-api'
 import { useUserBookings } from '@/hooks/use-bookings-api'
 import { useAuth } from '@/hooks/use-auth'
 import { useImages } from '@/hooks/use-images-api'
@@ -62,11 +75,19 @@ export const Route = createFileRoute('/user/reviews')({
 
 function UserReviewsPage() {
   const { user } = useAuth()
-  const { data: ratings, isLoading: isLoadingRatings, error: ratingsError } = useUserRatings(user?.userId || '')
+  const {
+    data: ratings,
+    isLoading: isLoadingRatings,
+    error: ratingsError,
+  } = useUserRatings(user?.userId || '')
   const { data: bookings, isLoading: isLoadingBookings } = useUserBookings()
-  
-  const [editingRating, setEditingRating] = useState<RatingWithMovie | null>(null)
-  const [deletingRating, setDeletingRating] = useState<RatingWithMovie | null>(null)
+
+  const [editingRating, setEditingRating] = useState<RatingWithMovie | null>(
+    null,
+  )
+  const [deletingRating, setDeletingRating] = useState<RatingWithMovie | null>(
+    null,
+  )
   const [isAddingReview, setIsAddingReview] = useState(false)
 
   const isLoading = isLoadingRatings || isLoadingBookings
@@ -88,21 +109,24 @@ function UserReviewsPage() {
   }
 
   const ratingsList = (ratings as unknown as Array<RatingWithMovie>) || []
-  
+
   // Logic to determine which movies can be reviewed
   // 1. Must have a confirmed booking
   // 2. Must not have been reviewed already
-  const confirmedBookings = (bookings as unknown as Array<BookingWithDetails>)?.filter(b => b.status === 'confirmed') || []
-  const reviewedMovieIds = new Set(ratingsList.map(r => r.movie_id))
-  
+  const confirmedBookings =
+    (bookings as unknown as Array<BookingWithDetails>)?.filter(
+      (b) => b.status === 'confirmed',
+    ) || []
+  const reviewedMovieIds = new Set(ratingsList.map((r) => r.movie_id))
+
   // Use a map to get unique movies (user might have booked the same movie multiple times)
   const reviewableMoviesMap = new Map()
-  confirmedBookings.forEach(booking => {
+  confirmedBookings.forEach((booking) => {
     if (booking.movie && !reviewedMovieIds.has(booking.movie_id)) {
       reviewableMoviesMap.set(booking.movie_id, booking.movie)
     }
   })
-  
+
   const reviewableMovies = Array.from(reviewableMoviesMap.values())
 
   return (
@@ -112,7 +136,7 @@ function UserReviewsPage() {
           <h1 className="text-3xl font-bold text-white">My Reviews</h1>
           <p className="mt-1 text-slate-400">Manage your movie reviews</p>
         </div>
-        <Button 
+        <Button
           onClick={() => setIsAddingReview(true)}
           className="bg-amber-500 text-slate-900 hover:bg-amber-400"
         >
@@ -157,7 +181,7 @@ function UserReviewsPage() {
         />
       )}
 
-      <AddReviewDialog 
+      <AddReviewDialog
         open={isAddingReview}
         onOpenChange={setIsAddingReview}
         reviewableMovies={reviewableMovies}
@@ -185,9 +209,9 @@ function ReviewCard({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
             {rating.movie?.poster_url ? (
-              <img 
-                src={rating.movie.poster_url} 
-                alt={rating.movie.title} 
+              <img
+                src={rating.movie.poster_url}
+                alt={rating.movie.title}
                 className="h-16 w-12 rounded object-cover"
               />
             ) : (
@@ -247,13 +271,22 @@ function ReviewCard({
         </p>
       </CardHeader>
       <CardContent>
-        <p className="mb-4 whitespace-pre-wrap text-slate-300">{rating.review}</p>
-        
+        <p className="mb-4 whitespace-pre-wrap text-slate-300">
+          {rating.review}
+        </p>
+
         {imageUrls.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-2">
             {imageUrls.map((url, index) => (
-              <div key={index} className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-slate-700">
-                <img src={url} alt="Review attachment" className="h-full w-full object-cover" />
+              <div
+                key={index}
+                className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-slate-700"
+              >
+                <img
+                  src={url}
+                  alt="Review attachment"
+                  className="h-full w-full object-cover"
+                />
               </div>
             ))}
           </div>
@@ -283,7 +316,7 @@ function AddReviewDialog({
 }) {
   const { mutate: createRating, isPending } = useCreateRating()
   const [hoverRating, setHoverRating] = useState(0)
-  
+
   const form = useForm<z.infer<typeof reviewSchema>>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
@@ -317,7 +350,7 @@ function AddReviewDialog({
         onError: () => {
           toast.error('Failed to submit review')
         },
-      }
+      },
     )
   }
 
@@ -332,11 +365,12 @@ function AddReviewDialog({
           <div className="py-8 text-center text-slate-400">
             <p>You don't have any movies to review.</p>
             <p className="mt-2 text-sm">
-              You can only review movies you have booked and watched, and haven't reviewed yet.
+              You can only review movies you have booked and watched, and
+              haven't reviewed yet.
             </p>
-            <Button 
-              onClick={() => onOpenChange(false)} 
-              variant="outline" 
+            <Button
+              onClick={() => onOpenChange(false)}
+              variant="outline"
               className="mt-4 border-slate-600 text-slate-300"
             >
               Close
@@ -351,7 +385,10 @@ function AddReviewDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Movie</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger className="border-slate-700 bg-slate-800 text-slate-100">
                           <SelectValue placeholder="Select a movie to review" />
@@ -359,7 +396,11 @@ function AddReviewDialog({
                       </FormControl>
                       <SelectContent className="border-slate-700 bg-slate-800 text-slate-100">
                         {reviewableMovies.map((movie) => (
-                          <SelectItem key={movie.id} value={movie.id} className="focus:bg-slate-700 focus:text-slate-100">
+                          <SelectItem
+                            key={movie.id}
+                            value={movie.id}
+                            className="focus:bg-slate-700 focus:text-slate-100"
+                          >
                             {movie.title}
                           </SelectItem>
                         ))}
@@ -434,10 +475,10 @@ function AddReviewDialog({
                   <FormItem>
                     <FormLabel>Images (Optional)</FormLabel>
                     <FormControl>
-                       <ReviewImagesEditor 
-                          keys={field.value || []} 
-                          onChange={field.onChange} 
-                       />
+                      <ReviewImagesEditor
+                        keys={field.value || []}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -453,8 +494,14 @@ function AddReviewDialog({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isPending} className="bg-amber-600 hover:bg-amber-700">
-                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="bg-amber-600 hover:bg-amber-700"
+                >
+                  {isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Submit Review
                 </Button>
               </DialogFooter>
@@ -476,7 +523,7 @@ function EditReviewDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const { mutate: updateRating, isPending } = useUpdateRating()
-  
+
   const form = useForm<z.infer<typeof reviewSchema>>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
@@ -503,7 +550,7 @@ function EditReviewDialog({
         onError: () => {
           toast.error('Failed to update review')
         },
-      }
+      },
     )
   }
 
@@ -582,10 +629,10 @@ function EditReviewDialog({
                 <FormItem>
                   <FormLabel>Images (Optional)</FormLabel>
                   <FormControl>
-                     <ReviewImagesEditor 
-                        keys={field.value || []} 
-                        onChange={field.onChange} 
-                     />
+                    <ReviewImagesEditor
+                      keys={field.value || []}
+                      onChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -601,7 +648,11 @@ function EditReviewDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending} className="bg-amber-600 hover:bg-amber-700">
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="bg-amber-600 hover:bg-amber-700"
+              >
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Changes
               </Button>
@@ -642,8 +693,11 @@ function DeleteReviewDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription className="text-slate-400">
-            This will permanently delete your review for <span className="text-white font-medium">{rating.movie?.title}</span>.
-            This action cannot be undone.
+            This will permanently delete your review for{' '}
+            <span className="text-white font-medium">
+              {rating.movie?.title}
+            </span>
+            . This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -663,12 +717,12 @@ function DeleteReviewDialog({
   )
 }
 
-function ReviewImagesEditor({ 
-  keys, 
-  onChange 
-}: { 
-  keys: Array<string>, 
-  onChange: (keys: Array<string>) => void 
+function ReviewImagesEditor({
+  keys,
+  onChange,
+}: {
+  keys: Array<string>
+  onChange: (keys: Array<string>) => void
 }) {
   const handleAdd = (newKey: string) => {
     onChange([...keys, newKey])
@@ -680,11 +734,11 @@ function ReviewImagesEditor({
 
   const handleReplace = (indexToReplace: number, newKey: string) => {
     if (!newKey) {
-        handleRemove(indexToReplace)
+      handleRemove(indexToReplace)
     } else {
-        const newKeys = [...keys]
-        newKeys[indexToReplace] = newKey
-        onChange(newKeys)
+      const newKeys = [...keys]
+      newKeys[indexToReplace] = newKey
+      onChange(newKeys)
     }
   }
 
@@ -701,16 +755,16 @@ function ReviewImagesEditor({
           />
         </div>
       ))}
-      
+
       {/* Show add button if fewer than 3 images */}
       {keys.length < 3 && (
-         <ImageUpload
-            folder="reviews"
-            value=""
-            onChange={handleAdd}
-            aspectRatio="square"
-            className="h-24 w-full"
-          />
+        <ImageUpload
+          folder="reviews"
+          value=""
+          onChange={handleAdd}
+          aspectRatio="square"
+          className="h-24 w-full"
+        />
       )}
     </div>
   )

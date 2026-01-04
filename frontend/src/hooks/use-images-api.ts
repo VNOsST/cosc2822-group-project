@@ -29,7 +29,7 @@ export function useUploadImage() {
         {
           folder,
           contentType: file.type,
-        }
+        },
       )
 
       // 2. Upload to S3
@@ -48,6 +48,36 @@ export function useUploadImage() {
       }
 
       return key
+    },
+  })
+}
+
+export function useDeleteImage() {
+  return useMutation({
+    mutationFn: async (key: string) => {
+      if (!key) return
+      return apiClient.delete(`/images/${key}`)
+    },
+  })
+}
+
+interface BatchDeleteResponse {
+  succeeded: Array<string>
+  failed: Array<string>
+}
+
+export function useDeleteImages() {
+  return useMutation({
+    mutationFn: async (keys: Array<string>) => {
+      if (!keys || keys.length === 0) return { succeeded: [], failed: [] }
+      
+      // Filter out empty keys and HTTP URLs (external images we don't own)
+      const validKeys = keys.filter((key) => key && !key.startsWith('http'))
+      if (validKeys.length === 0) return { succeeded: [], failed: [] }
+      
+      return apiClient.post<BatchDeleteResponse>('/images/batch-delete', {
+        keys: validKeys,
+      })
     },
   })
 }

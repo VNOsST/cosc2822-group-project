@@ -3,6 +3,7 @@ import { Clock, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { RemoteImage } from '@/components/ui/remote-image'
 import { ErrorState } from '@/components/error-state'
 import { serverApiClient } from '@/lib/server-api-client'
 import type { Movie } from '@/lib/api-types'
@@ -57,7 +58,7 @@ function PublicMoviesPage() {
             className="group overflow-hidden border-slate-700/50 bg-slate-800/50 transition-all duration-300 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10"
           >
             <div className="relative aspect-2/3 overflow-hidden">
-              <img
+              <RemoteImage
                 src={movie.poster_url}
                 alt={movie.title}
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"

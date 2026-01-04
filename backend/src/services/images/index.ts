@@ -30,7 +30,6 @@ app.get("/health", (c) => c.json({ service: "images", status: "ok" }));
 
 // Mount routes at root since API Gateway routes to /images
 app.route("/images", imagesRoutes);
-app.route("/", imagesRoutes);
 
 // Error handling
 app.onError((err, c) => {
