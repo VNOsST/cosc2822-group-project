@@ -506,7 +506,7 @@ Resources:
       Description: CineCloud Images Service
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
-        # Public routes (for viewing images via signed URLs logic if needed publicly, but here we use authenticated endpoints usually, 
+        # Public routes (for viewing images via signed URLs logic if needed publicly, but here we use authenticated endpoints usually,
         # however for getting a signed URL to view, we might want it open or protected. The plan said authenticated/public mix.)
         # Based on plan:
         # POST /images/upload-url (Auth required)
@@ -516,8 +516,8 @@ Resources:
             RestApiId: !Ref CineCloudApi
             Path: /images/upload-url
             Method: POST
-        # GET /images/{key} (Public or Auth? Usually images are public for movies/rooms. But plan said "Private Bucket". 
-        # So we need an endpoint to get the signed URL. 
+        # GET /images/{key} (Public or Auth? Usually images are public for movies/rooms. But plan said "Private Bucket".
+        # So we need an endpoint to get the signed URL.
         # Let's make viewing movies/rooms public, but maybe reviews are public too.)
         GetImage:
           Type: Api

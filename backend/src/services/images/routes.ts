@@ -77,9 +77,9 @@ images.post("/batch", async (c) => {
           });
           urls[key] = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
         } catch (err) {
-            console.error(`Failed to sign url for key ${key}`, err);
+          console.error(`Failed to sign url for key ${key}`, err);
         }
-      })
+      }),
     );
 
     return c.json({
@@ -87,8 +87,8 @@ images.post("/batch", async (c) => {
       data: urls,
     });
   } catch (error) {
-     console.error("[images]", "Error processing batch:", error);
-     return c.json({ success: false, error: "Failed to process batch" }, 500);
+    console.error("[images]", "Error processing batch:", error);
+    return c.json({ success: false, error: "Failed to process batch" }, 500);
   }
 });
 
@@ -144,18 +144,21 @@ images.post("/batch-delete", requireAuth(), async (c) => {
           console.error(`[images] Failed to delete key ${key}:`, err);
           deleteResults.failed.push(key);
         }
-      })
+      }),
     );
 
     const allSucceeded = deleteResults.failed.length === 0;
 
-    return c.json({
-      success: allSucceeded,
-      data: deleteResults,
-      ...(deleteResults.failed.length > 0 && {
-        error: `Failed to delete ${deleteResults.failed.length} image(s)`,
-      }),
-    }, allSucceeded ? 200 : 207); // 207 Multi-Status if partial success
+    return c.json(
+      {
+        success: allSucceeded,
+        data: deleteResults,
+        ...(deleteResults.failed.length > 0 && {
+          error: `Failed to delete ${deleteResults.failed.length} image(s)`,
+        }),
+      },
+      allSucceeded ? 200 : 207,
+    ); // 207 Multi-Status if partial success
   } catch (error) {
     console.error("[images]", "Error processing batch delete:", error);
     return c.json({ success: false, error: "Failed to process batch delete" }, 500);
@@ -173,7 +176,9 @@ images.delete("/*", requireAuth(), async (c) => {
     key = key.replace(/^images\//, "");
   }
 
-  console.log(`[images] Deleting image. Bucket: ${IMAGES_BUCKET}, Key: '${key}', RawPath: '${rawPath}'`);
+  console.log(
+    `[images] Deleting image. Bucket: ${IMAGES_BUCKET}, Key: '${key}', RawPath: '${rawPath}'`,
+  );
 
   try {
     const command = new DeleteObjectCommand({

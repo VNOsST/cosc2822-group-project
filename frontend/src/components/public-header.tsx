@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
-
 const NAV_LINKS = [
   { to: '/public/movies', label: 'Movies' },
   { to: '/public/showtimes', label: 'Showtimes' },

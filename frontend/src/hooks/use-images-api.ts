@@ -70,11 +70,11 @@ export function useDeleteImages() {
   return useMutation({
     mutationFn: async (keys: Array<string>) => {
       if (!keys || keys.length === 0) return { succeeded: [], failed: [] }
-      
+
       // Filter out empty keys and HTTP URLs (external images we don't own)
       const validKeys = keys.filter((key) => key && !key.startsWith('http'))
       if (validKeys.length === 0) return { succeeded: [], failed: [] }
-      
+
       return apiClient.post<BatchDeleteResponse>('/images/batch-delete', {
         keys: validKeys,
       })
