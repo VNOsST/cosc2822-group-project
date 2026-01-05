@@ -1,32 +1,32 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { Monitor, Users } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { RemoteImage } from "@/components/ui/remote-image";
-import { ErrorState } from "@/components/error-state";
-import { serverApiClient } from "@/lib/server-api-client";
-import type { Room } from "@/lib/api-types";
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { Monitor, Users } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { RemoteImage } from '@/components/ui/remote-image'
+import { ErrorState } from '@/components/error-state'
+import { serverApiClient } from '@/lib/server-api-client'
+import type { Room } from '@/lib/api-types'
 
-export const Route = createFileRoute("/public/rooms/")({
-  ssr: "data-only",
+export const Route = createFileRoute('/public/rooms/')({
+  ssr: 'data-only',
   loader: async () => {
     try {
-      const rooms = await serverApiClient.get<Array<Room>>("/rooms");
-      return { rooms, error: null };
+      const rooms = await serverApiClient.get<Array<Room>>('/rooms')
+      return { rooms, error: null }
     } catch (error) {
-      console.error("Failed to load rooms on server:", error);
+      console.error('Failed to load rooms on server:', error)
       return {
         rooms: [],
-        error: error instanceof Error ? error.message : "Failed to load rooms",
-      };
+        error: error instanceof Error ? error.message : 'Failed to load rooms',
+      }
     }
   },
   component: PublicRoomsPage,
-});
+})
 
 function PublicRoomsPage() {
-  const { rooms, error } = Route.useLoaderData();
+  const { rooms, error } = Route.useLoaderData()
 
   return (
     <div className="space-y-8">
@@ -84,11 +84,11 @@ function PublicRoomsPage() {
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
                 <div>
-                  <span className="font-medium">Layout:</span>{" "}
+                  <span className="font-medium">Layout:</span>{' '}
                   {room.layout_config.rows} × {room.layout_config.columns}
                 </div>
                 <div>
-                  <span className="font-medium">Images:</span>{" "}
+                  <span className="font-medium">Images:</span>{' '}
                   {room.room_image_urls?.length || 0}
                 </div>
               </div>
@@ -117,5 +117,5 @@ function PublicRoomsPage() {
         </div>
       )}
     </div>
-  );
+  )
 }
