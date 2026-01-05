@@ -14,6 +14,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
 import { adminOnly } from "../../shared/middleware";
+import { runMovieSync } from "../../scheduled/movie-sync";
 import type { Movie, Showtime } from "../../shared/types/entities";
 
 const movies = new Hono();
@@ -216,7 +217,7 @@ movies.post("/", adminOnly(), async (c) => {
     }
 
     const data = validationResult.data;
-    const movieId = `movie-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const movieId = crypto.randomUUID();
 
     const movie: Movie = {
       id: movieId,
@@ -363,6 +364,39 @@ movies.delete("/:id", adminOnly(), async (c) => {
   } catch (error) {
     console.error("[movies]", "Error deleting movie:", error);
     return c.json({ success: false, error: "Failed to delete movie" }, 500);
+  }
+});
+
+// POST /movies/sync - Trigger manual movie sync from TMDB (admin)
+movies.post("/sync", adminOnly(), async (c) => {
+  try {
+    console.log("[movies] Manual sync triggered");
+    const startTime = Date.now();
+
+    const result = await runMovieSync();
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`[movies] Manual sync completed in ${duration}s`);
+
+    return c.json({
+      success: true,
+      data: {
+        newMoviesCreated: result.newMoviesCreated,
+        ratingsUpdated: result.ratingsUpdated,
+        errorCount: result.errors.length,
+        errors: result.errors.length > 0 ? result.errors : undefined,
+        duration: `${duration}s`,
+      },
+    });
+  } catch (error) {
+    console.error("[movies]", "Error during manual sync:", error);
+    return c.json(
+      {
+        success: false,
+        error: `Sync failed: ${(error as Error).message}`,
+      },
+      500,
+    );
   }
 });
 

@@ -197,7 +197,7 @@ showtimes.post("/", adminOnly(), async (c) => {
     }
 
     const data = validationResult.data;
-    const showtimeId = `showtime-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const showtimeId = crypto.randomUUID();
 
     // Verify movie exists
     const movieResult = await docClient.send(
@@ -303,7 +303,13 @@ showtimes.post("/bulk", adminOnly(), async (c) => {
 
     // Validate that body is an array
     if (!Array.isArray(body)) {
-      return c.json({ success: false, error: "Request body must be an array of showtimes" }, 400);
+      return c.json(
+        {
+          success: false,
+          error: "Request body must be an array of showtimes",
+        },
+        400,
+      );
     }
 
     // Validate each showtime
@@ -435,7 +441,10 @@ showtimes.post("/bulk", adminOnly(), async (c) => {
       });
 
       if (hasExistingConflict) {
-        conflicts.push({ index, reason: "Conflicts with existing showtime" });
+        conflicts.push({
+          index,
+          reason: "Conflicts with existing showtime",
+        });
         return;
       }
 
@@ -452,7 +461,10 @@ showtimes.post("/bulk", adminOnly(), async (c) => {
       });
 
       if (hasNewConflict) {
-        conflicts.push({ index, reason: "Conflicts with another showtime in this batch" });
+        conflicts.push({
+          index,
+          reason: "Conflicts with another showtime in this batch",
+        });
         return;
       }
 
@@ -481,7 +493,7 @@ showtimes.post("/bulk", adminOnly(), async (c) => {
     const createdShowtimes: Showtime[] = [];
 
     for (const data of showtimesWithEndTimes) {
-      const showtimeId = `showtime-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const showtimeId = crypto.randomUUID();
 
       const showtime: Showtime = {
         movie_id: data.movie_id,
