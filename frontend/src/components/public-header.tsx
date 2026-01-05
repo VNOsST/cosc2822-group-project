@@ -11,6 +11,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
+const NAV_LINKS = [
+  { to: '/public/movies', label: 'Movies' },
+  { to: '/public/showtimes', label: 'Showtimes' },
+  { to: '/public/rooms', label: 'Rooms' },
+]
+
 export function PublicHeader() {
   const { user, isAuthenticated, signOut } = useAuth()
 
@@ -27,18 +33,15 @@ export function PublicHeader() {
 
         {/* Navigation */}
         <nav className="flex items-center gap-6">
-          <Link
-            to="/public/movies"
-            className="text-sm font-medium text-slate-300 transition-colors hover:text-white"
-          >
-            Movies
-          </Link>
-          <Link
-            to="/public/showtimes"
-            className="text-sm font-medium text-slate-300 transition-colors hover:text-white"
-          >
-            Showtimes
-          </Link>
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="text-sm font-medium text-slate-300 transition-colors hover:text-white"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         {/* Auth Actions */}

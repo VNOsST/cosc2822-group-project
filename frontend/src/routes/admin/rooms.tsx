@@ -17,6 +17,7 @@ import { useRooms } from '@/hooks/use-rooms-api'
 import { RoomDialog } from '@/components/admin/room-dialog'
 import { DeleteRoomDialog } from '@/components/admin/delete-room-dialog'
 import { RoomDetailsDialog } from '@/components/admin/room-details-dialog'
+import { RemoteImage } from '@/components/ui/remote-image'
 import type { Room } from '@/lib/api-types'
 
 export const Route = createFileRoute('/admin/rooms')({
@@ -106,6 +107,7 @@ function RoomsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[100px]">Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Screen Type</TableHead>
                   <TableHead>Capacity</TableHead>
@@ -117,6 +119,21 @@ function RoomsPage() {
               <TableBody>
                 {rooms.map((room) => (
                   <TableRow key={room.room_id}>
+                    <TableCell>
+                      <div className="h-12 w-20 overflow-hidden rounded-md border bg-muted">
+                        {room.room_image_urls?.[0] ? (
+                          <RemoteImage
+                            src={room.room_image_urls[0]}
+                            alt={room.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                            No image
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="font-medium">{room.name}</TableCell>
                     <TableCell>
                       <Badge
