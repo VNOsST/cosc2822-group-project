@@ -90,7 +90,7 @@ rooms.post("/", adminOnly(), async (c) => {
     }
 
     const data = validationResult.data;
-    const roomId = `room-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const roomId = crypto.randomUUID();
 
     const room: Room = {
       room_id: roomId,

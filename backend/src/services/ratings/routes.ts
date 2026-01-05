@@ -257,7 +257,7 @@ ratings.post("/", requireAuth(), async (c) => {
     }
 
     const data = validationResult.data;
-    const ratingId = `rating-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const ratingId = crypto.randomUUID();
 
     const rating: MovieRating = {
       id: ratingId,

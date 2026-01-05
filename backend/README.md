@@ -14,6 +14,10 @@ This backend uses a **microservices architecture** where each service runs as an
 - **Rooms Service** (`/rooms`) - Cinema room management with layout configuration
 - **Ratings Service** (`/ratings`) - Movie ratings and reviews with automatic average calculation
 
+### Scheduled Jobs
+
+- **Movie Sync** - Daily cron job that fetches movies from TMDB and updates ratings for recent releases (see [Movie Sync README](src/scheduled/movie-sync/README.md))
+
 ## Tech Stack
 
 - **Runtime**: Node.js 20.x (AWS Lambda)
@@ -44,6 +48,11 @@ backend/
 │   │   └── ratings/
 │   │       ├── index.ts        # Ratings service entry point & Lambda handler
 │   │       └── routes.ts       # Ratings API routes
+│   ├── scheduled/              # Scheduled Lambda functions (cron jobs)
+│   │   └── movie-sync/
+│   │       ├── index.ts        # Movie sync job handler
+│   │       ├── tmdb-client.ts  # TMDB API client
+│   │       └── README.md       # Job documentation
 │   └── shared/                 # Shared code across all services
 │       ├── db/
 │       │   └── client.ts       # DynamoDB client configuration

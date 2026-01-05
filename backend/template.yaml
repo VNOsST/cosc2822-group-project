@@ -32,6 +32,12 @@ Parameters:
       - prod
     Description: Deployment environment
 
+  TMDBApiKey:
+    Type: String
+    NoEcho: true
+    Description: TMDB API key for fetching movie data
+    Default: ""
+
 Resources:
   # API Gateway
   CineCloudApi:
@@ -136,6 +142,12 @@ Resources:
       Handler: services/movies/index.handler
       Description: CineCloud Movies Service
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 300 # Extended timeout for sync operation
+      MemorySize: 512 # More memory for sync operation
+      Environment:
+        Variables:
+          TMDB_API_KEY: !Ref TMDBApiKey
+          MOVIES_IMAGES_BUCKET: !Ref MovieImagesBucket
       Events:
         # Public routes (no auth required)
         GetMovies:
@@ -197,6 +209,12 @@ Resources:
             RestApiId: !Ref CineCloudApi
             Path: /movies/{id}
             Method: DELETE
+        SyncMovies:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /movies/sync
+            Method: POST
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -590,6 +608,78 @@ Resources:
       SourceArn: !GetAtt CineCloudUserPool.Arn
       Action: lambda:InvokeFunction
 
+  # Movie Sync Scheduled Lambda Function
+  # Runs daily to fetch new movies from TMDB and update ratings for recent releases
+  MovieSyncFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-movie-sync-${Environment}"
+      CodeUri: ./
+      Handler: scheduled/movie-sync/index.handler
+      Description: CineCloud Movie Sync - Fetches movies from TMDB and updates ratings daily
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 300 # 5 minutes timeout for batch processing
+      MemorySize: 512 # More memory for batch operations
+      Environment:
+        Variables:
+          TMDB_API_KEY: !Ref TMDBApiKey
+          MOVIES_IMAGES_BUCKET: !Ref MovieImagesBucket
+      Events:
+        # Daily schedule at 2:00 AM UTC (12:00 PM AEST)
+        DailySync:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 2 * * ? *)
+            Name: !Sub "cinecloud-movie-sync-daily-${Environment}"
+            Description: Daily movie sync from TMDB
+            Enabled: true
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/scheduled/movie-sync/index.ts
+        External:
+          - "@aws-sdk/*"
+
+  # S3 Bucket for Movie Images
+  MovieImagesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "cinecloud-movie-images-${Environment}-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+            AllowedOrigins:
+              - "*"
+            MaxAge: 3600
+
+  # S3 Bucket Policy for public read access
+  MovieImagesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref MovieImagesBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "${MovieImagesBucket.Arn}/*"
+
   # DynamoDB Tables
   MoviesTable:
     Type: AWS::DynamoDB::Table
@@ -885,6 +975,14 @@ Outputs:
     Description: Users DynamoDB Table Name
     Value: !Ref UsersTable
 
-  ImagesBucketName:
-    Description: Images S3 Bucket Name
-    Value: !Ref ImagesBucket
+  MovieSyncFunctionName:
+    Description: Movie Sync Lambda Function Name
+    Value: !Ref MovieSyncFunction
+
+  MovieImagesBucketName:
+    Description: S3 Bucket for movie images
+    Value: !Ref MovieImagesBucket
+
+  MovieImagesBucketUrl:
+    Description: S3 Bucket URL for movie images
+    Value: !Sub "https://${MovieImagesBucket}.s3.${AWS::Region}.amazonaws.com"
