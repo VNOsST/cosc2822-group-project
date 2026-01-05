@@ -3,48 +3,99 @@ import { Calendar, Clock, MapPin, Ticket } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-
-// Mock bookings data
-const MOCK_BOOKINGS = [
-  {
-    id: '1',
-    movieTitle: 'Dune: Part Two',
-    roomName: 'Screen 1 - IMAX',
-    date: '2024-12-25',
-    time: '19:00',
-    seats: ['A1', 'A2'],
-    totalPrice: 31.98,
-    status: 'confirmed',
-  },
-  {
-    id: '2',
-    movieTitle: 'Oppenheimer',
-    roomName: 'Screen 2 - Dolby Atmos',
-    date: '2024-12-26',
-    time: '15:00',
-    seats: ['C5'],
-    totalPrice: 14.99,
-    status: 'confirmed',
-  },
-  {
-    id: '3',
-    movieTitle: 'The Batman',
-    roomName: 'Screen 3',
-    date: '2024-12-20',
-    time: '21:00',
-    seats: ['B3', 'B4'],
-    totalPrice: 25.98,
-    status: 'completed',
-  },
-]
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { useCancelBooking, useUserBookings } from '@/hooks/use-bookings-api'
+import { formatCurrency } from '@/lib/utils'
+import type { BookingWithDetails } from '@/lib/api-types'
 
 export const Route = createFileRoute('/user/bookings')({
   component: UserBookingsPage,
 })
 
 function UserBookingsPage() {
-  const upcomingBookings = MOCK_BOOKINGS.filter((b) => b.status === 'confirmed')
-  const pastBookings = MOCK_BOOKINGS.filter((b) => b.status === 'completed')
+  const { data: bookings, isLoading, error } = useUserBookings()
+  const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking()
+
+  const handleCancelBooking = (booking: BookingWithDetails) => {
+    cancelBooking(
+      { email: booking.user_email, bookingId: booking.booking_id },
+      {
+        onError: (error) => {
+          // Display error message to user
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to cancel booking'
+          alert(errorMessage)
+        },
+      },
+    )
+  }
+
+  const canCancelBooking = (bookingDate: string): boolean => {
+    const bookingTime = new Date(bookingDate).getTime()
+    const currentTime = new Date().getTime()
+    const hoursSinceBooking = (currentTime - bookingTime) / (1000 * 60 * 60)
+    return hoursSinceBooking <= 6
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white">My Bookings</h1>
+          <p className="mt-1 text-slate-400">
+            View and manage your movie bookings
+          </p>
+        </div>
+        <div className="text-center text-slate-400">
+          Loading your bookings...
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white">My Bookings</h1>
+          <p className="mt-1 text-slate-400">
+            View and manage your movie bookings
+          </p>
+        </div>
+        <Card className="border-slate-700/50 bg-slate-800/50">
+          <CardContent className="py-8 text-center text-red-400">
+            Failed to load bookings. Please try again.
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const upcomingBookings =
+    bookings?.filter(
+      (b) =>
+        b.status === 'confirmed' &&
+        b.showtime &&
+        new Date(b.showtime.start_time).getTime() > new Date().getTime(),
+    ) || []
+
+  const pastBookings =
+    bookings?.filter(
+      (b) =>
+        b.status === 'cancelled' ||
+        (b.showtime &&
+          new Date(b.showtime.start_time).getTime() <= new Date().getTime()),
+    ) || []
 
   return (
     <div className="space-y-8">
@@ -71,13 +122,13 @@ function UserBookingsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {upcomingBookings.map((booking) => (
               <Card
-                key={booking.id}
+                key={booking.booking_id}
                 className="border-slate-700/50 bg-slate-800/50"
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-lg text-white">
-                      {booking.movieTitle}
+                      {booking.movie?.title || 'Unknown Movie'}
                     </CardTitle>
                     <Badge className="bg-green-500/20 text-green-400">
                       Confirmed
@@ -88,16 +139,27 @@ function UserBookingsPage() {
                   <div className="flex flex-wrap gap-4 text-sm text-slate-400">
                     <span className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      {booking.roomName}
+                      {booking.room?.name || 'Unknown Room'}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(booking.date).toLocaleDateString()}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {booking.time}
-                    </span>
+                    {booking.showtime && (
+                      <>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(
+                            booking.showtime.start_time,
+                          ).toLocaleDateString()}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {new Date(
+                            booking.showtime.start_time,
+                          ).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </>
+                    )}
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
@@ -107,16 +169,47 @@ function UserBookingsPage() {
                       </span>
                     </div>
                     <span className="text-lg font-bold text-amber-500">
-                      ${booking.totalPrice.toFixed(2)}
+                      {formatCurrency(booking.total_amount)}
                     </span>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full border-red-500/50 text-red-400 hover:bg-red-500/10"
-                  >
-                    Cancel Booking
-                  </Button>
+                  {canCancelBooking(booking.booking_date) ? (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-red-500/50 text-red-400 hover:bg-red-500/10"
+                          disabled={isCancelling}
+                        >
+                          {isCancelling ? 'Cancelling...' : 'Cancel Booking'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="border-slate-700 bg-slate-900 text-white">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-slate-400">
+                            This action cannot be undone. This will permanently
+                            cancel your booking for {booking.movie?.title}.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="border-slate-700 bg-slate-800 text-white hover:bg-slate-700">
+                            Go Back
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleCancelBooking(booking)}
+                            className="bg-red-600 text-white hover:bg-red-700"
+                          >
+                            Cancel Booking
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  ) : (
+                    <p className="text-xs text-slate-500">
+                      Cancellation period expired (6hrs after booking)
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -137,32 +230,45 @@ function UserBookingsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {pastBookings.map((booking) => (
               <Card
-                key={booking.id}
+                key={booking.booking_id}
                 className="border-slate-700/50 bg-slate-800/30 opacity-70"
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-lg text-slate-300">
-                      {booking.movieTitle}
+                      {booking.movie?.title || 'Unknown Movie'}
                     </CardTitle>
                     <Badge
                       variant="secondary"
                       className="bg-slate-700 text-slate-400"
                     >
-                      Completed
+                      {booking.status === 'cancelled'
+                        ? 'Cancelled'
+                        : 'Completed'}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(booking.date).toLocaleDateString()}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {booking.time}
-                    </span>
+                    {booking.showtime && (
+                      <>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(
+                            booking.showtime.start_time,
+                          ).toLocaleDateString()}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {new Date(
+                            booking.showtime.start_time,
+                          ).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -173,3 +279,4 @@ function UserBookingsPage() {
     </div>
   )
 }
+

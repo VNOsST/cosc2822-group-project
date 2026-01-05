@@ -23,7 +23,7 @@ const createBookingSchema = z.object({
   total_amount: z.number().positive(),
 });
 
-// GET /bookings - Get user's bookings
+// GET /bookings - Get user's bookings with details
 bookings.get("/", requireAuth(), async (c) => {
   const user = getUser(c);
   const userEmail = user.email;
@@ -43,10 +43,68 @@ bookings.get("/", requireAuth(), async (c) => {
       }),
     );
 
+    const bookings = result.Items as Booking[];
+
+    // Fetch related data for each booking
+    const bookingsWithDetails = await Promise.all(
+      bookings.map(async (booking) => {
+        // Fetch movie
+        let movie;
+        try {
+          const movieResult = await docClient.send(
+            new GetCommand({
+              TableName: TABLE_NAMES.MOVIES,
+              Key: { id: booking.movie_id },
+            }),
+          );
+          movie = movieResult.Item as Movie | undefined;
+        } catch (error) {
+          console.error(`Error fetching movie ${booking.movie_id}:`, error);
+        }
+
+        // Fetch showtime
+        let showtime;
+        let room;
+        try {
+          const showtimeResult = await docClient.send(
+            new QueryCommand({
+              TableName: TABLE_NAMES.SHOWTIMES,
+              IndexName: "showtime_id-index",
+              KeyConditionExpression: "showtime_id = :showtimeId",
+              ExpressionAttributeValues: {
+                ":showtimeId": booking.showtime_id,
+              },
+            }),
+          );
+          showtime = showtimeResult.Items?.[0] as Showtime | undefined;
+
+          // Fetch room if showtime exists
+          if (showtime?.room_id) {
+            const roomResult = await docClient.send(
+              new GetCommand({
+                TableName: TABLE_NAMES.ROOMS,
+                Key: { room_id: showtime.room_id },
+              }),
+            );
+            room = roomResult.Item;
+          }
+        } catch (error) {
+          console.error(`Error fetching showtime ${booking.showtime_id}:`, error);
+        }
+
+        return {
+          ...booking,
+          movie,
+          showtime,
+          room,
+        };
+      }),
+    );
+
     return c.json({
       success: true,
-      data: result.Items as Booking[],
-      count: result.Count || 0,
+      data: bookingsWithDetails,
+      count: bookingsWithDetails.length,
     });
   } catch (error) {
     console.error("[bookings]", "Error fetching bookings:", error);
@@ -323,6 +381,26 @@ bookings.delete("/:userEmail/:bookingId", requireAuth(), async (c) => {
     }
 
     const booking = bookingResult.Item as Booking;
+
+    // Check if booking is already cancelled
+    if (booking.status === "cancelled") {
+      return c.json({ success: false, error: "Booking is already cancelled" }, 400);
+    }
+
+    // Validate 6-hour cancellation window
+    const bookingTime = new Date(booking.booking_date).getTime();
+    const currentTime = new Date().getTime();
+    const hoursSinceBooking = (currentTime - bookingTime) / (1000 * 60 * 60);
+
+    if (hoursSinceBooking > 6) {
+      return c.json(
+        {
+          success: false,
+          error: "Booking can only be cancelled within 6 hours of booking time",
+        },
+        400,
+      );
+    }
 
     // Get the showtime to release seats
     const showtimeResult = await docClient.send(
