@@ -217,7 +217,7 @@ bookings.post("/", requireAuth(), async (c) => {
     }
 
     const data = validationResult.data;
-    const bookingId = `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const bookingId = crypto.randomUUID();
 
     // First, get the showtime to check seat availability
     const showtimeResult = await docClient.send(
