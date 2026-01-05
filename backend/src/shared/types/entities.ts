@@ -88,6 +88,7 @@ export interface MovieRating {
   movie_id: string;
   rating: number;
   review?: string;
+  image_keys?: string[]; // S3 keys for review images
   created_at: string;
 }
 

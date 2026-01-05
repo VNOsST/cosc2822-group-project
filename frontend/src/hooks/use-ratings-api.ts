@@ -49,6 +49,7 @@ export function useCreateRating() {
       movie_id: string
       rating: number
       review?: string
+      image_keys?: Array<string>
     }) => apiClient.post<MovieRating>('/ratings', data),
     {
       onSuccess: (_, variables) => {
@@ -63,8 +64,15 @@ export function useUpdateRating() {
   const { invalidate } = useInvalidateQueries()
 
   return useApiMutation(
-    ({ id, ...data }: { id: string; rating?: number; review?: string }) =>
-      apiClient.put<MovieRating>(`/ratings/${id}`, data),
+    ({
+      id,
+      ...data
+    }: {
+      id: string
+      rating?: number
+      review?: string
+      image_keys?: Array<string>
+    }) => apiClient.put<MovieRating>(`/ratings/${id}`, data),
     {
       onSuccess: () => invalidate([...QUERY_KEYS.all]),
     },
