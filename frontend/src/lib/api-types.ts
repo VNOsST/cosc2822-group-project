@@ -91,6 +91,10 @@ export interface MovieRating {
   image_keys?: Array<string>
   created_at: string
   is_spam?: boolean
+  user?: {
+    id: string
+    name: string
+  }
 }
 
 // API Response wrapper

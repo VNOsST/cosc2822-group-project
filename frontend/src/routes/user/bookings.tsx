@@ -279,4 +279,3 @@ function UserBookingsPage() {
     </div>
   )
 }
-

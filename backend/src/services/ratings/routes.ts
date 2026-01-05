@@ -113,12 +113,47 @@ ratings.get("/movie/:movieId", async (c) => {
       ...rating,
       is_spam: detectSpam(rating.review),
     }));
+
+    // Fetch user details for each rating
+    const userIds = [...new Set(items.map((r) => r.user_id))];
+    let usersMap: Record<string, any> = {};
+
+    if (userIds.length > 0) {
+      // Create chunks of 100 IDs if necessary
+      const userKeys = userIds.map((id) => ({ id }));
+      const usersResult = await docClient.send(
+        new BatchGetCommand({
+          RequestItems: {
+            [TABLE_NAMES.USERS]: {
+              Keys: userKeys,
+              ProjectionExpression: "id, #name",
+              ExpressionAttributeNames: { "#name": "name" },
+            },
+          },
+        }),
+      );
+
+      const users = (usersResult.Responses?.[TABLE_NAMES.USERS] as any[]) || [];
+      usersMap = users.reduce(
+        (acc, user) => {
+          acc[user.id] = user;
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
+    }
+
+    const itemsWithUsers = items.map((item) => ({
+      ...item,
+      user: usersMap[item.user_id] || { name: "Unknown User" },
+    }));
+
     const avgRating =
       items.length > 0 ? items.reduce((sum, r) => sum + r.rating, 0) / items.length : 0;
 
     return c.json({
       success: true,
-      data: items,
+      data: itemsWithUsers,
       count: result.Count || 0,
       average_rating: Math.round(avgRating * 10) / 10,
     });

@@ -1,10 +1,12 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Calendar, Clock, Film, Star, Users } from 'lucide-react'
+import { ArrowLeft, Calendar, Clock, Film, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { RemoteImage } from '@/components/ui/remote-image'
 import { ErrorState } from '@/components/error-state'
+import { MovieRatingDisplay } from '@/components/movie-rating-display'
+import { ReviewsSection } from '@/components/reviews-section'
 import { serverApiClient } from '@/lib/server-api-client'
 import type { Movie, Showtime } from '@/lib/api-types'
 
@@ -82,10 +84,11 @@ function MovieDetailPage() {
               className="h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-transparent to-transparent" />
-            <Badge className="absolute right-4 top-4 bg-amber-500 text-slate-900">
-              <Star className="mr-1 h-4 w-4 fill-current" />
-              {movie.rating.toFixed(1)}
-            </Badge>
+            <MovieRatingDisplay
+              movie={movie}
+              className="absolute right-4 top-4"
+              size="md"
+            />
           </div>
         </div>
 
@@ -129,14 +132,9 @@ function MovieDetailPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border border-slate-700/50 bg-slate-800/50 p-4">
-              <Star className="h-5 w-5 text-amber-500" />
-              <div>
-                <p className="text-xs text-slate-400">TMDB Score</p>
-                <p className="font-semibold text-white">
-                  {movie.tmdb_popularity_score.toFixed(1)}
-                </p>
-              </div>
+            <div className="flex flex-col gap-3 rounded-lg border border-slate-700/50 bg-slate-800/50 p-4">
+              <p className="text-xs text-slate-400">CineScore</p>
+              <MovieRatingDisplay movie={movie} size="lg" showLabel />
             </div>
           </div>
 
@@ -262,6 +260,11 @@ function MovieDetailPage() {
           </Card>
         )}
       </div>
+
+      <hr className="border-slate-800" />
+
+      {/* Reviews Section */}
+      <ReviewsSection movieId={movie.id} />
     </div>
   )
 }
