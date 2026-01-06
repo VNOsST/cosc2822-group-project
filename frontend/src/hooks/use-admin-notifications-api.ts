@@ -47,6 +47,9 @@ export function useUnsubscribeAdmin() {
 
 export function useTestAdminNotification() {
   return useApiMutation(() =>
-    apiClient.post<{ message: string; sentAt: string }>('/admin/notifications/test', {}),
+    apiClient.post<{ message: string; sentAt: string }>(
+      '/admin/notifications/test',
+      {},
+    ),
   )
 }
