@@ -21,7 +21,7 @@ import {
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/admin/notifications' as any)({
+export const Route = createFileRoute('/admin/notifications')({
   component: AdminNotificationsPage,
 })
 
