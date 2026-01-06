@@ -97,6 +97,12 @@ export interface MovieRating {
   }
 }
 
+export interface AdminSubscription {
+  email: string
+  subscriptionArn: string
+  status: 'pending' | 'confirmed'
+}
+
 // API Response wrapper
 export interface ApiResponse<T> {
   success: boolean

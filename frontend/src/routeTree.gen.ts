@@ -21,6 +21,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminShowtimesRouteImport } from './routes/admin/showtimes'
 import { Route as AdminRoomsRouteImport } from './routes/admin/rooms'
 import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
+import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminMoviesRouteImport } from './routes/admin/movies'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
@@ -91,6 +92,11 @@ const AdminReviewsRoute = AdminReviewsRouteImport.update({
   path: '/reviews',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMoviesRoute = AdminMoviesRouteImport.update({
   id: '/movies',
   path: '/movies',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/movies': typeof AdminMoviesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/movies': typeof AdminMoviesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/movies': typeof AdminMoviesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/showtimes': typeof AdminShowtimesRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/dashboard'
     | '/admin/movies'
+    | '/admin/notifications'
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/dashboard'
     | '/admin/movies'
+    | '/admin/notifications'
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/dashboard'
     | '/admin/movies'
+    | '/admin/notifications'
     | '/admin/reviews'
     | '/admin/rooms'
     | '/admin/showtimes'
@@ -373,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReviewsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/movies': {
       id: '/admin/movies'
       path: '/movies'
@@ -443,6 +462,7 @@ interface AdminRouteChildren {
   AdminBookingsRoute: typeof AdminBookingsRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminMoviesRoute: typeof AdminMoviesRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminRoomsRoute: typeof AdminRoomsRoute
   AdminShowtimesRoute: typeof AdminShowtimesRoute
@@ -453,6 +473,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBookingsRoute: AdminBookingsRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminMoviesRoute: AdminMoviesRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   AdminRoomsRoute: AdminRoomsRoute,
   AdminShowtimesRoute: AdminShowtimesRoute,

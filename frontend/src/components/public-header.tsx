@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { NotificationBell } from './notification-bell'
 
 const NAV_LINKS = [
   { to: '/public/movies', label: 'Movies' },
@@ -46,6 +47,7 @@ export function PublicHeader() {
 
         {/* Auth Actions */}
         <div className="flex items-center gap-3">
+          {isAuthenticated && user && <NotificationBell />}
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

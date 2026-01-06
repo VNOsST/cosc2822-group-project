@@ -21,6 +21,7 @@ Globals:
         NOTIFICATIONS_TABLE: !Ref NotificationsTable
         USERS_TABLE: !Ref UsersTable
         IMAGES_BUCKET: !Ref ImagesBucket
+        ADMIN_ALERTS_TOPIC_ARN: !Ref AdminAlertsTopic
 
 Parameters:
   Environment:
@@ -259,6 +260,12 @@ Resources:
           Properties:
             RestApiId: !Ref CineCloudApi
             Path: /showtimes
+            Method: POST
+        CreateShowtimeBulk:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /showtimes/bulk
             Method: POST
         UpdateShowtimeBySchedule:
           Type: Api
@@ -922,6 +929,123 @@ Resources:
               - "*"
             MaxAge: 3000
 
+  # SNS Topic for Admin Notifications
+  AdminAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "cinecloud-admin-alerts-${Environment}"
+      DisplayName: CineCloud Admin Alerts
+
+  # Admin Notifications Service Lambda Function
+  AdminNotificationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-admin-notifications-${Environment}"
+      CodeUri: ./
+      Handler: services/admin-notifications/index.handler
+      Description: CineCloud Admin Notifications Service - SNS subscription management
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Events:
+        # Admin-only routes (require Cognito auth)
+        SubscribeAdmin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /admin/notifications/subscribe
+            Method: POST
+        UnsubscribeAdmin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /admin/notifications/unsubscribe
+            Method: POST
+        ListSubscriptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /admin/notifications/subscriptions
+            Method: GET
+        TestNotification:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /admin/notifications/test
+            Method: POST
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/services/admin-notifications/index.ts
+        External:
+          - "@aws-sdk/*"
+
+  # User Notifications Service Lambda Function
+  NotificationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-notifications-${Environment}"
+      CodeUri: ./
+      Handler: services/notifications/index.handler
+      Description: CineCloud User Notifications Service
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /notifications
+            Method: ANY
+        ApiWithId:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /notifications/{proxy+}
+            Method: ANY
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/services/notifications/index.ts
+        External:
+          - "@aws-sdk/*"
+
+  # Review Prompt Scheduled Lambda Function
+  ReviewPromptFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-review-prompt-${Environment}"
+      CodeUri: ./
+      Handler: scheduled/review-prompt/index.handler
+      Description: CineCloud Review Prompt - Notifies users to leave reviews 1h after showtime
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 300
+      MemorySize: 256
+      Events:
+        # Every 15 minutes
+        ScheduledTrigger:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+            Name: !Sub "cinecloud-review-prompt-timer-${Environment}"
+            Description: Periodic check for showtimes that just ended
+            Enabled: true
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/scheduled/review-prompt/index.ts
+        External:
+          - "@aws-sdk/*"
+
 Outputs:
   ApiEndpoint:
     Description: API Gateway endpoint URL
@@ -986,3 +1110,9 @@ Outputs:
   MovieImagesBucketUrl:
     Description: S3 Bucket URL for movie images
     Value: !Sub "https://${MovieImagesBucket}.s3.${AWS::Region}.amazonaws.com"
+
+  AdminAlertsTopicArn:
+    Description: SNS Topic ARN for Admin Alerts
+    Value: !Ref AdminAlertsTopic
+    Export:
+      Name: !Sub "${AWS::StackName}-AdminAlertsTopicArn"

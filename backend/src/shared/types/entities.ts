@@ -93,11 +93,18 @@ export interface MovieRating {
 }
 
 export interface Notification {
-  id: string;
-  user_id: string;
-  type: NotificationType;
-  message: string;
-  sent_at: string;
+  id: string
+  user_id: string
+  type: NotificationType
+  message: string
+  sent_at: string
+  read: boolean
+  metadata?: {
+    movie_id?: string
+    showtime_id?: string
+    booking_id?: string
+    movie_title?: string
+  }
 }
 
 // Extended types with nested entities

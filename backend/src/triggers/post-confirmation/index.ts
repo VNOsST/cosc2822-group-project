@@ -11,6 +11,7 @@ import {
   AdminAddUserToGroupCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
+import { notifyAdmins } from "../../shared/notifications/sns-client";
 import type { PostConfirmationTriggerHandler, PostConfirmationTriggerEvent } from "aws-lambda";
 
 // Initialize Cognito client
@@ -106,6 +107,17 @@ export const handler: PostConfirmationTriggerHandler = async (
           // Don't fail confirmation if group assignment fails
           // User is still registered in DynamoDB
         }
+
+        // Send admin notification for new user registration
+        notifyAdmins({
+          type: "user_registered",
+          userId,
+          userEmail: email || "",
+          userName: name,
+          timestamp: new Date().toISOString(),
+        }).catch((err) =>
+          console.error("[post-confirmation] Failed to send registration notification:", err),
+        );
       } catch (error) {
         console.error("[post-confirmation] Error registering user:", error);
         // Don't fail confirmation if DynamoDB write fails
