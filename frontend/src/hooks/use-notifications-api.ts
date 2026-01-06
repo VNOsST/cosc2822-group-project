@@ -8,7 +8,12 @@ import { apiClient } from '@/lib/api-client'
 export interface UserNotification {
   id: string
   user_id: string
-  type: 'rating_prompt' | 'reminder_1day' | 'reminder_1hour' | 'showtime_update' | 'showtime_cancelled'
+  type:
+    | 'rating_prompt'
+    | 'reminder_1day'
+    | 'reminder_1hour'
+    | 'showtime_update'
+    | 'showtime_cancelled'
   message: string
   sent_at: string
   read: boolean

@@ -31,12 +31,17 @@ export function AdminHeader() {
       <SidebarTrigger className="-ml-1 text-foreground" />
       <Separator orientation="vertical" />
       <div className="flex flex-1 items-center justify-between px-2">
-        <h1 className="text-lg font-semibold text-foreground">Admin Dashboard</h1>
+        <h1 className="text-lg font-semibold text-foreground">
+          Admin Dashboard
+        </h1>
         <div className="flex items-center gap-4">
           <NotificationBell />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+              <Button
+                variant="ghost"
+                className="relative h-10 w-10 rounded-full"
+              >
                 <Avatar className="h-10 w-10">
                   <AvatarFallback className="bg-linear-to-br from-amber-400 to-orange-500 text-white">
                     {initials}

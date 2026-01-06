@@ -373,7 +373,8 @@ bookings.post("/", requireAuth(), async (c) => {
       if (roomResult.Item) {
         const room = roomResult.Item as Room;
         roomName = room.name;
-        totalCapacity = room.layout_config.rows * room.layout_config.columns - (room.unavailable?.length || 0);
+        totalCapacity =
+          room.layout_config.rows * room.layout_config.columns - (room.unavailable?.length || 0);
       }
     } catch (error) {
       console.error("[bookings] Error fetching details for notification:", error);

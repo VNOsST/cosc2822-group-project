@@ -7,11 +7,7 @@
  * 3. Create an in-app notification for those users to leave a movie review
  */
 
-import {
-  ScanCommand,
-  PutCommand,
-  QueryCommand,
-} from "@aws-sdk/lib-dynamodb";
+import { ScanCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import type { ScheduledHandler } from "aws-lambda";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
 import type { Booking, Showtime, Movie } from "../../shared/types/entities";
@@ -28,7 +24,9 @@ export const handler: ScheduledHandler = async (event) => {
     const windowEnd = new Date(now.getTime() - DELAY_HOURS * 60 * 60 * 1000);
     const windowStart = new Date(windowEnd.getTime() - WINDOW_MINUTES * 60 * 1000);
 
-    console.log(`[review-prompt] Looking for showtimes ending between ${windowStart.toISOString()} and ${windowEnd.toISOString()}`);
+    console.log(
+      `[review-prompt] Looking for showtimes ending between ${windowStart.toISOString()} and ${windowEnd.toISOString()}`,
+    );
 
     // 1. Fetch showtimes that ended in our target window
     // Since we don't have an index on endtime, we scan (assuming volume is manageable for this prototype)
@@ -40,7 +38,7 @@ export const handler: ScheduledHandler = async (event) => {
           ":start": windowStart.toISOString(),
           ":end": windowEnd.toISOString(),
         },
-      })
+      }),
     );
 
     const showtimes = (showtimesResult.Items || []) as Showtime[];
@@ -51,8 +49,8 @@ export const handler: ScheduledHandler = async (event) => {
       const movieResult = await docClient.send(
         new GetCommand({
           TableName: TABLE_NAMES.MOVIES,
-          Key: { id: showtime.movie_id }
-        })
+          Key: { id: showtime.movie_id },
+        }),
       );
       const movie = movieResult.Item as Movie;
       if (!movie) continue;
@@ -66,11 +64,13 @@ export const handler: ScheduledHandler = async (event) => {
           ExpressionAttributeValues: {
             ":showtimeId": showtime.showtime_id,
           },
-        })
+        }),
       );
 
       const bookings = (bookingsResult.Items || []) as Booking[];
-      console.log(`[review-prompt] Processing ${bookings.length} bookings for showtime ${showtime.showtime_id} (${movie.title})`);
+      console.log(
+        `[review-prompt] Processing ${bookings.length} bookings for showtime ${showtime.showtime_id} (${movie.title})`,
+      );
 
       for (const booking of bookings) {
         if (booking.status !== "confirmed") continue;
@@ -84,18 +84,20 @@ export const handler: ScheduledHandler = async (event) => {
             KeyConditionExpression: "user_id = :userId",
             FilterExpression: "metadata.showtime_id = :showtimeId AND #type = :type",
             ExpressionAttributeNames: {
-              "#type": "type"
+              "#type": "type",
             },
             ExpressionAttributeValues: {
               ":userId": booking.user_id,
               ":showtimeId": showtime.showtime_id,
-              ":type": "rating_prompt"
-            }
-          })
+              ":type": "rating_prompt",
+            },
+          }),
         );
 
         if (existingNotifications.Items && existingNotifications.Items.length > 0) {
-          console.log(`[review-prompt] Notification already exists for user ${booking.user_id} and showtime ${showtime.showtime_id}`);
+          console.log(
+            `[review-prompt] Notification already exists for user ${booking.user_id} and showtime ${showtime.showtime_id}`,
+          );
           continue;
         }
 
@@ -117,10 +119,10 @@ export const handler: ScheduledHandler = async (event) => {
                 movie_id: movie.id,
                 showtime_id: showtime.showtime_id,
                 booking_id: booking.booking_id,
-                movie_title: movie.title
-              }
-            }
-          })
+                movie_title: movie.title,
+              },
+            },
+          }),
         );
 
         console.log(`[review-prompt] Created notification for user ${booking.user_id}`);
