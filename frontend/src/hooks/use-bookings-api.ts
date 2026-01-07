@@ -76,6 +76,7 @@ export function useCreateBooking() {
       movie_id: string
       seats: Array<string>
       total_amount: number
+      lock_id?: string // Optional seat lock ID for validation
     }) => apiClient.post<Booking>('/bookings', data),
     {
       onSuccess: () => invalidate([...QUERY_KEYS.all]),

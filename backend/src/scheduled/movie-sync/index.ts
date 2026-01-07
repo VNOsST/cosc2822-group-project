@@ -9,13 +9,7 @@
  * Schedule: Daily at 2:00 AM UTC (12:00 PM AEST)
  */
 
-import {
-  ScanCommand,
-  GetCommand,
-  PutCommand,
-  UpdateCommand,
-  QueryCommand,
-} from "@aws-sdk/lib-dynamodb";
+import { ScanCommand, PutCommand, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import type { ScheduledHandler } from "aws-lambda";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
 import { TMDBClient } from "./tmdb-client";

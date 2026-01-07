@@ -9,6 +9,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
 import { requireAuth, requireRole, getUser } from "../../shared/middleware";
+import { validateLocks, releaseLocksForBooking } from "../../shared/cache/redis-client";
 import type { Booking, Showtime, Movie, User } from "../../shared/types/entities";
 
 const bookings = new Hono();
@@ -21,6 +22,7 @@ const createBookingSchema = z.object({
   movie_id: z.string(),
   seats: z.array(z.string()).min(1),
   total_amount: z.number().positive(),
+  lock_id: z.string().optional(), // Optional lock_id for seat lock validation
 });
 
 // GET /bookings - Get user's bookings with details
@@ -267,6 +269,7 @@ bookings.get("/admin/all", requireRole(["Admins"]), async (c) => {
 // POST /bookings - Create a new booking
 bookings.post("/", requireAuth(), async (c) => {
   try {
+    const user = getUser(c);
     const body = await c.req.json();
     const validationResult = createBookingSchema.safeParse(body);
 
@@ -309,6 +312,31 @@ bookings.post("/", requireAuth(), async (c) => {
       );
     }
 
+    // Validate seat locks if lock_id is provided
+    if (data.lock_id) {
+      try {
+        const lockValidation = await validateLocks(
+          data.showtime_id,
+          data.seats,
+          user.sub,
+          data.lock_id,
+        );
+        if (!lockValidation.valid) {
+          return c.json(
+            {
+              success: false,
+              error: "Seat lock validation failed. Your locks may have expired.",
+              invalid_seats: lockValidation.invalidSeats,
+            },
+            409,
+          );
+        }
+      } catch (lockError) {
+        console.warn("[bookings]", "Lock validation skipped (Redis unavailable):", lockError);
+        // Continue without lock validation if Redis is unavailable
+      }
+    }
+
     // Create the booking
     const booking: Booking = {
       user_email: data.user_email,
@@ -345,6 +373,16 @@ bookings.post("/", requireAuth(), async (c) => {
         },
       }),
     );
+
+    // Release seat locks after successful booking
+    if (data.lock_id) {
+      try {
+        await releaseLocksForBooking(data.showtime_id, data.seats);
+      } catch (lockError) {
+        console.warn("[bookings]", "Failed to release locks (non-critical):", lockError);
+        // Non-critical error - booking was successful, locks will expire automatically
+      }
+    }
 
     return c.json(
       {

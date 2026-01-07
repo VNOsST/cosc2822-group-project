@@ -2,6 +2,12 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: CineCloud Backend API - Serverless Cinema Management System
 
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - W1030 # Ignore VPC ID pattern validation for optional parameters
+
 Globals:
   Function:
     Timeout: 30
@@ -21,6 +27,8 @@ Globals:
         NOTIFICATIONS_TABLE: !Ref NotificationsTable
         USERS_TABLE: !Ref UsersTable
         IMAGES_BUCKET: !Ref ImagesBucket
+        REDIS_ENDPOINT: !If [HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Address, ""]
+        REDIS_PORT: !If [HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Port, "6379"]
 
 Parameters:
   Environment:
@@ -38,7 +46,106 @@ Parameters:
     Description: TMDB API key for fetching movie data
     Default: ""
 
+  # VPC Configuration for ElastiCache
+  # Option 1: Reference frontend stack (recommended)
+  FrontendStackName:
+    Type: String
+    Default: ""
+    Description: Name of the frontend CloudFormation stack to import VPC from (e.g., cinecloud-frontend-dev)
+
+  # Option 2: Manual VPC configuration (if not using frontend stack)
+  VpcId:
+    Type: String
+    Default: ""
+    Description: VPC ID for ElastiCache (leave empty if using FrontendStackName)
+
+  SubnetIds:
+    Type: CommaDelimitedList
+    Default: ""
+    Description: Comma-separated list of subnet IDs for ElastiCache (leave empty if using FrontendStackName)
+
+Conditions:
+  # Use frontend stack if provided, otherwise fall back to manual VPC params
+  UseFrontendStack: !Not [!Equals [!Ref FrontendStackName, ""]]
+  HasManualVpc: !Not [!Equals [!Ref VpcId, ""]]
+  HasVpc: !Or [!Condition UseFrontendStack, !Condition HasManualVpc]
+
 Resources:
+  # Lambda Security Group for VPC access (only created when VPC is provided)
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: HasVpc
+    Properties:
+      GroupName: !Sub "cinecloud-lambda-sg-${Environment}"
+      GroupDescription: Security group for Lambda functions in VPC
+      VpcId: !If
+        - UseFrontendStack
+        - !ImportValue
+          Fn::Sub: "${FrontendStackName}-VPCId"
+        - !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "cinecloud-lambda-sg-${Environment}"
+
+  # ElastiCache Security Group (only created when VPC is provided)
+  ElastiCacheSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: HasVpc
+    Properties:
+      GroupName: !Sub "cinecloud-elasticache-sg-${Environment}"
+      GroupDescription: Security group for ElastiCache Redis cluster
+      VpcId: !If
+        - UseFrontendStack
+        - !ImportValue
+          Fn::Sub: "${FrontendStackName}-VPCId"
+        - !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref LambdaSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub "cinecloud-elasticache-sg-${Environment}"
+
+  # ElastiCache Subnet Group (only created when VPC is provided)
+  ElastiCacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Condition: HasVpc
+    Properties:
+      CacheSubnetGroupName: !Sub "cinecloud-redis-subnet-${Environment}"
+      Description: Subnet group for CineCloud Redis cluster
+      SubnetIds: !If
+        - UseFrontendStack
+        - - !ImportValue
+            Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
+          - !ImportValue
+            Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
+        - !Ref SubnetIds
+
+  # ElastiCache Redis Cluster for Seat Locks
+  ElastiCacheCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Condition: HasVpc
+    Properties:
+      ClusterName: !Sub "cinecloud-redis-${Environment}"
+      CacheNodeType: cache.t3.micro
+      Engine: redis
+      EngineVersion: "7.0"
+      NumCacheNodes: 1
+      Port: 6379
+      CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup
+      VpcSecurityGroupIds:
+        - !GetAtt ElastiCacheSecurityGroup.GroupId
+      Tags:
+        - Key: Name
+          Value: !Sub "cinecloud-redis-${Environment}"
+        - Key: Environment
+          Value: !Ref Environment
+
   # API Gateway
   CineCloudApi:
     Type: AWS::Serverless::Api
@@ -292,6 +399,18 @@ Resources:
       Handler: services/bookings/index.handler
       Description: CineCloud Bookings Service
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      VpcConfig: !If
+        - HasVpc
+        - SecurityGroupIds:
+            - !Ref LambdaSecurityGroup
+          SubnetIds: !If
+            - UseFrontendStack
+            - - !ImportValue
+                Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
+              - !ImportValue
+                Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
+            - !Ref SubnetIds
+        - !Ref AWS::NoValue
       Events:
         # Public routes
         GetBookingStats:
@@ -341,6 +460,79 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - src/services/bookings/index.ts
+        External:
+          - "@aws-sdk/*"
+
+  # Seat Locks Service Lambda Function
+  SeatLocksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-seat-locks-${Environment}"
+      CodeUri: ./
+      Handler: services/seat-locks/index.handler
+      Description: CineCloud Seat Locks Service - Manages temporary seat reservations via ElastiCache
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      VpcConfig: !If
+        - HasVpc
+        - SecurityGroupIds:
+            - !Ref LambdaSecurityGroup
+          SubnetIds: !If
+            - UseFrontendStack
+            - - !ImportValue
+                Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
+              - !ImportValue
+                Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
+            - !Ref SubnetIds
+        - !Ref AWS::NoValue
+      Events:
+        # Public route - Get seat availability
+        GetShowtimeSeatStatus:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /seat-locks/showtime/{showtimeId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        # Authenticated routes
+        LockSeats:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /seat-locks/lock
+            Method: POST
+        UnlockSeats:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /seat-locks/unlock
+            Method: POST
+        ExtendLocks:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /seat-locks/extend
+            Method: POST
+        ValidateLocks:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /seat-locks/validate
+            Method: POST
+        GetMyLocks:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /seat-locks/my-locks/{showtimeId}
+            Method: GET
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/services/seat-locks/index.ts
         External:
           - "@aws-sdk/*"
 
@@ -986,3 +1178,12 @@ Outputs:
   MovieImagesBucketUrl:
     Description: S3 Bucket URL for movie images
     Value: !Sub "https://${MovieImagesBucket}.s3.${AWS::Region}.amazonaws.com"
+  ElastiCacheEndpoint:
+    Condition: HasVpc
+    Description: ElastiCache Redis endpoint for seat locks
+    Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Address
+
+  ElastiCachePort:
+    Condition: HasVpc
+    Description: ElastiCache Redis port
+    Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Port

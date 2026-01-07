@@ -27,6 +27,7 @@ import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
 import { Route as PublicShowtimesIndexRouteImport } from './routes/public/showtimes.index'
 import { Route as PublicRoomsIndexRouteImport } from './routes/public/rooms.index'
 import { Route as PublicMoviesIndexRouteImport } from './routes/public/movies.index'
+import { Route as UserBookIdRouteImport } from './routes/user/book.$id'
 import { Route as PublicShowtimesIdRouteImport } from './routes/public/showtimes.$id'
 import { Route as PublicRoomsIdRouteImport } from './routes/public/rooms.$id'
 import { Route as PublicMoviesIdRouteImport } from './routes/public/movies.$id'
@@ -121,6 +122,11 @@ const PublicMoviesIndexRoute = PublicMoviesIndexRouteImport.update({
   path: '/movies/',
   getParentRoute: () => PublicRoute,
 } as any)
+const UserBookIdRoute = UserBookIdRouteImport.update({
+  id: '/book/$id',
+  path: '/book/$id',
+  getParentRoute: () => UserRoute,
+} as any)
 const PublicShowtimesIdRoute = PublicShowtimesIdRouteImport.update({
   id: '/showtimes/$id',
   path: '/showtimes/$id',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/public/movies/$id': typeof PublicMoviesIdRoute
   '/public/rooms/$id': typeof PublicRoomsIdRoute
   '/public/showtimes/$id': typeof PublicShowtimesIdRoute
+  '/user/book/$id': typeof UserBookIdRoute
   '/public/movies': typeof PublicMoviesIndexRoute
   '/public/rooms': typeof PublicRoomsIndexRoute
   '/public/showtimes': typeof PublicShowtimesIndexRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/public/movies/$id': typeof PublicMoviesIdRoute
   '/public/rooms/$id': typeof PublicRoomsIdRoute
   '/public/showtimes/$id': typeof PublicShowtimesIdRoute
+  '/user/book/$id': typeof UserBookIdRoute
   '/public/movies': typeof PublicMoviesIndexRoute
   '/public/rooms': typeof PublicRoomsIndexRoute
   '/public/showtimes': typeof PublicShowtimesIndexRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/public/movies/$id': typeof PublicMoviesIdRoute
   '/public/rooms/$id': typeof PublicRoomsIdRoute
   '/public/showtimes/$id': typeof PublicShowtimesIdRoute
+  '/user/book/$id': typeof UserBookIdRoute
   '/public/movies/': typeof PublicMoviesIndexRoute
   '/public/rooms/': typeof PublicRoomsIndexRoute
   '/public/showtimes/': typeof PublicShowtimesIndexRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/public/movies/$id'
     | '/public/rooms/$id'
     | '/public/showtimes/$id'
+    | '/user/book/$id'
     | '/public/movies'
     | '/public/rooms'
     | '/public/showtimes'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/public/movies/$id'
     | '/public/rooms/$id'
     | '/public/showtimes/$id'
+    | '/user/book/$id'
     | '/public/movies'
     | '/public/rooms'
     | '/public/showtimes'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/public/movies/$id'
     | '/public/rooms/$id'
     | '/public/showtimes/$id'
+    | '/user/book/$id'
     | '/public/movies/'
     | '/public/rooms/'
     | '/public/showtimes/'
@@ -415,6 +427,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicMoviesIndexRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/user/book/$id': {
+      id: '/user/book/$id'
+      path: '/book/$id'
+      fullPath: '/user/book/$id'
+      preLoaderRoute: typeof UserBookIdRouteImport
+      parentRoute: typeof UserRoute
+    }
     '/public/showtimes/$id': {
       id: '/public/showtimes/$id'
       path: '/showtimes/$id'
@@ -486,12 +505,14 @@ interface UserRouteChildren {
   UserBookingsRoute: typeof UserBookingsRoute
   UserProfileRoute: typeof UserProfileRoute
   UserReviewsRoute: typeof UserReviewsRoute
+  UserBookIdRoute: typeof UserBookIdRoute
 }
 
 const UserRouteChildren: UserRouteChildren = {
   UserBookingsRoute: UserBookingsRoute,
   UserProfileRoute: UserProfileRoute,
   UserReviewsRoute: UserReviewsRoute,
+  UserBookIdRoute: UserBookIdRoute,
 }
 
 const UserRouteWithChildren = UserRoute._addFileChildren(UserRouteChildren)

@@ -100,6 +100,15 @@ export interface Notification {
   sent_at: string;
 }
 
+export interface SeatLock {
+  showtime_id: string; // Partition Key
+  seat_id: string; // Sort Key
+  user_id: string; // User who locked the seat
+  locked_at: string; // ISO datetime when lock was created
+  expires_at: number; // Unix timestamp for TTL (DynamoDB TTL)
+  lock_id: string; // Unique lock identifier for validation
+}
+
 // Extended types with nested entities
 export interface ShowtimeWithDetails extends Showtime {
   movie: Movie;

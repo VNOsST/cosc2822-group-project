@@ -85,8 +85,7 @@ export function MultiImageUpload({
     }
 
     // Validate all files first
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
+    for (const file of files) {
       if (!file.type.startsWith('image/')) {
         toast.error(`File ${file.name} is not an image`)
         return

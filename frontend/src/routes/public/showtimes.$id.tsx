@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ErrorState } from '@/components/error-state'
+import { useAuth } from '@/hooks/use-auth'
 import { serverApiClient } from '@/lib/server-api-client'
 import type { ShowtimeWithDetails } from '@/lib/api-types'
 
@@ -39,6 +40,7 @@ export const Route = createFileRoute('/public/showtimes/$id')({
 function ShowtimeDetailPage() {
   const navigate = useNavigate()
   const { showtime, error } = Route.useLoaderData()
+  const { isAuthenticated } = useAuth()
 
   // Movie and room are now nested in the showtime response
   const movie = showtime?.movie
@@ -278,19 +280,36 @@ function ShowtimeDetailPage() {
                 </div>
               </div>
 
-              <Link to="/login" search={{ redirect: '/user/bookings' }}>
-                <Button
-                  className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400"
-                  size="lg"
-                  disabled={availableSeats === 0}
+              {isAuthenticated ? (
+                <Link to="/user/book/$id" params={{ id: showtime.showtime_id }}>
+                  <Button
+                    className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400"
+                    size="lg"
+                    disabled={availableSeats === 0}
+                  >
+                    {availableSeats === 0 ? 'Sold Out' : 'Book Tickets'}
+                  </Button>
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  search={{ redirect: `/user/book/${showtime.showtime_id}` }}
                 >
-                  {availableSeats === 0 ? 'Sold Out' : 'Book Tickets'}
-                </Button>
-              </Link>
+                  <Button
+                    className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400"
+                    size="lg"
+                    disabled={availableSeats === 0}
+                  >
+                    {availableSeats === 0 ? 'Sold Out' : 'Book Tickets'}
+                  </Button>
+                </Link>
+              )}
 
-              <p className="text-center text-xs text-slate-500">
-                Login required to complete booking
-              </p>
+              {!isAuthenticated && (
+                <p className="text-center text-xs text-slate-500">
+                  Login required to complete booking
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
