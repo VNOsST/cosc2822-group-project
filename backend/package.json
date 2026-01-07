@@ -1,44 +1,44 @@
 {
-    "name": "cinecloud-backend",
-    "type": "module",
-    "scripts": {
-        "dev": "bun run dev:all",
-        "dev:all": "concurrently \"bun run dev:movies\" \"bun run dev:showtimes\" \"bun run dev:bookings\" \"bun run dev:rooms\" \"bun run dev:ratings\" \"bun run dev:seat-locks\"",
-        "dev:movies": "bun run --hot src/services/movies/index.ts",
-        "dev:showtimes": "bun run --hot src/services/showtimes/index.ts",
-        "dev:bookings": "bun run --hot src/services/bookings/index.ts",
-        "dev:rooms": "bun run --hot src/services/rooms/index.ts",
-        "dev:ratings": "bun run --hot src/services/ratings/index.ts",
-        "dev:seat-locks": "bun run --hot src/services/seat-locks/index.ts",
-        "build": "sam build",
-        "deploy": "sam deploy",
-        "deploy:staging": "sam deploy --config-env staging",
-        "deploy:prod": "sam deploy --config-env prod",
-        "local:api": "sam local start-api --warm-containers EAGER",
-        "validate": "sam validate --lint",
-        "lint": "oxlint",
-        "format": "oxfmt --write .",
-        "format:check": "oxfmt --check ."
-    },
-    "dependencies": {
-        "@aws-sdk/client-cognito-identity-provider": "^3.958.0",
-        "@aws-sdk/client-dynamodb": "^3.712.0",
-        "@aws-sdk/client-s3": "^3.962.0",
-        "@aws-sdk/lib-dynamodb": "^3.712.0",
-        "@aws-sdk/s3-request-presigner": "^3.962.0",
-        "@hono/node-server": "^1.13.7",
-        "hono": "^4.6.14",
-        "redis": "^4.7.0",
-        "zod": "^3.24.1"
-    },
-    "devDependencies": {
-        "@types/aws-lambda": "^8.10.147",
-        "@types/bun": "^1.1.14",
-        "concurrently": "^9.1.2",
-        "esbuild": "^0.24.2",
-        "oxfmt": "^0.21.0",
-        "oxlint": "^1.36.0",
-        "oxlint-tsgolint": "^0.10.0",
-        "typescript": "^5.7.2"
-    }
+  "name": "cinecloud-backend",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run dev:all",
+    "dev:all": "concurrently \"bun run dev:movies\" \"bun run dev:showtimes\" \"bun run dev:bookings\" \"bun run dev:rooms\" \"bun run dev:ratings\" \"bun run dev:seat-locks\"",
+    "dev:movies": "bun run --hot src/services/movies/index.ts",
+    "dev:showtimes": "bun run --hot src/services/showtimes/index.ts",
+    "dev:bookings": "bun run --hot src/services/bookings/index.ts",
+    "dev:rooms": "bun run --hot src/services/rooms/index.ts",
+    "dev:ratings": "bun run --hot src/services/ratings/index.ts",
+    "dev:seat-locks": "bun run --hot src/services/seat-locks/index.ts",
+    "build": "sam build",
+    "deploy": "sam deploy",
+    "deploy:staging": "sam deploy --config-env staging",
+    "deploy:prod": "sam deploy --config-env prod",
+    "local:api": "sam local start-api --warm-containers EAGER",
+    "validate": "sam validate --lint",
+    "lint": "oxlint",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.958.0",
+    "@aws-sdk/client-dynamodb": "^3.712.0",
+    "@aws-sdk/client-s3": "^3.962.0",
+    "@aws-sdk/lib-dynamodb": "^3.712.0",
+    "@aws-sdk/s3-request-presigner": "^3.962.0",
+    "@hono/node-server": "^1.13.7",
+    "hono": "^4.6.14",
+    "redis": "^4.7.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.147",
+    "@types/bun": "^1.1.14",
+    "concurrently": "^9.1.2",
+    "esbuild": "^0.24.2",
+    "oxfmt": "^0.21.0",
+    "oxlint": "^1.36.0",
+    "oxlint-tsgolint": "^0.10.0",
+    "typescript": "^5.7.2"
+  }
 }
