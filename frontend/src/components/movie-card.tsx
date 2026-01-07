@@ -49,29 +49,14 @@ export function MovieCard({ movie }: MovieCardProps) {
         <p className="mb-4 line-clamp-2 text-sm text-slate-400">
           {movie.synopsis}
         </p>
-        <div className="flex gap-2">
-          <Link
-            to="/public/movies/$id"
-            params={{ id: movie.id }}
-            className="flex-1"
+        <Link to="/public/movies/$id" params={{ id: movie.id }}>
+          <Button
+            size="sm"
+            className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400"
           >
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
-            >
-              View Details
-            </Button>
-          </Link>
-          <Link to="/public/showtimes" className="flex-1">
-            <Button
-              size="sm"
-              className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400"
-            >
-              Book Now
-            </Button>
-          </Link>
-        </div>
+            View Details & Book
+          </Button>
+        </Link>
       </CardContent>
     </Card>
   )

@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun run dev:all",
-    "dev:all": "concurrently \"bun run dev:movies\" \"bun run dev:showtimes\" \"bun run dev:bookings\" \"bun run dev:rooms\" \"bun run dev:ratings\" \"bun run dev:admin-notifications\" \"bun run dev:notifications\"",
+    "dev:all": "concurrently \"bun run dev:movies\" \"bun run dev:showtimes\" \"bun run dev:bookings\" \"bun run dev:rooms\" \"bun run dev:ratings\" \"bun run dev:seat-locks\" \"bun run dev:admin-notifications\" \"bun run dev:notifications\"",
     "dev:movies": "bun run --hot src/services/movies/index.ts",
     "dev:showtimes": "bun run --hot src/services/showtimes/index.ts",
     "dev:bookings": "bun run --hot src/services/bookings/index.ts",
@@ -11,6 +11,7 @@
     "dev:ratings": "bun run --hot src/services/ratings/index.ts",
     "dev:admin-notifications": "bun run --hot src/services/admin-notifications/index.ts",
     "dev:notifications": "bun run --hot src/services/notifications/index.ts",
+    "dev:seat-locks": "bun run --hot src/services/seat-locks/index.ts",
     "build": "sam build",
     "deploy": "sam deploy",
     "deploy:staging": "sam deploy --config-env staging",
@@ -30,6 +31,7 @@
     "@aws-sdk/s3-request-presigner": "^3.962.0",
     "@hono/node-server": "^1.13.7",
     "hono": "^4.6.14",
+    "redis": "^4.7.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {

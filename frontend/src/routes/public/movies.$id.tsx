@@ -187,7 +187,7 @@ function MovieDetailPage() {
       )}
 
       {/* Showtimes */}
-      <div className="space-y-4">
+      <div id="showtimes" className="space-y-4 scroll-mt-8">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-2xl font-semibold text-white">
             <Film className="h-6 w-6 text-amber-500" />
@@ -230,7 +230,10 @@ function MovieDetailPage() {
                       ${showtime.price.toFixed(2)}
                     </Badge>
                   </div>
-                  <Link to="/login" search={{ redirect: '/user/bookings' }}>
+                  <Link
+                    to="/public/showtimes/$id"
+                    params={{ id: showtime.showtime_id }}
+                  >
                     <Button
                       size="sm"
                       className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400"
@@ -248,14 +251,6 @@ function MovieDetailPage() {
               <p className="text-slate-400">
                 No showtimes available for this movie at the moment
               </p>
-              <Link to="/public/showtimes">
-                <Button
-                  className="mt-4 bg-amber-500 text-slate-900 hover:bg-amber-400"
-                  size="sm"
-                >
-                  View All Showtimes
-                </Button>
-              </Link>
             </CardContent>
           </Card>
         )}
