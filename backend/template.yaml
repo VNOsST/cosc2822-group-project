@@ -3,1187 +3,1206 @@ Transform: AWS::Serverless-2016-10-31
 Description: CineCloud Backend API - Serverless Cinema Management System
 
 Metadata:
-  cfn-lint:
-    config:
-      ignore_checks:
-        - W1030 # Ignore VPC ID pattern validation for optional parameters
+    cfn-lint:
+        config:
+            ignore_checks:
+                - W1030 # Ignore VPC ID pattern validation for optional parameters
 
 Globals:
-  Function:
-    Timeout: 30
-    MemorySize: 256
-    Runtime: nodejs20.x
-    Architectures:
-      - x86_64
-    Environment:
-      Variables:
-        NODE_ENV: production
-        DYNAMODB_REGION: !Ref AWS::Region
-        MOVIES_TABLE: !Ref MoviesTable
-        SHOWTIMES_TABLE: !Ref ShowtimesTable
-        BOOKINGS_TABLE: !Ref BookingsTable
-        ROOMS_TABLE: !Ref RoomsTable
-        RATINGS_TABLE: !Ref RatingsTable
-        NOTIFICATIONS_TABLE: !Ref NotificationsTable
-        USERS_TABLE: !Ref UsersTable
-        IMAGES_BUCKET: !Ref ImagesBucket
-        REDIS_ENDPOINT: !If [HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Address, ""]
-        REDIS_PORT: !If [HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Port, "6379"]
+    Function:
+        Timeout: 30
+        MemorySize: 256
+        Runtime: nodejs20.x
+        Architectures:
+            - x86_64
+        Environment:
+            Variables:
+                NODE_ENV: production
+                DYNAMODB_REGION: !Ref AWS::Region
+                MOVIES_TABLE: !Ref MoviesTable
+                SHOWTIMES_TABLE: !Ref ShowtimesTable
+                BOOKINGS_TABLE: !Ref BookingsTable
+                ROOMS_TABLE: !Ref RoomsTable
+                RATINGS_TABLE: !Ref RatingsTable
+                NOTIFICATIONS_TABLE: !Ref NotificationsTable
+                USERS_TABLE: !Ref UsersTable
+                IMAGES_BUCKET: !Ref ImagesBucket
+                REDIS_ENDPOINT:
+                    !If [
+                        HasVpc,
+                        !GetAtt ElastiCacheCluster.RedisEndpoint.Address,
+                        "",
+                    ]
+                REDIS_PORT:
+                    !If [
+                        HasVpc,
+                        !GetAtt ElastiCacheCluster.RedisEndpoint.Port,
+                        "6379",
+                    ]
 
 Parameters:
-  Environment:
-    Type: String
-    Default: dev
-    AllowedValues:
-      - dev
-      - staging
-      - prod
-    Description: Deployment environment
+    Environment:
+        Type: String
+        Default: dev
+        AllowedValues:
+            - dev
+            - staging
+            - prod
+        Description: Deployment environment
 
-  TMDBApiKey:
-    Type: String
-    NoEcho: true
-    Description: TMDB API key for fetching movie data
-    Default: ""
+    TMDBApiKey:
+        Type: String
+        NoEcho: true
+        Description: TMDB API key for fetching movie data
+        Default: ""
 
-  # VPC Configuration for ElastiCache
-  # Option 1: Reference frontend stack (recommended)
-  FrontendStackName:
-    Type: String
-    Default: ""
-    Description: Name of the frontend CloudFormation stack to import VPC from (e.g., cinecloud-frontend-dev)
+    # VPC Configuration for ElastiCache
+    # Option 1: Reference frontend stack (recommended)
+    FrontendStackName:
+        Type: String
+        Default: ""
+        Description: Name of the frontend CloudFormation stack to import VPC from (e.g., cinecloud-frontend-dev)
 
-  # Option 2: Manual VPC configuration (if not using frontend stack)
-  VpcId:
-    Type: String
-    Default: ""
-    Description: VPC ID for ElastiCache (leave empty if using FrontendStackName)
+    # Option 2: Manual VPC configuration (if not using frontend stack)
+    VpcId:
+        Type: String
+        Default: ""
+        Description: VPC ID for ElastiCache (leave empty if using FrontendStackName)
 
-  SubnetIds:
-    Type: CommaDelimitedList
-    Default: ""
-    Description: Comma-separated list of subnet IDs for ElastiCache (leave empty if using FrontendStackName)
+    SubnetIds:
+        Type: CommaDelimitedList
+        Default: ""
+        Description: Comma-separated list of subnet IDs for ElastiCache (leave empty if using FrontendStackName)
 
 Conditions:
-  # Use frontend stack if provided, otherwise fall back to manual VPC params
-  UseFrontendStack: !Not [!Equals [!Ref FrontendStackName, ""]]
-  HasManualVpc: !Not [!Equals [!Ref VpcId, ""]]
-  HasVpc: !Or [!Condition UseFrontendStack, !Condition HasManualVpc]
+    # Use frontend stack if provided, otherwise fall back to manual VPC params
+    UseFrontendStack: !Not [!Equals [!Ref FrontendStackName, ""]]
+    HasManualVpc: !Not [!Equals [!Ref VpcId, ""]]
+    HasVpc: !Or [!Condition UseFrontendStack, !Condition HasManualVpc]
 
 Resources:
-  # Lambda Security Group for VPC access (only created when VPC is provided)
-  LambdaSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Condition: HasVpc
-    Properties:
-      GroupName: !Sub "cinecloud-lambda-sg-${Environment}"
-      GroupDescription: Security group for Lambda functions in VPC
-      VpcId: !If
-        - UseFrontendStack
-        - !ImportValue
-          Fn::Sub: "${FrontendStackName}-VPCId"
-        - !Ref VpcId
-      SecurityGroupEgress:
-        - IpProtocol: "-1"
-          CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: Name
-          Value: !Sub "cinecloud-lambda-sg-${Environment}"
+    # Lambda Security Group for VPC access (only created when VPC is provided)
+    LambdaSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Condition: HasVpc
+        Properties:
+            GroupName: !Sub "cinecloud-lambda-sg-${Environment}"
+            GroupDescription: Security group for Lambda functions in VPC
+            VpcId: !If
+                - UseFrontendStack
+                - !ImportValue
+                  Fn::Sub: "${FrontendStackName}-VPCId"
+                - !Ref VpcId
+            SecurityGroupEgress:
+                - IpProtocol: "-1"
+                  CidrIp: 0.0.0.0/0
+            Tags:
+                - Key: Name
+                  Value: !Sub "cinecloud-lambda-sg-${Environment}"
 
-  # ElastiCache Security Group (only created when VPC is provided)
-  ElastiCacheSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Condition: HasVpc
-    Properties:
-      GroupName: !Sub "cinecloud-elasticache-sg-${Environment}"
-      GroupDescription: Security group for ElastiCache Redis cluster
-      VpcId: !If
-        - UseFrontendStack
-        - !ImportValue
-          Fn::Sub: "${FrontendStackName}-VPCId"
-        - !Ref VpcId
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 6379
-          ToPort: 6379
-          SourceSecurityGroupId: !Ref LambdaSecurityGroup
-      Tags:
-        - Key: Name
-          Value: !Sub "cinecloud-elasticache-sg-${Environment}"
+    # ElastiCache Security Group (only created when VPC is provided)
+    ElastiCacheSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Condition: HasVpc
+        Properties:
+            GroupName: !Sub "cinecloud-elasticache-sg-${Environment}"
+            GroupDescription: Security group for ElastiCache Redis cluster
+            VpcId: !If
+                - UseFrontendStack
+                - !ImportValue
+                  Fn::Sub: "${FrontendStackName}-VPCId"
+                - !Ref VpcId
+            SecurityGroupIngress:
+                - IpProtocol: tcp
+                  FromPort: 6379
+                  ToPort: 6379
+                  SourceSecurityGroupId: !Ref LambdaSecurityGroup
+            Tags:
+                - Key: Name
+                  Value: !Sub "cinecloud-elasticache-sg-${Environment}"
 
-  # ElastiCache Subnet Group (only created when VPC is provided)
-  ElastiCacheSubnetGroup:
-    Type: AWS::ElastiCache::SubnetGroup
-    Condition: HasVpc
-    Properties:
-      CacheSubnetGroupName: !Sub "cinecloud-redis-subnet-${Environment}"
-      Description: Subnet group for CineCloud Redis cluster
-      SubnetIds: !If
-        - UseFrontendStack
-        - - !ImportValue
-            Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
-          - !ImportValue
-            Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
-        - !Ref SubnetIds
+    # ElastiCache Subnet Group (only created when VPC is provided)
+    ElastiCacheSubnetGroup:
+        Type: AWS::ElastiCache::SubnetGroup
+        Condition: HasVpc
+        Properties:
+            CacheSubnetGroupName: !Sub "cinecloud-redis-subnet-${Environment}"
+            Description: Subnet group for CineCloud Redis cluster
+            SubnetIds: !If
+                - UseFrontendStack
+                - - !ImportValue
+                    Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
+                  - !ImportValue
+                    Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
+                - !Ref SubnetIds
 
-  # ElastiCache Redis Cluster for Seat Locks
-  ElastiCacheCluster:
-    Type: AWS::ElastiCache::CacheCluster
-    Condition: HasVpc
-    Properties:
-      ClusterName: !Sub "cinecloud-redis-${Environment}"
-      CacheNodeType: cache.t3.micro
-      Engine: redis
-      EngineVersion: "7.0"
-      NumCacheNodes: 1
-      Port: 6379
-      CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup
-      VpcSecurityGroupIds:
-        - !GetAtt ElastiCacheSecurityGroup.GroupId
-      Tags:
-        - Key: Name
-          Value: !Sub "cinecloud-redis-${Environment}"
-        - Key: Environment
-          Value: !Ref Environment
+    # ElastiCache Redis Cluster for Seat Locks
+    ElastiCacheCluster:
+        Type: AWS::ElastiCache::CacheCluster
+        Condition: HasVpc
+        Properties:
+            ClusterName: !Sub "cinecloud-redis-${Environment}"
+            CacheNodeType: cache.t3.micro
+            Engine: redis
+            EngineVersion: "7.0"
+            NumCacheNodes: 1
+            Port: 6379
+            CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup
+            VpcSecurityGroupIds:
+                - !GetAtt ElastiCacheSecurityGroup.GroupId
+            Tags:
+                - Key: Name
+                  Value: !Sub "cinecloud-redis-${Environment}"
+                - Key: Environment
+                  Value: !Ref Environment
 
-  # API Gateway
-  CineCloudApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: !Sub "cinecloud-api-${Environment}"
-      StageName: !Ref Environment
-      Cors:
-        AllowMethods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
-        AllowHeaders: "'Content-Type,Authorization,X-Requested-With'"
-        AllowOrigin: "'*'"
-        MaxAge: "'600'"
-      Auth:
-        DefaultAuthorizer: CognitoAuthorizer
-        AddDefaultAuthorizerToCorsPreflight: false
-        Authorizers:
-          CognitoAuthorizer:
-            UserPoolArn: !GetAtt CineCloudUserPool.Arn
-            Identity:
-              Header: Authorization
-      GatewayResponses:
-        DEFAULT_4XX:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
-        DEFAULT_5XX:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
-        UNAUTHORIZED:
-          StatusCode: 401
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
-        ACCESS_DENIED:
-          StatusCode: 403
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
-
-  # Cognito User Pool
-  CineCloudUserPool:
-    Type: AWS::Cognito::UserPool
-    Properties:
-      UserPoolName: !Sub "cinecloud-users-${Environment}"
-      AutoVerifiedAttributes:
-        - email
-      UsernameAttributes:
-        - email
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 8
-          RequireLowercase: true
-          RequireNumbers: true
-          RequireSymbols: false
-          RequireUppercase: true
-      LambdaConfig:
-        PostConfirmation: !GetAtt PostConfirmationFunction.Arn
-
-  # User Pool Client
-  CineCloudUserPoolClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      ClientName: !Sub "cinecloud-client-${Environment}"
-      UserPoolId: !Ref CineCloudUserPool
-      GenerateSecret: false
-      ExplicitAuthFlows:
-        - ALLOW_USER_PASSWORD_AUTH
-        - ALLOW_REFRESH_TOKEN_AUTH
-        - ALLOW_USER_SRP_AUTH
-
-  # Admin Group
-  AdminsGroup:
-    Type: AWS::Cognito::UserPoolGroup
-    Properties:
-      GroupName: Admins
-      UserPoolId: !Ref CineCloudUserPool
-      Description: Administrator users with full access
-
-  # Users Group
-  UsersGroup:
-    Type: AWS::Cognito::UserPoolGroup
-    Properties:
-      GroupName: Users
-      UserPoolId: !Ref CineCloudUserPool
-      Description: Regular users
-
-  # Movies Service Lambda Function
-  MoviesFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-movies-${Environment}"
-      CodeUri: ./
-      Handler: services/movies/index.handler
-      Description: CineCloud Movies Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Timeout: 300 # Extended timeout for sync operation
-      MemorySize: 512 # More memory for sync operation
-      Environment:
-        Variables:
-          TMDB_API_KEY: !Ref TMDBApiKey
-          MOVIES_IMAGES_BUCKET: !Ref MovieImagesBucket
-      Events:
-        # Public routes (no auth required)
-        GetMovies:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /movies
-            Method: GET
+    # API Gateway
+    CineCloudApi:
+        Type: AWS::Serverless::Api
+        Properties:
+            Name: !Sub "cinecloud-api-${Environment}"
+            StageName: !Ref Environment
+            Cors:
+                AllowMethods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+                AllowHeaders: "'Content-Type,Authorization,X-Requested-With'"
+                AllowOrigin: "'*'"
+                MaxAge: "'600'"
             Auth:
-              Authorizer: NONE
-        SearchMovies:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /movies/search
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetGenres:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /movies/genres
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetMovie:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /movies/{id}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetMovieShowtimes:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /movies/{id}/showtimes
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        # Admin-only routes (require Cognito auth)
-        CreateMovie:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /movies
-            Method: POST
-        UpdateMovie:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /movies/{id}
-            Method: PUT
-        DeleteMovie:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /movies/{id}
-            Method: DELETE
-        SyncMovies:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /movies/sync
-            Method: POST
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/movies/index.ts
-        External:
-          - "@aws-sdk/*"
+                DefaultAuthorizer: CognitoAuthorizer
+                AddDefaultAuthorizerToCorsPreflight: false
+                Authorizers:
+                    CognitoAuthorizer:
+                        UserPoolArn: !GetAtt CineCloudUserPool.Arn
+                        Identity:
+                            Header: Authorization
+            GatewayResponses:
+                DEFAULT_4XX:
+                    ResponseParameters:
+                        Headers:
+                            Access-Control-Allow-Origin: "'*'"
+                            Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
+                            Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+                DEFAULT_5XX:
+                    ResponseParameters:
+                        Headers:
+                            Access-Control-Allow-Origin: "'*'"
+                            Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
+                            Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+                UNAUTHORIZED:
+                    StatusCode: 401
+                    ResponseParameters:
+                        Headers:
+                            Access-Control-Allow-Origin: "'*'"
+                            Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
+                            Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+                ACCESS_DENIED:
+                    StatusCode: 403
+                    ResponseParameters:
+                        Headers:
+                            Access-Control-Allow-Origin: "'*'"
+                            Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Requested-With'"
+                            Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
 
-  # Showtimes Service Lambda Function
-  ShowtimesFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-showtimes-${Environment}"
-      CodeUri: ./
-      Handler: services/showtimes/index.handler
-      Description: CineCloud Showtimes Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        # Public routes (no auth required)
-        GetShowtimes:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /showtimes
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetShowtimeById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /showtimes/{id}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        # Admin-only routes (require Cognito auth)
-        CreateShowtime:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /showtimes
-            Method: POST
-        UpdateShowtimeBySchedule:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /showtimes/{id}/schedule/{startTime}
-            Method: PUT
-        DeleteShowtimeBySchedule:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /showtimes/{id}/schedule/{startTime}
-            Method: DELETE
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/showtimes/index.ts
-        External:
-          - "@aws-sdk/*"
+    # Cognito User Pool
+    CineCloudUserPool:
+        Type: AWS::Cognito::UserPool
+        Properties:
+            UserPoolName: !Sub "cinecloud-users-${Environment}"
+            AutoVerifiedAttributes:
+                - email
+            UsernameAttributes:
+                - email
+            Policies:
+                PasswordPolicy:
+                    MinimumLength: 8
+                    RequireLowercase: true
+                    RequireNumbers: true
+                    RequireSymbols: false
+                    RequireUppercase: true
+            LambdaConfig:
+                PostConfirmation: !GetAtt PostConfirmationFunction.Arn
 
-  # Bookings Service Lambda Function
-  BookingsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-bookings-${Environment}"
-      CodeUri: ./
-      Handler: services/bookings/index.handler
-      Description: CineCloud Bookings Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      VpcConfig: !If
-        - HasVpc
-        - SecurityGroupIds:
-            - !Ref LambdaSecurityGroup
-          SubnetIds: !If
-            - UseFrontendStack
-            - - !ImportValue
-                Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
-              - !ImportValue
-                Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
-            - !Ref SubnetIds
-        - !Ref AWS::NoValue
-      Events:
-        # Public routes
-        GetBookingStats:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /bookings/stats
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        # Authenticated routes (all bookings routes require auth)
-        GetUserBookings:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /bookings
-            Method: GET
-        GetShowtimeBookings:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /bookings/showtime/{showtimeId}
-            Method: GET
-        CreateBooking:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /bookings
-            Method: POST
-        GetBooking:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /bookings/{userEmail}/{bookingId}
-            Method: GET
-        DeleteBooking:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /bookings/{userEmail}/{bookingId}
-            Method: DELETE
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/bookings/index.ts
-        External:
-          - "@aws-sdk/*"
+    # User Pool Client
+    CineCloudUserPoolClient:
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            ClientName: !Sub "cinecloud-client-${Environment}"
+            UserPoolId: !Ref CineCloudUserPool
+            GenerateSecret: false
+            ExplicitAuthFlows:
+                - ALLOW_USER_PASSWORD_AUTH
+                - ALLOW_REFRESH_TOKEN_AUTH
+                - ALLOW_USER_SRP_AUTH
 
-  # Seat Locks Service Lambda Function
-  SeatLocksFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-seat-locks-${Environment}"
-      CodeUri: ./
-      Handler: services/seat-locks/index.handler
-      Description: CineCloud Seat Locks Service - Manages temporary seat reservations via ElastiCache
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      VpcConfig: !If
-        - HasVpc
-        - SecurityGroupIds:
-            - !Ref LambdaSecurityGroup
-          SubnetIds: !If
-            - UseFrontendStack
-            - - !ImportValue
-                Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
-              - !ImportValue
-                Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
-            - !Ref SubnetIds
-        - !Ref AWS::NoValue
-      Events:
-        # Public route - Get seat availability
-        GetShowtimeSeatStatus:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /seat-locks/showtime/{showtimeId}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        # Authenticated routes
-        LockSeats:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /seat-locks/lock
-            Method: POST
-        UnlockSeats:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /seat-locks/unlock
-            Method: POST
-        ExtendLocks:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /seat-locks/extend
-            Method: POST
-        ValidateLocks:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /seat-locks/validate
-            Method: POST
-        GetMyLocks:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /seat-locks/my-locks/{showtimeId}
-            Method: GET
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/seat-locks/index.ts
-        External:
-          - "@aws-sdk/*"
+    # Admin Group
+    AdminsGroup:
+        Type: AWS::Cognito::UserPoolGroup
+        Properties:
+            GroupName: Admins
+            UserPoolId: !Ref CineCloudUserPool
+            Description: Administrator users with full access
 
-  # Rooms Service Lambda Function
-  RoomsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-rooms-${Environment}"
-      CodeUri: ./
-      Handler: services/rooms/index.handler
-      Description: CineCloud Rooms Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        # Public routes (no auth required)
-        GetRooms:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /rooms
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetRoom:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /rooms/{id}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        # Admin-only routes (require Cognito auth)
-        CreateRoom:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /rooms
-            Method: POST
-        UpdateRoom:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /rooms/{id}
-            Method: PUT
-        DeleteRoom:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /rooms/{id}
-            Method: DELETE
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/rooms/index.ts
-        External:
-          - "@aws-sdk/*"
+    # Users Group
+    UsersGroup:
+        Type: AWS::Cognito::UserPoolGroup
+        Properties:
+            GroupName: Users
+            UserPoolId: !Ref CineCloudUserPool
+            Description: Regular users
 
-  # Ratings Service Lambda Function
-  RatingsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-ratings-${Environment}"
-      CodeUri: ./
-      Handler: services/ratings/index.handler
-      Description: CineCloud Ratings Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        # Public routes (no auth required)
-        GetMovieRatings:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/movie/{movieId}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetUserRatings:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/user/{userId}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetMovieRatingStats:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/movie/{movieId}/stats
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetAllRatings:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/all
-            Method: GET
-        # Authenticated routes (require Cognito auth)
-        CreateRating:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings
-            Method: POST
-        UpdateRating:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/{id}
-            Method: PUT
-        DeleteRating:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/{id}
-            Method: DELETE
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/ratings/index.ts
-        External:
-          - "@aws-sdk/*"
+    # Movies Service Lambda Function
+    MoviesFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub "cinecloud-movies-${Environment}"
+            CodeUri: ./
+            Handler: services/movies/index.handler
+            Description: CineCloud Movies Service
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Timeout: 300 # Extended timeout for sync operation
+            MemorySize: 512 # More memory for sync operation
+            Environment:
+                Variables:
+                    TMDB_API_KEY: !Ref TMDBApiKey
+                    MOVIES_IMAGES_BUCKET: !Ref MovieImagesBucket
+            Events:
+                # Public routes (no auth required)
+                GetMovies:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /movies
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                SearchMovies:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /movies/search
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                GetGenres:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /movies/genres
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                GetMovie:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /movies/{id}
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                GetMovieShowtimes:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /movies/{id}/showtimes
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                # Admin-only routes (require Cognito auth)
+                CreateMovie:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /movies
+                        Method: POST
+                UpdateMovie:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /movies/{id}
+                        Method: PUT
+                DeleteMovie:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /movies/{id}
+                        Method: DELETE
+                SyncMovies:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /movies/sync
+                        Method: POST
+        Metadata:
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: es2022
+                Sourcemap: true
+                EntryPoints:
+                    - src/services/movies/index.ts
+                External:
+                    - "@aws-sdk/*"
 
-  # Users Service Lambda Function
-  UsersFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-users-${Environment}"
-      CodeUri: ./
-      Handler: services/users/index.handler
-      Description: CineCloud Users Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Environment:
-        Variables:
-          COGNITO_USER_POOL_ID: !Ref CineCloudUserPool
-      Events:
-        GetUsers:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /users
-            Method: GET
-        GetUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /users/{id}
-            Method: GET
-        UpdateUserRole:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /users/{id}/role
-            Method: PUT
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/users/index.ts
-        External:
-          - "@aws-sdk/*"
+    # Showtimes Service Lambda Function
+    ShowtimesFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub "cinecloud-showtimes-${Environment}"
+            CodeUri: ./
+            Handler: services/showtimes/index.handler
+            Description: CineCloud Showtimes Service
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Events:
+                # Public routes (no auth required)
+                GetShowtimes:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /showtimes
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                GetShowtimeById:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /showtimes/{id}
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                # Admin-only routes (require Cognito auth)
+                CreateShowtime:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /showtimes
+                        Method: POST
+                UpdateShowtimeBySchedule:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /showtimes/{id}/schedule/{startTime}
+                        Method: PUT
+                DeleteShowtimeBySchedule:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /showtimes/{id}/schedule/{startTime}
+                        Method: DELETE
+        Metadata:
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: es2022
+                Sourcemap: true
+                EntryPoints:
+                    - src/services/showtimes/index.ts
+                External:
+                    - "@aws-sdk/*"
 
-  # Images Service Lambda Function
-  ImagesFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-images-${Environment}"
-      CodeUri: ./
-      Handler: services/images/index.handler
-      Description: CineCloud Images Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        # Public routes (for viewing images via signed URLs logic if needed publicly, but here we use authenticated endpoints usually,
-        # however for getting a signed URL to view, we might want it open or protected. The plan said authenticated/public mix.)
-        # Based on plan:
-        # POST /images/upload-url (Auth required)
-        GetUploadUrl:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /images/upload-url
-            Method: POST
-        # GET /images/{key} (Public or Auth? Usually images are public for movies/rooms. But plan said "Private Bucket".
-        # So we need an endpoint to get the signed URL.
-        # Let's make viewing movies/rooms public, but maybe reviews are public too.)
-        GetImage:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /images/{key+}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        # POST /images/batch (Public or Auth? Public for fetching movie lists)
-        GetImagesBatch:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /images/batch
-            Method: POST
-            Auth:
-              Authorizer: NONE
-        # DELETE /images/{key} (Auth required)
-        DeleteImage:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /images/{key+}
-            Method: DELETE
-        # DELETE /images/batch (Auth required)
-        DeleteImagesBatch:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /images/batch-delete
-            Method: POST
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/images/index.ts
-        External:
-          - "@aws-sdk/*"
+    # Bookings Service Lambda Function
+    BookingsFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub "cinecloud-bookings-${Environment}"
+            CodeUri: ./
+            Handler: services/bookings/index.handler
+            Description: CineCloud Bookings Service
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            VpcConfig: !If
+                - HasVpc
+                - SecurityGroupIds:
+                      - !Ref LambdaSecurityGroup
+                  SubnetIds: !If
+                      - UseFrontendStack
+                      - - !ImportValue
+                          Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
+                        - !ImportValue
+                          Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
+                      - !Ref SubnetIds
+                - !Ref AWS::NoValue
+            Events:
+                # Public routes
+                GetBookingStats:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /bookings/stats
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                # Authenticated routes (all bookings routes require auth)
+                GetUserBookings:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /bookings
+                        Method: GET
+                GetShowtimeBookings:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /bookings/showtime/{showtimeId}
+                        Method: GET
+                CreateBooking:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /bookings
+                        Method: POST
+                GetBooking:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /bookings/{userEmail}/{bookingId}
+                        Method: GET
+                DeleteBooking:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /bookings/{userEmail}/{bookingId}
+                        Method: DELETE
+        Metadata:
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: es2022
+                Sourcemap: true
+                EntryPoints:
+                    - src/services/bookings/index.ts
+                External:
+                    - "@aws-sdk/*"
 
-  # Post Confirmation Lambda Trigger
-  PostConfirmationFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-post-confirmation-${Environment}"
-      CodeUri: ./
-      Handler: triggers/post-confirmation/index.handler
-      Description: CineCloud Post Confirmation Trigger - Registers users in DynamoDB
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/triggers/post-confirmation/index.ts
-        External:
-          - "@aws-sdk/*"
+    # Seat Locks Service Lambda Function
+    SeatLocksFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub "cinecloud-seat-locks-${Environment}"
+            CodeUri: ./
+            Handler: services/seat-locks/index.handler
+            Description: CineCloud Seat Locks Service - Manages temporary seat reservations via ElastiCache
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            VpcConfig: !If
+                - HasVpc
+                - SecurityGroupIds:
+                      - !Ref LambdaSecurityGroup
+                  SubnetIds: !If
+                      - UseFrontendStack
+                      - - !ImportValue
+                          Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
+                        - !ImportValue
+                          Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
+                      - !Ref SubnetIds
+                - !Ref AWS::NoValue
+            Events:
+                # Health check - no auth required
+                HealthCheck:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /seat-locks/health
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                # Public route - Get seat availability
+                GetShowtimeSeatStatus:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /seat-locks/showtime/{showtimeId}
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                # Authenticated routes
+                LockSeats:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /seat-locks/lock
+                        Method: POST
+                UnlockSeats:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /seat-locks/unlock
+                        Method: POST
+                ExtendLocks:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /seat-locks/extend
+                        Method: POST
+                ValidateLocks:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /seat-locks/validate
+                        Method: POST
+                GetMyLocks:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /seat-locks/my-locks/{showtimeId}
+                        Method: GET
+        Metadata:
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: es2022
+                Sourcemap: true
+                EntryPoints:
+                    - src/services/seat-locks/index.ts
+                External:
+                    - "@aws-sdk/*"
 
-  # Permission for Cognito to invoke PostConfirmation Lambda
-  PostConfirmationFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref PostConfirmationFunction
-      Principal: cognito-idp.amazonaws.com
-      SourceArn: !GetAtt CineCloudUserPool.Arn
-      Action: lambda:InvokeFunction
+    # Rooms Service Lambda Function
+    RoomsFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub "cinecloud-rooms-${Environment}"
+            CodeUri: ./
+            Handler: services/rooms/index.handler
+            Description: CineCloud Rooms Service
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Events:
+                # Public routes (no auth required)
+                GetRooms:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /rooms
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                GetRoom:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /rooms/{id}
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                # Admin-only routes (require Cognito auth)
+                CreateRoom:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /rooms
+                        Method: POST
+                UpdateRoom:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /rooms/{id}
+                        Method: PUT
+                DeleteRoom:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /rooms/{id}
+                        Method: DELETE
+        Metadata:
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: es2022
+                Sourcemap: true
+                EntryPoints:
+                    - src/services/rooms/index.ts
+                External:
+                    - "@aws-sdk/*"
 
-  # Movie Sync Scheduled Lambda Function
-  # Runs daily to fetch new movies from TMDB and update ratings for recent releases
-  MovieSyncFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-movie-sync-${Environment}"
-      CodeUri: ./
-      Handler: scheduled/movie-sync/index.handler
-      Description: CineCloud Movie Sync - Fetches movies from TMDB and updates ratings daily
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Timeout: 300 # 5 minutes timeout for batch processing
-      MemorySize: 512 # More memory for batch operations
-      Environment:
-        Variables:
-          TMDB_API_KEY: !Ref TMDBApiKey
-          MOVIES_IMAGES_BUCKET: !Ref MovieImagesBucket
-      Events:
-        # Daily schedule at 2:00 AM UTC (12:00 PM AEST)
-        DailySync:
-          Type: Schedule
-          Properties:
-            Schedule: cron(0 2 * * ? *)
-            Name: !Sub "cinecloud-movie-sync-daily-${Environment}"
-            Description: Daily movie sync from TMDB
-            Enabled: true
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/scheduled/movie-sync/index.ts
-        External:
-          - "@aws-sdk/*"
+    # Ratings Service Lambda Function
+    RatingsFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub "cinecloud-ratings-${Environment}"
+            CodeUri: ./
+            Handler: services/ratings/index.handler
+            Description: CineCloud Ratings Service
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Events:
+                # Public routes (no auth required)
+                GetMovieRatings:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /ratings/movie/{movieId}
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                GetUserRatings:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /ratings/user/{userId}
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                GetMovieRatingStats:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /ratings/movie/{movieId}/stats
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                GetAllRatings:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /ratings/all
+                        Method: GET
+                # Authenticated routes (require Cognito auth)
+                CreateRating:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /ratings
+                        Method: POST
+                UpdateRating:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /ratings/{id}
+                        Method: PUT
+                DeleteRating:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /ratings/{id}
+                        Method: DELETE
+        Metadata:
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: es2022
+                Sourcemap: true
+                EntryPoints:
+                    - src/services/ratings/index.ts
+                External:
+                    - "@aws-sdk/*"
 
-  # S3 Bucket for Movie Images
-  MovieImagesBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      BucketName: !Sub "cinecloud-movie-images-${Environment}-${AWS::AccountId}"
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: false
-        BlockPublicPolicy: false
-        IgnorePublicAcls: false
-        RestrictPublicBuckets: false
-      CorsConfiguration:
-        CorsRules:
-          - AllowedHeaders:
-              - "*"
-            AllowedMethods:
-              - GET
-            AllowedOrigins:
-              - "*"
-            MaxAge: 3600
+    # Users Service Lambda Function
+    UsersFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub "cinecloud-users-${Environment}"
+            CodeUri: ./
+            Handler: services/users/index.handler
+            Description: CineCloud Users Service
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Environment:
+                Variables:
+                    COGNITO_USER_POOL_ID: !Ref CineCloudUserPool
+            Events:
+                GetUsers:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /users
+                        Method: GET
+                GetUser:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /users/{id}
+                        Method: GET
+                UpdateUserRole:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /users/{id}/role
+                        Method: PUT
+        Metadata:
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: es2022
+                Sourcemap: true
+                EntryPoints:
+                    - src/services/users/index.ts
+                External:
+                    - "@aws-sdk/*"
 
-  # S3 Bucket Policy for public read access
-  MovieImagesBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref MovieImagesBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: PublicReadGetObject
-            Effect: Allow
-            Principal: "*"
-            Action: s3:GetObject
-            Resource: !Sub "${MovieImagesBucket.Arn}/*"
+    # Images Service Lambda Function
+    ImagesFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub "cinecloud-images-${Environment}"
+            CodeUri: ./
+            Handler: services/images/index.handler
+            Description: CineCloud Images Service
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Events:
+                # Public routes (for viewing images via signed URLs logic if needed publicly, but here we use authenticated endpoints usually,
+                # however for getting a signed URL to view, we might want it open or protected. The plan said authenticated/public mix.)
+                # Based on plan:
+                # POST /images/upload-url (Auth required)
+                GetUploadUrl:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /images/upload-url
+                        Method: POST
+                # GET /images/{key} (Public or Auth? Usually images are public for movies/rooms. But plan said "Private Bucket".
+                # So we need an endpoint to get the signed URL.
+                # Let's make viewing movies/rooms public, but maybe reviews are public too.)
+                GetImage:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /images/{key+}
+                        Method: GET
+                        Auth:
+                            Authorizer: NONE
+                # POST /images/batch (Public or Auth? Public for fetching movie lists)
+                GetImagesBatch:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /images/batch
+                        Method: POST
+                        Auth:
+                            Authorizer: NONE
+                # DELETE /images/{key} (Auth required)
+                DeleteImage:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /images/{key+}
+                        Method: DELETE
+                # DELETE /images/batch (Auth required)
+                DeleteImagesBatch:
+                    Type: Api
+                    Properties:
+                        RestApiId: !Ref CineCloudApi
+                        Path: /images/batch-delete
+                        Method: POST
+        Metadata:
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: es2022
+                Sourcemap: true
+                EntryPoints:
+                    - src/services/images/index.ts
+                External:
+                    - "@aws-sdk/*"
 
-  # DynamoDB Tables
-  MoviesTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      TableName: !Sub "cinecloud-movies-${Environment}"
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-        - AttributeName: tmdb_id
-          AttributeType: S
-        - AttributeName: type
-          AttributeType: S
-        - AttributeName: rating
-          AttributeType: N
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: tmdb_id-index
-          KeySchema:
-            - AttributeName: tmdb_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: type-rating-index
-          KeySchema:
-            - AttributeName: type
-              KeyType: HASH
-            - AttributeName: rating
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
+    # Post Confirmation Lambda Trigger
+    PostConfirmationFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub "cinecloud-post-confirmation-${Environment}"
+            CodeUri: ./
+            Handler: triggers/post-confirmation/index.handler
+            Description: CineCloud Post Confirmation Trigger - Registers users in DynamoDB
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+        Metadata:
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: es2022
+                Sourcemap: true
+                EntryPoints:
+                    - src/triggers/post-confirmation/index.ts
+                External:
+                    - "@aws-sdk/*"
 
-  ShowtimesTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      TableName: !Sub "cinecloud-showtimes-${Environment}"
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      AttributeDefinitions:
-        - AttributeName: movie_id
-          AttributeType: S
-        - AttributeName: start_time
-          AttributeType: S
-        - AttributeName: room_id
-          AttributeType: S
-        - AttributeName: showtime_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: movie_id
-          KeyType: HASH
-        - AttributeName: start_time
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: room_id-start_time-index
-          KeySchema:
-            - AttributeName: room_id
-              KeyType: HASH
-            - AttributeName: start_time
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-        - IndexName: showtime_id-index
-          KeySchema:
-            - AttributeName: showtime_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
+    # Permission for Cognito to invoke PostConfirmation Lambda
+    PostConfirmationFunctionPermission:
+        Type: AWS::Lambda::Permission
+        Properties:
+            FunctionName: !Ref PostConfirmationFunction
+            Principal: cognito-idp.amazonaws.com
+            SourceArn: !GetAtt CineCloudUserPool.Arn
+            Action: lambda:InvokeFunction
 
-  BookingsTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      TableName: !Sub "cinecloud-bookings-${Environment}"
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      AttributeDefinitions:
-        - AttributeName: user_email
-          AttributeType: S
-        - AttributeName: booking_id
-          AttributeType: S
-        - AttributeName: showtime_id
-          AttributeType: S
-        - AttributeName: user_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: user_email
-          KeyType: HASH
-        - AttributeName: booking_id
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: showtime_id-index
-          KeySchema:
-            - AttributeName: showtime_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: user_id-index
-          KeySchema:
-            - AttributeName: user_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
+    # Movie Sync Scheduled Lambda Function
+    # Runs daily to fetch new movies from TMDB and update ratings for recent releases
+    MovieSyncFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub "cinecloud-movie-sync-${Environment}"
+            CodeUri: ./
+            Handler: scheduled/movie-sync/index.handler
+            Description: CineCloud Movie Sync - Fetches movies from TMDB and updates ratings daily
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Timeout: 300 # 5 minutes timeout for batch processing
+            MemorySize: 512 # More memory for batch operations
+            Environment:
+                Variables:
+                    TMDB_API_KEY: !Ref TMDBApiKey
+                    MOVIES_IMAGES_BUCKET: !Ref MovieImagesBucket
+            Events:
+                # Daily schedule at 2:00 AM UTC (12:00 PM AEST)
+                DailySync:
+                    Type: Schedule
+                    Properties:
+                        Schedule: cron(0 2 * * ? *)
+                        Name: !Sub "cinecloud-movie-sync-daily-${Environment}"
+                        Description: Daily movie sync from TMDB
+                        Enabled: true
+        Metadata:
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: es2022
+                Sourcemap: true
+                EntryPoints:
+                    - src/scheduled/movie-sync/index.ts
+                External:
+                    - "@aws-sdk/*"
 
-  RoomsTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      TableName: !Sub "cinecloud-rooms-${Environment}"
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      AttributeDefinitions:
-        - AttributeName: room_id
-          AttributeType: S
-        - AttributeName: sk
-          AttributeType: S
-      KeySchema:
-        - AttributeName: room_id
-          KeyType: HASH
-        - AttributeName: sk
-          KeyType: RANGE
+    # S3 Bucket for Movie Images
+    MovieImagesBucket:
+        Type: AWS::S3::Bucket
+        DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
+        Properties:
+            BucketName: !Sub "cinecloud-movie-images-${Environment}-${AWS::AccountId}"
+            PublicAccessBlockConfiguration:
+                BlockPublicAcls: false
+                BlockPublicPolicy: false
+                IgnorePublicAcls: false
+                RestrictPublicBuckets: false
+            CorsConfiguration:
+                CorsRules:
+                    - AllowedHeaders:
+                          - "*"
+                      AllowedMethods:
+                          - GET
+                      AllowedOrigins:
+                          - "*"
+                      MaxAge: 3600
 
-  RatingsTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      TableName: !Sub "cinecloud-ratings-${Environment}"
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-        - AttributeName: movie_id
-          AttributeType: S
-        - AttributeName: user_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: movie_id-index
-          KeySchema:
-            - AttributeName: movie_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: user_id-index
-          KeySchema:
-            - AttributeName: user_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
+    # S3 Bucket Policy for public read access
+    MovieImagesBucketPolicy:
+        Type: AWS::S3::BucketPolicy
+        Properties:
+            Bucket: !Ref MovieImagesBucket
+            PolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                    - Sid: PublicReadGetObject
+                      Effect: Allow
+                      Principal: "*"
+                      Action: s3:GetObject
+                      Resource: !Sub "${MovieImagesBucket.Arn}/*"
 
-  NotificationsTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      TableName: !Sub "cinecloud-notifications-${Environment}"
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-        - AttributeName: user_id
-          AttributeType: S
-        - AttributeName: sent_at
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: user_id-sent_at-index
-          KeySchema:
-            - AttributeName: user_id
-              KeyType: HASH
-            - AttributeName: sent_at
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
+    # DynamoDB Tables
+    MoviesTable:
+        Type: AWS::DynamoDB::Table
+        DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
+        Properties:
+            TableName: !Sub "cinecloud-movies-${Environment}"
+            BillingMode: PAY_PER_REQUEST
+            SSESpecification:
+                SSEEnabled: true
+            AttributeDefinitions:
+                - AttributeName: id
+                  AttributeType: S
+                - AttributeName: tmdb_id
+                  AttributeType: S
+                - AttributeName: type
+                  AttributeType: S
+                - AttributeName: rating
+                  AttributeType: N
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            GlobalSecondaryIndexes:
+                - IndexName: tmdb_id-index
+                  KeySchema:
+                      - AttributeName: tmdb_id
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: ALL
+                - IndexName: type-rating-index
+                  KeySchema:
+                      - AttributeName: type
+                        KeyType: HASH
+                      - AttributeName: rating
+                        KeyType: RANGE
+                  Projection:
+                      ProjectionType: ALL
 
-  UsersTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      TableName: !Sub "cinecloud-users-data-${Environment}"
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-        - AttributeName: email
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: email-index
-          KeySchema:
-            - AttributeName: email
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
+    ShowtimesTable:
+        Type: AWS::DynamoDB::Table
+        DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
+        Properties:
+            TableName: !Sub "cinecloud-showtimes-${Environment}"
+            BillingMode: PAY_PER_REQUEST
+            SSESpecification:
+                SSEEnabled: true
+            AttributeDefinitions:
+                - AttributeName: movie_id
+                  AttributeType: S
+                - AttributeName: start_time
+                  AttributeType: S
+                - AttributeName: room_id
+                  AttributeType: S
+                - AttributeName: showtime_id
+                  AttributeType: S
+            KeySchema:
+                - AttributeName: movie_id
+                  KeyType: HASH
+                - AttributeName: start_time
+                  KeyType: RANGE
+            GlobalSecondaryIndexes:
+                - IndexName: room_id-start_time-index
+                  KeySchema:
+                      - AttributeName: room_id
+                        KeyType: HASH
+                      - AttributeName: start_time
+                        KeyType: RANGE
+                  Projection:
+                      ProjectionType: ALL
+                - IndexName: showtime_id-index
+                  KeySchema:
+                      - AttributeName: showtime_id
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: ALL
 
-  ImagesBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "cinecloud-images-${Environment}-${AWS::AccountId}"
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      CorsConfiguration:
-        CorsRules:
-          - AllowedHeaders:
-              - "*"
-            AllowedMethods:
-              - GET
-              - PUT
-              - HEAD
-            AllowedOrigins:
-              - "*"
-            MaxAge: 3000
+    BookingsTable:
+        Type: AWS::DynamoDB::Table
+        DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
+        Properties:
+            TableName: !Sub "cinecloud-bookings-${Environment}"
+            BillingMode: PAY_PER_REQUEST
+            SSESpecification:
+                SSEEnabled: true
+            AttributeDefinitions:
+                - AttributeName: user_email
+                  AttributeType: S
+                - AttributeName: booking_id
+                  AttributeType: S
+                - AttributeName: showtime_id
+                  AttributeType: S
+                - AttributeName: user_id
+                  AttributeType: S
+            KeySchema:
+                - AttributeName: user_email
+                  KeyType: HASH
+                - AttributeName: booking_id
+                  KeyType: RANGE
+            GlobalSecondaryIndexes:
+                - IndexName: showtime_id-index
+                  KeySchema:
+                      - AttributeName: showtime_id
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: ALL
+                - IndexName: user_id-index
+                  KeySchema:
+                      - AttributeName: user_id
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: ALL
+
+    RoomsTable:
+        Type: AWS::DynamoDB::Table
+        DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
+        Properties:
+            TableName: !Sub "cinecloud-rooms-${Environment}"
+            BillingMode: PAY_PER_REQUEST
+            SSESpecification:
+                SSEEnabled: true
+            AttributeDefinitions:
+                - AttributeName: room_id
+                  AttributeType: S
+                - AttributeName: sk
+                  AttributeType: S
+            KeySchema:
+                - AttributeName: room_id
+                  KeyType: HASH
+                - AttributeName: sk
+                  KeyType: RANGE
+
+    RatingsTable:
+        Type: AWS::DynamoDB::Table
+        DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
+        Properties:
+            TableName: !Sub "cinecloud-ratings-${Environment}"
+            BillingMode: PAY_PER_REQUEST
+            SSESpecification:
+                SSEEnabled: true
+            AttributeDefinitions:
+                - AttributeName: id
+                  AttributeType: S
+                - AttributeName: movie_id
+                  AttributeType: S
+                - AttributeName: user_id
+                  AttributeType: S
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            GlobalSecondaryIndexes:
+                - IndexName: movie_id-index
+                  KeySchema:
+                      - AttributeName: movie_id
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: ALL
+                - IndexName: user_id-index
+                  KeySchema:
+                      - AttributeName: user_id
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: ALL
+
+    NotificationsTable:
+        Type: AWS::DynamoDB::Table
+        DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
+        Properties:
+            TableName: !Sub "cinecloud-notifications-${Environment}"
+            BillingMode: PAY_PER_REQUEST
+            SSESpecification:
+                SSEEnabled: true
+            AttributeDefinitions:
+                - AttributeName: id
+                  AttributeType: S
+                - AttributeName: user_id
+                  AttributeType: S
+                - AttributeName: sent_at
+                  AttributeType: S
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            GlobalSecondaryIndexes:
+                - IndexName: user_id-sent_at-index
+                  KeySchema:
+                      - AttributeName: user_id
+                        KeyType: HASH
+                      - AttributeName: sent_at
+                        KeyType: RANGE
+                  Projection:
+                      ProjectionType: ALL
+
+    UsersTable:
+        Type: AWS::DynamoDB::Table
+        DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
+        Properties:
+            TableName: !Sub "cinecloud-users-data-${Environment}"
+            BillingMode: PAY_PER_REQUEST
+            SSESpecification:
+                SSEEnabled: true
+            AttributeDefinitions:
+                - AttributeName: id
+                  AttributeType: S
+                - AttributeName: email
+                  AttributeType: S
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            GlobalSecondaryIndexes:
+                - IndexName: email-index
+                  KeySchema:
+                      - AttributeName: email
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: ALL
+
+    ImagesBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+            BucketName: !Sub "cinecloud-images-${Environment}-${AWS::AccountId}"
+            PublicAccessBlockConfiguration:
+                BlockPublicAcls: true
+                BlockPublicPolicy: true
+                IgnorePublicAcls: true
+                RestrictPublicBuckets: true
+            CorsConfiguration:
+                CorsRules:
+                    - AllowedHeaders:
+                          - "*"
+                      AllowedMethods:
+                          - GET
+                          - PUT
+                          - HEAD
+                      AllowedOrigins:
+                          - "*"
+                      MaxAge: 3000
 
 Outputs:
-  ApiEndpoint:
-    Description: API Gateway endpoint URL
-    Value: !Sub "https://${CineCloudApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
-    Export:
-      Name: !Sub "${AWS::StackName}-ApiEndpoint"
+    ApiEndpoint:
+        Description: API Gateway endpoint URL
+        Value: !Sub "https://${CineCloudApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+        Export:
+            Name: !Sub "${AWS::StackName}-ApiEndpoint"
 
-  UserPoolId:
-    Description: Cognito User Pool ID
-    Value: !Ref CineCloudUserPool
-    Export:
-      Name: !Sub "${AWS::StackName}-UserPoolId"
+    UserPoolId:
+        Description: Cognito User Pool ID
+        Value: !Ref CineCloudUserPool
+        Export:
+            Name: !Sub "${AWS::StackName}-UserPoolId"
 
-  UserPoolClientId:
-    Description: Cognito User Pool Client ID
-    Value: !Ref CineCloudUserPoolClient
-    Export:
-      Name: !Sub "${AWS::StackName}-UserPoolClientId"
+    UserPoolClientId:
+        Description: Cognito User Pool Client ID
+        Value: !Ref CineCloudUserPoolClient
+        Export:
+            Name: !Sub "${AWS::StackName}-UserPoolClientId"
 
-  UserPoolArn:
-    Description: Cognito User Pool ARN
-    Value: !GetAtt CineCloudUserPool.Arn
-    Export:
-      Name: !Sub "${AWS::StackName}-UserPoolArn"
+    UserPoolArn:
+        Description: Cognito User Pool ARN
+        Value: !GetAtt CineCloudUserPool.Arn
+        Export:
+            Name: !Sub "${AWS::StackName}-UserPoolArn"
 
-  MoviesTableName:
-    Description: Movies DynamoDB Table Name
-    Value: !Ref MoviesTable
+    MoviesTableName:
+        Description: Movies DynamoDB Table Name
+        Value: !Ref MoviesTable
 
-  ShowtimesTableName:
-    Description: Showtimes DynamoDB Table Name
-    Value: !Ref ShowtimesTable
+    ShowtimesTableName:
+        Description: Showtimes DynamoDB Table Name
+        Value: !Ref ShowtimesTable
 
-  BookingsTableName:
-    Description: Bookings DynamoDB Table Name
-    Value: !Ref BookingsTable
+    BookingsTableName:
+        Description: Bookings DynamoDB Table Name
+        Value: !Ref BookingsTable
 
-  RoomsTableName:
-    Description: Rooms DynamoDB Table Name
-    Value: !Ref RoomsTable
+    RoomsTableName:
+        Description: Rooms DynamoDB Table Name
+        Value: !Ref RoomsTable
 
-  RatingsTableName:
-    Description: Ratings DynamoDB Table Name
-    Value: !Ref RatingsTable
+    RatingsTableName:
+        Description: Ratings DynamoDB Table Name
+        Value: !Ref RatingsTable
 
-  NotificationsTableName:
-    Description: Notifications DynamoDB Table Name
-    Value: !Ref NotificationsTable
+    NotificationsTableName:
+        Description: Notifications DynamoDB Table Name
+        Value: !Ref NotificationsTable
 
-  UsersTableName:
-    Description: Users DynamoDB Table Name
-    Value: !Ref UsersTable
+    UsersTableName:
+        Description: Users DynamoDB Table Name
+        Value: !Ref UsersTable
 
-  MovieSyncFunctionName:
-    Description: Movie Sync Lambda Function Name
-    Value: !Ref MovieSyncFunction
+    MovieSyncFunctionName:
+        Description: Movie Sync Lambda Function Name
+        Value: !Ref MovieSyncFunction
 
-  MovieImagesBucketName:
-    Description: S3 Bucket for movie images
-    Value: !Ref MovieImagesBucket
+    MovieImagesBucketName:
+        Description: S3 Bucket for movie images
+        Value: !Ref MovieImagesBucket
 
-  MovieImagesBucketUrl:
-    Description: S3 Bucket URL for movie images
-    Value: !Sub "https://${MovieImagesBucket}.s3.${AWS::Region}.amazonaws.com"
-  ElastiCacheEndpoint:
-    Condition: HasVpc
-    Description: ElastiCache Redis endpoint for seat locks
-    Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Address
+    MovieImagesBucketUrl:
+        Description: S3 Bucket URL for movie images
+        Value: !Sub "https://${MovieImagesBucket}.s3.${AWS::Region}.amazonaws.com"
+    ElastiCacheEndpoint:
+        Condition: HasVpc
+        Description: ElastiCache Redis endpoint for seat locks
+        Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Address
 
-  ElastiCachePort:
-    Condition: HasVpc
-    Description: ElastiCache Redis port
-    Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Port
+    ElastiCachePort:
+        Condition: HasVpc
+        Description: ElastiCache Redis port
+        Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Port
