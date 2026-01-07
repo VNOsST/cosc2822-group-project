@@ -109,7 +109,7 @@ export const handler: PostConfirmationTriggerHandler = async (
         }
 
         // Send admin notification for new user registration
-        notifyAdmins({
+        await notifyAdmins({
           type: "user_registered",
           userId,
           userEmail: email || "",

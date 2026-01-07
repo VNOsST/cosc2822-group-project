@@ -22,6 +22,8 @@ import type {
   TestNotificationEvent,
 } from "./types";
 
+import { enqueueAdminNotification } from "./queue-client";
+
 // Initialize SNS client
 const snsClient = new SNSClient({
   region: process.env.AWS_REGION || process.env.DYNAMODB_REGION || "ap-southeast-2",
@@ -160,9 +162,10 @@ CineCloud Admin Notifications
 }
 
 /**
- * Publish an admin notification event to SNS
+ * Publish an admin notification event directly to SNS
+ * Used by the worker function
  */
-export async function notifyAdmins(event: AdminEvent): Promise<void> {
+export async function publishToTopic(event: AdminEvent): Promise<void> {
   try {
     const topicArn = getTopicArn();
     const { subject, body } = formatEventMessage(event);
@@ -185,10 +188,16 @@ export async function notifyAdmins(event: AdminEvent): Promise<void> {
 
     console.log(`[sns-client] Successfully published ${event.type} event`);
   } catch (error) {
-    // Log but don't throw - notifications should not break the main flow
     console.error("[sns-client] Failed to publish notification:", error);
+    throw error; // Throw so SQS can retry
   }
 }
+
+/**
+ * Queue an admin notification to be processed asynchronously
+ * @deprecated Use notifyAdmins instead, which now uses the queue
+ */
+export const notifyAdmins = enqueueAdminNotification;
 
 /**
  * Subscribe an email to the admin alerts topic

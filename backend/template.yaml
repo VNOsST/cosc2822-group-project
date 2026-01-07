@@ -30,6 +30,7 @@ Globals:
         ADMIN_ALERTS_TOPIC_ARN: !Ref AdminAlertsTopic
         REDIS_ENDPOINT: !If [HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Address, ""]
         REDIS_PORT: !If [HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Port, "6379"]
+        ADMIN_NOTIFICATION_QUEUE_URL: !Ref AdminNotificationQueue
 
 Parameters:
   Environment:
@@ -151,6 +152,52 @@ Resources:
           Value: !Sub "cinecloud-redis-${Environment}"
         - Key: Environment
           Value: !Ref Environment
+
+  # Security Group for VPC Endpoints
+  # Allows HTTPS traffic from the entire VPC
+  VPCEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: HasVpc
+    Properties:
+      GroupName: !Sub "cinecloud-vpce-sg-${Environment}"
+      GroupDescription: Security group for VPC Endpoints
+      VpcId: !If
+        - UseFrontendStack
+        - !ImportValue
+          Fn::Sub: "${FrontendStackName}-VPCId"
+        - !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0 # Allow from anywhere (effectively VPC-only due to private routing)
+      Tags:
+        - Key: Name
+          Value: !Sub "cinecloud-vpce-sg-${Environment}"
+
+  # SQS VPC Endpoint
+  SQSEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: HasVpc
+    Properties:
+      VpcId: !If
+        - UseFrontendStack
+        - !ImportValue
+          Fn::Sub: "${FrontendStackName}-VPCId"
+        - !Ref VpcId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.sqs"
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: true
+      SubnetIds: !If
+        - UseFrontendStack
+        # Aligning with Lambda function subnets (Public) for guaranteed reachability
+        - - !ImportValue
+            Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
+          - !ImportValue
+            Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
+        - !Ref SubnetIds
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
 
   # DynamoDB VPC Gateway Endpoint
   # Required because Lambda functions in a VPC lose default internet access
@@ -446,6 +493,20 @@ Resources:
                 Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
             - !Ref SubnetIds
         - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          # Override Queue URL to use VPC Endpoint explicitly for this VPC-bound function
+          ADMIN_NOTIFICATION_QUEUE_URL: !If
+            - HasVpc
+            - !Join
+              - ""
+              - - "https://"
+                - !Select [0, !GetAtt SQSEndpoint.DnsEntries]
+                - "/"
+                - !Ref AWS::AccountId
+                - "/"
+                - !GetAtt AdminNotificationQueue.QueueName
+            - !Ref AdminNotificationQueue
       Events:
         # Public routes
         GetBookingStats:
@@ -1164,6 +1225,70 @@ Resources:
     Properties:
       TopicName: !Sub "cinecloud-admin-alerts-${Environment}"
       DisplayName: CineCloud Admin Alerts
+
+  # SQS Queue for Admin Notifications (Decoupling)
+  AdminNotificationQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "cinecloud-admin-notifications-${Environment}"
+      VisibilityTimeout: 30
+      MessageRetentionPeriod: 345600 # 4 days
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AdminNotificationDLQ.Arn
+        maxReceiveCount: 3
+
+  # SQS Queue Policy to allow LabRole access
+  AdminNotificationQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref AdminNotificationQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowLabRoleAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Action:
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+            Resource: !GetAtt AdminNotificationQueue.Arn
+
+  # Dead Letter Queue for Admin Notifications
+  AdminNotificationDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "cinecloud-admin-notifications-dlq-${Environment}"
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  # Admin Notification Worker Lambda Function
+  AdminNotificationWorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-admin-notification-worker-${Environment}"
+      CodeUri: ./
+      Handler: workers/admin-notifications/index.handler
+      Description: CineCloud Admin Notification Worker - Processes SQS messages and sends SNS alerts
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt AdminNotificationQueue.Arn
+            BatchSize: 10
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/workers/admin-notifications/index.ts
+        External:
+          - "@aws-sdk/*"
 
   # Admin Notifications Service Lambda Function
   AdminNotificationsFunction:

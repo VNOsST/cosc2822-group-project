@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
 import {
   AlertCircle,
   Bell,
@@ -17,7 +16,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -41,23 +39,20 @@ export const Route = createFileRoute('/admin/notifications')({
 
 function AdminNotificationsPage() {
   const { user } = useAuth()
-  const [email, setEmail] = useState('')
 
   const { data: subscriptions, isLoading, isError } = useAdminSubscriptions()
   const subscribeMutation = useSubscribeAdmin()
   const unsubscribeMutation = useUnsubscribeAdmin()
   const testMutation = useTestAdminNotification()
 
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email) return
+  const handleSubscribe = async () => {
+    if (!user?.email) return
 
     try {
-      await subscribeMutation.mutateAsync({ email })
+      await subscribeMutation.mutateAsync({ email: user.email })
       toast.success(
         'Subscription request sent! Please check your email to confirm.',
       )
-      setEmail('')
     } catch (error) {
       toast.error('Failed to subscribe. Please try again.')
     }
@@ -109,49 +104,59 @@ function AdminNotificationsPage() {
               Subscribe to Alerts
             </CardTitle>
             <CardDescription>
-              Add an email address to receive real-time admin notifications via
-              SNS.
+              Subscribe your account email to receive real-time system alerts
+              via SNS.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubscribe} className="flex gap-2">
-              <Input
-                type="email"
-                placeholder="admin@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-background text-foreground"
-              />
-              <Button type="submit" disabled={subscribeMutation.isPending}>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 rounded-lg border border-border p-3 bg-muted/50">
+                <Mail className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Your account email
+                  </p>
+                  <p className="text-sm font-medium text-foreground">
+                    {user?.email}
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                className="w-full"
+                onClick={handleSubscribe}
+                disabled={
+                  subscribeMutation.isPending ||
+                  isSubscribed ||
+                  isPending ||
+                  !user?.email
+                }
+              >
                 {subscribeMutation.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  'Subscribe'
-                )}
+                ) : null}
+                {isSubscribed
+                  ? 'Already Subscribed'
+                  : isPending
+                    ? 'Pending Confirmation'
+                    : 'Subscribe to Alerts'}
               </Button>
-            </form>
-            {user && !isSubscribed && !isPending && (
-              <p className="mt-4 text-sm text-muted-foreground">
-                You are not currently subscribed to alerts with your account
-                email ({user.email}).
-              </p>
-            )}
-            {isPending && (
-              <div className="mt-4 flex items-center gap-2 rounded-lg bg-amber-500/10 p-3 text-sm text-amber-600 dark:text-amber-400">
-                <AlertCircle className="h-4 w-4" />
-                <span>
-                  Subscription pending confirmation for {user?.email}. Check
-                  your inbox!
-                </span>
-              </div>
-            )}
-            {isSubscribed && (
-              <div className="mt-4 flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-600 dark:text-green-400">
-                <CheckCircle2 className="h-4 w-4" />
-                <span>You are successfully subscribed and confirmed!</span>
-              </div>
-            )}
+
+              {isPending && (
+                <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 p-3 text-sm text-amber-600 dark:text-amber-400">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>
+                    Please check your inbox to confirm your subscription!
+                  </span>
+                </div>
+              )}
+              {isSubscribed && (
+                <div className="flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-600 dark:text-green-400">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>You are receiving alerts at this email.</span>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 

@@ -409,7 +409,7 @@ bookings.post("/", requireAuth(), async (c) => {
     }
 
     // Send admin notification for new booking
-    notifyAdmins({
+    await notifyAdmins({
       type: "booking_created",
       bookingId,
       userEmail: data.user_email,
@@ -429,7 +429,7 @@ bookings.post("/", requireAuth(), async (c) => {
       if (percentageFilled >= LOW_SEAT_THRESHOLD_PERCENT) {
         const remainingSeats = totalCapacity - occupiedCount;
 
-        notifyAdmins({
+        await notifyAdmins({
           type: "low_seat_availability",
           showtimeId: data.showtime_id,
           movieTitle,
@@ -599,7 +599,7 @@ bookings.delete("/:userEmail/:bookingId", requireAuth(), async (c) => {
     }
 
     // Send admin notification for booking cancellation
-    notifyAdmins({
+    await notifyAdmins({
       type: "booking_cancelled",
       bookingId: booking.booking_id,
       userEmail: booking.user_email,
