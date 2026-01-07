@@ -30,7 +30,6 @@ app.get("/health", (c) => c.json({ service: "seat-locks", status: "ok" }));
 
 // Mount routes - handle both /seat-locks and / paths
 app.route("/seat-locks", seatLocksRoutes);
-app.route("/", seatLocksRoutes);
 
 // Error handling
 app.onError((err, c) => {

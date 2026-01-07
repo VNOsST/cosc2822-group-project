@@ -20,7 +20,7 @@ capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
 s3_prefix = "cinecloud-backend"
-parameter_overrides = "Environment=\"dev\" FrontendStackName=\"cinecloud-frontend-dev\" VpcId=\"\" SubnetIds=\"\""
+parameter_overrides = "Environment=\"dev\" FrontendStackName=\"cinecloud-frontend-dev\" VpcId=\"\" SubnetIds=\"\" PublicRouteTableId=\"\""
 image_repositories = []
 
 [default.local_start_api.parameters]

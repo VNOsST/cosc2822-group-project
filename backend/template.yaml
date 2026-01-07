@@ -64,6 +64,11 @@ Parameters:
     Default: ""
     Description: Comma-separated list of subnet IDs for ElastiCache (leave empty if using FrontendStackName)
 
+  PublicRouteTableId:
+    Type: String
+    Default: ""
+    Description: Public Route Table ID for DynamoDB VPC Endpoint (leave empty if using FrontendStackName)
+
 Conditions:
   # Use frontend stack if provided, otherwise fall back to manual VPC params
   UseFrontendStack: !Not [!Equals [!Ref FrontendStackName, ""]]
@@ -145,6 +150,29 @@ Resources:
           Value: !Sub "cinecloud-redis-${Environment}"
         - Key: Environment
           Value: !Ref Environment
+
+  # DynamoDB VPC Gateway Endpoint
+  # Required because Lambda functions in a VPC lose default internet access
+  # and cannot reach DynamoDB without a NAT Gateway or VPC Endpoint.
+  # This is a free Gateway Endpoint.
+  DynamoDBEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: HasVpc
+    Properties:
+      VpcId: !If
+        - UseFrontendStack
+        - !ImportValue
+          Fn::Sub: "${FrontendStackName}-VPCId"
+        - !Ref VpcId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.dynamodb"
+      VpcEndpointType: Gateway
+      RouteTableIds:
+        - !If
+          - UseFrontendStack
+          - !ImportValue
+            Fn::Sub: "${FrontendStackName}-PublicRouteTableId"
+          - !Ref PublicRouteTableId
+
 
   # API Gateway
   CineCloudApi:

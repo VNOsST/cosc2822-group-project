@@ -416,7 +416,7 @@ Resources:
       ServiceName: !Sub cinecloud-frontend-${Environment}
       Cluster: !Ref ECSCluster
       TaskDefinition: !Ref FrontendTaskDefinition
-      DesiredCount: 1 # Start at 0 - GitHub Actions will scale up after first image push
+      DesiredCount: 0 # Start at 0 - GitHub Actions will scale up after first image push
       LaunchType: EC2
       LoadBalancers:
       - ContainerName: frontend
@@ -473,3 +473,10 @@ Outputs:
     Value: !Ref PublicSubnet2
     Export:
       Name: !Sub "${AWS::StackName}-PublicSubnet2Id"
+
+  PublicRouteTableId:
+    Description: Public Route Table ID
+    Value: !Ref PublicRouteTable
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicRouteTableId"
+
