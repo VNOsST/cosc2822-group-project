@@ -30,9 +30,9 @@ export async function enqueueAdminNotification(event: AdminEvent): Promise<void>
 
   try {
     const queueUrl = getQueueUrl();
-    
+
     console.log(`[sqs-client] Enqueuing ${event.type} event to SQS`);
-    
+
     await Promise.race([
       sqsClient.send(
         new SendMessageCommand({
@@ -40,9 +40,9 @@ export async function enqueueAdminNotification(event: AdminEvent): Promise<void>
           MessageBody: JSON.stringify(event),
         }),
       ),
-      timeoutPromise
+      timeoutPromise,
     ]);
-    
+
     console.log(`[sqs-client] Successfully enqueued ${event.type} event`);
   } catch (error) {
     // Log but don't throw - notifications should not break the main flow
