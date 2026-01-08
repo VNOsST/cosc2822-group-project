@@ -38,7 +38,7 @@ app.route("/ratings", ratingsRoutes);
 app.route("/users", usersRoutes);
 app.route("/images", imagesRoutes);
 app.route("/admin/notifications", adminNotificationsRoutes);
-app.route("/notifications", notificationsRoutes); 
+app.route("/notifications", notificationsRoutes);
 
 // Error handling
 app.onError((err, c) => {

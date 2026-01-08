@@ -280,7 +280,9 @@ export function CreateBulkShowtimesDialog({
                   {movies?.map((movie) => (
                     <SelectItem key={movie.id} value={movie.id}>
                       <div className="flex items-center gap-2 min-w-0 py-0.5">
-                        <span className="font-medium truncate">{movie.title}</span>
+                        <span className="font-medium truncate">
+                          {movie.title}
+                        </span>
                         <span className="text-xs text-muted-foreground shrink-0">
                           ({movie.runtime} min)
                         </span>

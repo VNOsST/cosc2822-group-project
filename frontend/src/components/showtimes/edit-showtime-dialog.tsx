@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import {
   Building2,
   Calendar,
@@ -7,8 +7,8 @@ import {
   DollarSign,
   Film,
   Pencil,
-} from "lucide-react";
-import { addMinutes, format } from "date-fns";
+} from 'lucide-react'
+import { addMinutes, format } from 'date-fns'
 import {
   Dialog,
   DialogContent,
@@ -17,37 +17,37 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useMovies } from "@/hooks/use-movies-api";
-import { useRooms } from "@/hooks/use-rooms-api";
-import { useUpdateShowtime } from "@/hooks/use-showtimes-api";
-import type { ShowtimeWithDetails } from "@/lib/api-types";
+} from '@/components/ui/select'
+import { useMovies } from '@/hooks/use-movies-api'
+import { useRooms } from '@/hooks/use-rooms-api'
+import { useUpdateShowtime } from '@/hooks/use-showtimes-api'
+import type { ShowtimeWithDetails } from '@/lib/api-types'
 
 interface EditShowtimeDialogProps {
-  showtime: ShowtimeWithDetails;
-  trigger?: React.ReactNode;
+  showtime: ShowtimeWithDetails
+  trigger?: React.ReactNode
 }
 
 export function EditShowtimeDialog({
   showtime,
   trigger,
 }: EditShowtimeDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   // Parse the existing start_time to get date and time
-  const existingStartTime = new Date(showtime.start_time);
-  const initialDate = format(existingStartTime, "yyyy-MM-dd");
-  const initialTime = format(existingStartTime, "HH:mm");
+  const existingStartTime = new Date(showtime.start_time)
+  const initialDate = format(existingStartTime, 'yyyy-MM-dd')
+  const initialTime = format(existingStartTime, 'HH:mm')
 
   const [formData, setFormData] = useState({
     movie_id: showtime.movie_id,
@@ -55,27 +55,27 @@ export function EditShowtimeDialog({
     date: initialDate,
     time: initialTime,
     price: showtime.price.toString(),
-  });
+  })
 
-  const { data: movies, isLoading: moviesLoading } = useMovies();
-  const { data: rooms, isLoading: roomsLoading } = useRooms();
-  const updateShowtime = useUpdateShowtime();
+  const { data: movies, isLoading: moviesLoading } = useMovies()
+  const { data: rooms, isLoading: roomsLoading } = useRooms()
+  const updateShowtime = useUpdateShowtime()
 
   // Calculate end time based on movie runtime
-  const selectedMovie = movies?.find((m) => m.id === formData.movie_id);
+  const selectedMovie = movies?.find((m) => m.id === formData.movie_id)
   const endTime =
     selectedMovie && formData.date && formData.time
       ? format(
           addMinutes(
             new Date(`${formData.date}T${formData.time}`),
-            selectedMovie.runtime
+            selectedMovie.runtime,
           ),
-          "HH:mm"
+          'HH:mm',
         )
-      : "";
+      : ''
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (
       !formData.movie_id ||
@@ -84,14 +84,14 @@ export function EditShowtimeDialog({
       !formData.time ||
       !formData.price
     ) {
-      toast.error("Please fill in all fields");
-      return;
+      toast.error('Please fill in all fields')
+      return
     }
 
     // Create ISO timestamp from date and time inputs
     const startDateTime = new Date(
-      `${formData.date}T${formData.time}:00`
-    ).toISOString();
+      `${formData.date}T${formData.time}:00`,
+    ).toISOString()
 
     try {
       await updateShowtime.mutateAsync({
@@ -101,28 +101,28 @@ export function EditShowtimeDialog({
         room_id: formData.room_id,
         start_time: startDateTime,
         price: parseFloat(formData.price),
-      });
+      })
 
-      toast.success("Showtime updated successfully");
-      setOpen(false);
+      toast.success('Showtime updated successfully')
+      setOpen(false)
     } catch (error: any) {
-      toast.error(error.message || "Failed to update showtime");
+      toast.error(error.message || 'Failed to update showtime')
     }
-  };
+  }
 
   // Reset form when dialog opens with showtime data
   useEffect(() => {
     if (open) {
-      const existingStartTime = new Date(showtime.start_time);
+      const existingStartTime = new Date(showtime.start_time)
       setFormData({
         movie_id: showtime.movie_id,
         room_id: showtime.room_id,
-        date: format(existingStartTime, "yyyy-MM-dd"),
-        time: format(existingStartTime, "HH:mm"),
+        date: format(existingStartTime, 'yyyy-MM-dd'),
+        time: format(existingStartTime, 'HH:mm'),
         price: showtime.price.toString(),
-      });
+      })
     }
-  }, [open, showtime]);
+  }, [open, showtime])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -221,7 +221,7 @@ export function EditShowtimeDialog({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, date: e.target.value }))
                 }
-                min={format(new Date(), "yyyy-MM-dd")}
+                min={format(new Date(), 'yyyy-MM-dd')}
               />
             </div>
 
@@ -292,14 +292,14 @@ export function EditShowtimeDialog({
                     <span className="truncate">{selectedMovie?.title}</span>
                   </p>
                   <p className="flex gap-2">
-                    <strong className="shrink-0">Room:</strong>{" "}
+                    <strong className="shrink-0">Room:</strong>{' '}
                     <span className="truncate">
                       {rooms?.find((r) => r.room_id === formData.room_id)?.name}
                     </span>
                   </p>
                   <p>
-                    <strong>Date & Time:</strong>{" "}
-                    {format(new Date(formData.date), "MMM d, yyyy")} at{" "}
+                    <strong>Date & Time:</strong>{' '}
+                    {format(new Date(formData.date), 'MMM d, yyyy')} at{' '}
                     {formData.time}
                   </p>
                   {endTime && (
@@ -325,11 +325,11 @@ export function EditShowtimeDialog({
               disabled={updateShowtime.isPending}
               className="bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
             >
-              {updateShowtime.isPending ? "Updating..." : "Update Showtime"}
+              {updateShowtime.isPending ? 'Updating...' : 'Update Showtime'}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
