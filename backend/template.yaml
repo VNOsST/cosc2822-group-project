@@ -217,7 +217,6 @@ Resources:
             Fn::Sub: "${FrontendStackName}-PublicRouteTableId"
           - !Ref PublicRouteTableId
 
-
   # API Gateway
   CineCloudApi:
     Type: AWS::Serverless::Api

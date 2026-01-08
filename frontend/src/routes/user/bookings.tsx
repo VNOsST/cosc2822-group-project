@@ -33,9 +33,8 @@ export const Route = createFileRoute('/user/bookings')({
 function UserBookingsPage() {
   const { data: bookings, isLoading, error } = useUserBookings()
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking()
-  const [selectedBooking, setSelectedBooking] = useState<BookingWithDetails | null>(
-    null,
-  )
+  const [selectedBooking, setSelectedBooking] =
+    useState<BookingWithDetails | null>(null)
 
   const handleCancelBooking = (booking: BookingWithDetails) => {
     cancelBooking(
