@@ -190,7 +190,6 @@ Resources:
       PrivateDnsEnabled: true
       SubnetIds: !If
         - UseFrontendStack
-        # Aligning with Lambda function subnets (Public) for guaranteed reachability
         - - !ImportValue
             Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
           - !ImportValue
@@ -200,9 +199,6 @@ Resources:
         - !Ref VPCEndpointSecurityGroup
 
   # DynamoDB VPC Gateway Endpoint
-  # Required because Lambda functions in a VPC lose default internet access
-  # and cannot reach DynamoDB without a NAT Gateway or VPC Endpoint.
-  # This is a free Gateway Endpoint.
   DynamoDBEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Condition: HasVpc
@@ -316,23 +312,24 @@ Resources:
       UserPoolId: !Ref CineCloudUserPool
       Description: Regular users
 
-  # Movies Service Lambda Function
-  MoviesFunction:
+  # Public API Monolith (Movies, Showtimes, Rooms, Ratings, Users, Images, AdminNotifications)
+  PublicApiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "cinecloud-movies-${Environment}"
+      FunctionName: !Sub "cinecloud-public-api-${Environment}"
       CodeUri: ./
-      Handler: services/movies/index.handler
-      Description: CineCloud Movies Service
+      Handler: src/public-api.handler
+      Description: CineCloud Public API (Movies, Showtimes, Rooms, Ratings, Users, Images, AdminNotifications)
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Timeout: 300 # Extended timeout for sync operation
-      MemorySize: 512 # More memory for sync operation
+      Timeout: 29
+      MemorySize: 512
       Environment:
         Variables:
           TMDB_API_KEY: !Ref TMDBApiKey
           MOVIES_IMAGES_BUCKET: !Ref MovieImagesBucket
+          COGNITO_USER_POOL_ID: !Ref CineCloudUserPool
       Events:
-        # Public routes (no auth required)
+        # Movies Service Events
         GetMovies:
           Type: Api
           Properties:
@@ -373,7 +370,6 @@ Resources:
             Method: GET
             Auth:
               Authorizer: NONE
-        # Admin-only routes (require Cognito auth)
         CreateMovie:
           Type: Api
           Properties:
@@ -398,28 +394,7 @@ Resources:
             RestApiId: !Ref CineCloudApi
             Path: /movies/sync
             Method: POST
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/movies/index.ts
-        External:
-          - "@aws-sdk/*"
-
-  # Showtimes Service Lambda Function
-  ShowtimesFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-showtimes-${Environment}"
-      CodeUri: ./
-      Handler: services/showtimes/index.handler
-      Description: CineCloud Showtimes Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        # Public routes (no auth required)
+        # Showtimes Service Events
         GetShowtimes:
           Type: Api
           Properties:
@@ -436,7 +411,6 @@ Resources:
             Method: GET
             Auth:
               Authorizer: NONE
-        # Admin-only routes (require Cognito auth)
         CreateShowtime:
           Type: Api
           Properties:
@@ -461,6 +435,169 @@ Resources:
             RestApiId: !Ref CineCloudApi
             Path: /showtimes/{id}/schedule/{startTime}
             Method: DELETE
+        # Rooms Service Events
+        GetRooms:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /rooms
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetRoom:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /rooms/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        CreateRoom:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /rooms
+            Method: POST
+        UpdateRoom:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /rooms/{id}
+            Method: PUT
+        DeleteRoom:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /rooms/{id}
+            Method: DELETE
+        # Ratings Service Events
+        GetMovieRatings:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/movie/{movieId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetUserRatings:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/user/{userId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetMovieRatingStats:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/movie/{movieId}/stats
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetAllRatings:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/all
+            Method: GET
+        CreateRating:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings
+            Method: POST
+        UpdateRating:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/{id}
+            Method: PUT
+        DeleteRating:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /ratings/{id}
+            Method: DELETE
+        # Users Service Events
+        GetUsers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /users
+            Method: GET
+        GetUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /users/{id}
+            Method: GET
+        UpdateUserRole:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /users/{id}/role
+            Method: PUT
+        # Images Service Events
+        GetUploadUrl:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /images/upload-url
+            Method: POST
+        GetImage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /images/{key+}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetImagesBatch:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /images/batch
+            Method: POST
+            Auth:
+              Authorizer: NONE
+        DeleteImage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /images/{key+}
+            Method: DELETE
+        DeleteImagesBatch:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /images/batch-delete
+            Method: POST
+        # Admin Notifications Service Events
+        SubscribeAdmin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /admin/notifications/subscribe
+            Method: POST
+        UnsubscribeAdmin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /admin/notifications/unsubscribe
+            Method: POST
+        ListSubscriptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /admin/notifications/subscriptions
+            Method: GET
+        TestNotification:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /admin/notifications/test
+            Method: POST
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -468,19 +605,21 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-          - src/services/showtimes/index.ts
+          - src/public-api.ts
         External:
           - "@aws-sdk/*"
 
-  # Bookings Service Lambda Function
-  BookingsFunction:
+  # Secure API Monolith (Bookings, Seat Locks) - Requires VPC
+  SecureApiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "cinecloud-bookings-${Environment}"
+      FunctionName: !Sub "cinecloud-secure-api-${Environment}"
       CodeUri: ./
-      Handler: services/bookings/index.handler
-      Description: CineCloud Bookings Service
+      Handler: src/secure-api.handler
+      Description: CineCloud Secure API (Bookings, Seat Locks)
       Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 29
+      MemorySize: 512
       VpcConfig: !If
         - HasVpc
         - SecurityGroupIds:
@@ -508,7 +647,7 @@ Resources:
                 - !GetAtt AdminNotificationQueue.QueueName
             - !Ref AdminNotificationQueue
       Events:
-        # Public routes
+        # Bookings Service Events
         GetBookingStats:
           Type: Api
           Properties:
@@ -517,7 +656,6 @@ Resources:
             Method: GET
             Auth:
               Authorizer: NONE
-        # Authenticated routes (all bookings routes require auth)
         GetUserBookings:
           Type: Api
           Properties:
@@ -548,40 +686,7 @@ Resources:
             RestApiId: !Ref CineCloudApi
             Path: /bookings/{userEmail}/{bookingId}
             Method: DELETE
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/bookings/index.ts
-        External:
-          - "@aws-sdk/*"
-
-  # Seat Locks Service Lambda Function
-  SeatLocksFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-seat-locks-${Environment}"
-      CodeUri: ./
-      Handler: services/seat-locks/index.handler
-      Description: CineCloud Seat Locks Service - Manages temporary seat reservations via ElastiCache
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      VpcConfig: !If
-        - HasVpc
-        - SecurityGroupIds:
-            - !Ref LambdaSecurityGroup
-          SubnetIds: !If
-            - UseFrontendStack
-            - - !ImportValue
-                Fn::Sub: "${FrontendStackName}-PublicSubnet1Id"
-              - !ImportValue
-                Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
-            - !Ref SubnetIds
-        - !Ref AWS::NoValue
-      Events:
-        # Health check - no auth required
+        # Seat Locks Service Events
         HealthCheck:
           Type: Api
           Properties:
@@ -590,7 +695,6 @@ Resources:
             Method: GET
             Auth:
               Authorizer: NONE
-        # Public route - Get seat availability
         GetShowtimeSeatStatus:
           Type: Api
           Properties:
@@ -599,7 +703,6 @@ Resources:
             Method: GET
             Auth:
               Authorizer: NONE
-        # Authenticated routes
         LockSeats:
           Type: Api
           Properties:
@@ -637,242 +740,7 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-          - src/services/seat-locks/index.ts
-        External:
-          - "@aws-sdk/*"
-
-  # Rooms Service Lambda Function
-  RoomsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-rooms-${Environment}"
-      CodeUri: ./
-      Handler: services/rooms/index.handler
-      Description: CineCloud Rooms Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        # Public routes (no auth required)
-        GetRooms:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /rooms
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetRoom:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /rooms/{id}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        # Admin-only routes (require Cognito auth)
-        CreateRoom:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /rooms
-            Method: POST
-        UpdateRoom:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /rooms/{id}
-            Method: PUT
-        DeleteRoom:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /rooms/{id}
-            Method: DELETE
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/rooms/index.ts
-        External:
-          - "@aws-sdk/*"
-
-  # Ratings Service Lambda Function
-  RatingsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-ratings-${Environment}"
-      CodeUri: ./
-      Handler: services/ratings/index.handler
-      Description: CineCloud Ratings Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        # Public routes (no auth required)
-        GetMovieRatings:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/movie/{movieId}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetUserRatings:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/user/{userId}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetMovieRatingStats:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/movie/{movieId}/stats
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        GetAllRatings:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/all
-            Method: GET
-        # Authenticated routes (require Cognito auth)
-        CreateRating:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings
-            Method: POST
-        UpdateRating:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/{id}
-            Method: PUT
-        DeleteRating:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /ratings/{id}
-            Method: DELETE
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/ratings/index.ts
-        External:
-          - "@aws-sdk/*"
-
-  # Users Service Lambda Function
-  UsersFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-users-${Environment}"
-      CodeUri: ./
-      Handler: services/users/index.handler
-      Description: CineCloud Users Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Environment:
-        Variables:
-          COGNITO_USER_POOL_ID: !Ref CineCloudUserPool
-      Events:
-        GetUsers:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /users
-            Method: GET
-        GetUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /users/{id}
-            Method: GET
-        UpdateUserRole:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /users/{id}/role
-            Method: PUT
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/users/index.ts
-        External:
-          - "@aws-sdk/*"
-
-  # Images Service Lambda Function
-  ImagesFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-images-${Environment}"
-      CodeUri: ./
-      Handler: services/images/index.handler
-      Description: CineCloud Images Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        # Public routes (for viewing images via signed URLs logic if needed publicly, but here we use authenticated endpoints usually,
-        # however for getting a signed URL to view, we might want it open or protected. The plan said authenticated/public mix.)
-        # Based on plan:
-        # POST /images/upload-url (Auth required)
-        GetUploadUrl:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /images/upload-url
-            Method: POST
-        # GET /images/{key} (Public or Auth? Usually images are public for movies/rooms. But plan said "Private Bucket".
-        # So we need an endpoint to get the signed URL.
-        # Let's make viewing movies/rooms public, but maybe reviews are public too.)
-        GetImage:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /images/{key+}
-            Method: GET
-            Auth:
-              Authorizer: NONE
-        # POST /images/batch (Public or Auth? Public for fetching movie lists)
-        GetImagesBatch:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /images/batch
-            Method: POST
-            Auth:
-              Authorizer: NONE
-        # DELETE /images/{key} (Auth required)
-        DeleteImage:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /images/{key+}
-            Method: DELETE
-        # DELETE /images/batch (Auth required)
-        DeleteImagesBatch:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /images/batch-delete
-            Method: POST
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/images/index.ts
+          - src/secure-api.ts
         External:
           - "@aws-sdk/*"
 
@@ -938,6 +806,32 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - src/scheduled/movie-sync/index.ts
+        External:
+          - "@aws-sdk/*"
+
+  # Admin Notification Worker Lambda Function
+  AdminNotificationWorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-admin-notification-worker-${Environment}"
+      CodeUri: ./
+      Handler: workers/admin-notifications/index.handler
+      Description: CineCloud Admin Notification Worker - Processes SQS messages and sends SNS alerts
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt AdminNotificationQueue.Arn
+            BatchSize: 10
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/workers/admin-notifications/index.ts
         External:
           - "@aws-sdk/*"
 
@@ -1264,142 +1158,6 @@ Resources:
       QueueName: !Sub "cinecloud-admin-notifications-dlq-${Environment}"
       MessageRetentionPeriod: 1209600 # 14 days
 
-  # Admin Notification Worker Lambda Function
-  AdminNotificationWorkerFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-admin-notification-worker-${Environment}"
-      CodeUri: ./
-      Handler: workers/admin-notifications/index.handler
-      Description: CineCloud Admin Notification Worker - Processes SQS messages and sends SNS alerts
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        SQSEvent:
-          Type: SQS
-          Properties:
-            Queue: !GetAtt AdminNotificationQueue.Arn
-            BatchSize: 10
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/workers/admin-notifications/index.ts
-        External:
-          - "@aws-sdk/*"
-
-  # Admin Notifications Service Lambda Function
-  AdminNotificationsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-admin-notifications-${Environment}"
-      CodeUri: ./
-      Handler: services/admin-notifications/index.handler
-      Description: CineCloud Admin Notifications Service - SNS subscription management
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        # Admin-only routes (require Cognito auth)
-        SubscribeAdmin:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /admin/notifications/subscribe
-            Method: POST
-        UnsubscribeAdmin:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /admin/notifications/unsubscribe
-            Method: POST
-        ListSubscriptions:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /admin/notifications/subscriptions
-            Method: GET
-        TestNotification:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /admin/notifications/test
-            Method: POST
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/admin-notifications/index.ts
-        External:
-          - "@aws-sdk/*"
-
-  # User Notifications Service Lambda Function
-  NotificationsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-notifications-${Environment}"
-      CodeUri: ./
-      Handler: services/notifications/index.handler
-      Description: CineCloud User Notifications Service
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /notifications
-            Method: ANY
-        ApiWithId:
-          Type: Api
-          Properties:
-            RestApiId: !Ref CineCloudApi
-            Path: /notifications/{proxy+}
-            Method: ANY
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/services/notifications/index.ts
-        External:
-          - "@aws-sdk/*"
-
-  # Review Prompt Scheduled Lambda Function
-  ReviewPromptFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "cinecloud-review-prompt-${Environment}"
-      CodeUri: ./
-      Handler: scheduled/review-prompt/index.handler
-      Description: CineCloud Review Prompt - Notifies users to leave reviews 1h after showtime
-      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-      Timeout: 300
-      MemorySize: 256
-      Events:
-        # Every 15 minutes
-        ScheduledTrigger:
-          Type: Schedule
-          Properties:
-            Schedule: rate(15 minutes)
-            Name: !Sub "cinecloud-review-prompt-timer-${Environment}"
-            Description: Periodic check for showtimes that just ended
-            Enabled: true
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/scheduled/review-prompt/index.ts
-        External:
-          - "@aws-sdk/*"
-
 Outputs:
   ApiEndpoint:
     Description: API Gateway endpoint URL
@@ -1464,12 +1222,6 @@ Outputs:
   MovieImagesBucketUrl:
     Description: S3 Bucket URL for movie images
     Value: !Sub "https://${MovieImagesBucket}.s3.${AWS::Region}.amazonaws.com"
-  AdminAlertsTopicArn:
-    Description: SNS Topic ARN for Admin Alerts
-    Value: !Ref AdminAlertsTopic
-    Export:
-      Name: !Sub "${AWS::StackName}-AdminAlertsTopicArn"
-
   ElastiCacheEndpoint:
     Condition: HasVpc
     Description: ElastiCache Redis endpoint for seat locks
