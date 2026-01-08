@@ -403,6 +403,14 @@ Resources:
           Value: production
         - Name: PORT
           Value: "3000"
+        - Name: VITE_AWS_REGION
+          Value: !If [ HasCognitoRegion, !Ref CognitoRegion, !Ref AWS::Region ]
+        - Name: VITE_AWS_USER_POOL_ID
+          Value: !If [ HasUserPoolId, !Ref CognitoUserPoolId, "PLACEHOLDER" ]
+        - Name: VITE_AWS_USER_POOL_CLIENT_ID
+          Value: !If [ HasClientId, !Ref CognitoClientId, "PLACEHOLDER" ]
+        - Name: VITE_API_ENDPOINT
+          Value: !If [ HasApiEndpoint, !Ref ApiEndpoint, "http://localhost:3000" ]
         Memory: 512
 
   # ========================================

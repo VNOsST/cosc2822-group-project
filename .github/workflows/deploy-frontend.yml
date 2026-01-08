@@ -111,6 +111,11 @@ jobs:
           task-definition: task-definition.json
           container-name: frontend
           image: ${{ steps.build-image.outputs.image }}
+          environment-variables: |
+            VITE_AWS_REGION=${{ env.VITE_AWS_REGION }}
+            VITE_AWS_USER_POOL_ID=${{ env.VITE_AWS_USER_POOL_ID }}
+            VITE_AWS_USER_POOL_CLIENT_ID=${{ env.VITE_AWS_USER_POOL_CLIENT_ID }}
+            VITE_API_ENDPOINT=${{ env.VITE_API_ENDPOINT }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
