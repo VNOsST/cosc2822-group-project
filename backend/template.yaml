@@ -317,6 +317,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "cinecloud-public-api-${Environment}"
+      ReservedConcurrentExecutions: 2 # Strict limit to prevent account ban
       CodeUri: ./
       Handler: src/public-api.handler
       Description: CineCloud Public API (Movies, Showtimes, Rooms, Ratings, Users, Images, AdminNotifications)
@@ -598,6 +599,12 @@ Resources:
             RestApiId: !Ref CineCloudApi
             Path: /admin/notifications/test
             Method: POST
+        GetNotifications:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /notifications
+            Method: GET
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -614,6 +621,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "cinecloud-secure-api-${Environment}"
+      ReservedConcurrentExecutions: 2 # Strict limit to prevent account ban
       CodeUri: ./
       Handler: src/secure-api.handler
       Description: CineCloud Secure API (Bookings, Seat Locks)
@@ -749,6 +757,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "cinecloud-post-confirmation-${Environment}"
+      ReservedConcurrentExecutions: 2 # Strict limit
       CodeUri: ./
       Handler: triggers/post-confirmation/index.handler
       Description: CineCloud Post Confirmation Trigger - Registers users in DynamoDB
@@ -779,6 +788,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "cinecloud-movie-sync-${Environment}"
+      ReservedConcurrentExecutions: 1 # Strict limit
       CodeUri: ./
       Handler: scheduled/movie-sync/index.handler
       Description: CineCloud Movie Sync - Fetches movies from TMDB and updates ratings daily
@@ -814,6 +824,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "cinecloud-admin-notification-worker-${Environment}"
+      ReservedConcurrentExecutions: 1 # Strict limit
       CodeUri: ./
       Handler: workers/admin-notifications/index.handler
       Description: CineCloud Admin Notification Worker - Processes SQS messages and sends SNS alerts

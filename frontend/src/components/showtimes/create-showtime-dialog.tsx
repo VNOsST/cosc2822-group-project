@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
   Building2,
   Calendar,
@@ -7,8 +7,8 @@ import {
   DollarSign,
   Film,
   Plus,
-} from 'lucide-react'
-import { addMinutes, format } from 'date-fns'
+} from "lucide-react";
+import { addMinutes, format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -17,54 +17,54 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { useMovies } from '@/hooks/use-movies-api'
-import { useRooms } from '@/hooks/use-rooms-api'
-import { useCreateShowtime } from '@/hooks/use-showtimes-api'
+} from "@/components/ui/select";
+import { useMovies } from "@/hooks/use-movies-api";
+import { useRooms } from "@/hooks/use-rooms-api";
+import { useCreateShowtime } from "@/hooks/use-showtimes-api";
 
 interface CreateShowtimeDialogProps {
-  trigger?: React.ReactNode
+  trigger?: React.ReactNode;
 }
 
 export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
-    movie_id: '',
-    room_id: '',
-    date: '',
-    time: '',
-    price: '',
-  })
+    movie_id: "",
+    room_id: "",
+    date: "",
+    time: "",
+    price: "",
+  });
 
-  const { data: movies, isLoading: moviesLoading } = useMovies()
-  const { data: rooms, isLoading: roomsLoading } = useRooms()
-  const createShowtime = useCreateShowtime()
+  const { data: movies, isLoading: moviesLoading } = useMovies();
+  const { data: rooms, isLoading: roomsLoading } = useRooms();
+  const createShowtime = useCreateShowtime();
 
   // Calculate end time based on movie runtime
-  const selectedMovie = movies?.find((m) => m.id === formData.movie_id)
+  const selectedMovie = movies?.find((m) => m.id === formData.movie_id);
   const endTime =
     selectedMovie && formData.date && formData.time
       ? format(
           addMinutes(
             new Date(`${formData.date}T${formData.time}`),
-            selectedMovie.runtime,
+            selectedMovie.runtime
           ),
-          'HH:mm',
+          "HH:mm"
         )
-      : ''
+      : "";
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (
       !formData.movie_id ||
@@ -73,14 +73,14 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
       !formData.time ||
       !formData.price
     ) {
-      toast.error('Please fill in all fields')
-      return
+      toast.error("Please fill in all fields");
+      return;
     }
 
     // Create ISO timestamp from date and time inputs
     const startDateTime = new Date(
-      `${formData.date}T${formData.time}:00`,
-    ).toISOString()
+      `${formData.date}T${formData.time}:00`
+    ).toISOString();
 
     try {
       await createShowtime.mutateAsync({
@@ -88,34 +88,34 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
         room_id: formData.room_id,
         start_time: startDateTime,
         price: parseFloat(formData.price),
-      })
+      });
 
-      toast.success('Showtime created successfully')
-      setOpen(false)
+      toast.success("Showtime created successfully");
+      setOpen(false);
       setFormData({
-        movie_id: '',
-        room_id: '',
-        date: '',
-        time: '',
-        price: '',
-      })
+        movie_id: "",
+        room_id: "",
+        date: "",
+        time: "",
+        price: "",
+      });
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create showtime')
+      toast.error(error.message || "Failed to create showtime");
     }
-  }
+  };
 
   // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
       setFormData({
-        movie_id: '',
-        room_id: '',
-        date: '',
-        time: '',
-        price: '',
-      })
+        movie_id: "",
+        room_id: "",
+        date: "",
+        time: "",
+        price: "",
+      });
     }
-  }, [open])
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -137,7 +137,7 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Movie Selection */}
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="movie" className="flex items-center gap-2">
                 <Film className="h-4 w-4 text-amber-500" />
                 Movie
@@ -149,16 +149,15 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
                 }
                 disabled={moviesLoading}
               >
-                <SelectTrigger id="movie">
+                <SelectTrigger id="movie" className="w-full">
                   <SelectValue placeholder="Select a movie" />
                 </SelectTrigger>
                 <SelectContent>
                   {movies?.map((movie) => (
                     <SelectItem key={movie.id} value={movie.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{movie.title}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {movie.runtime} mins
+                      <div className="flex flex-col min-w-0 py-0.5">
+                        <span className="font-medium truncate">
+                          {movie.title} ({movie.runtime} mins)
                         </span>
                       </div>
                     </SelectItem>
@@ -180,14 +179,16 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
                 }
                 disabled={roomsLoading}
               >
-                <SelectTrigger id="room">
+                <SelectTrigger id="room" className="w-full">
                   <SelectValue placeholder="Select a room" />
                 </SelectTrigger>
                 <SelectContent>
                   {rooms?.map((room) => (
                     <SelectItem key={room.room_id} value={room.room_id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{room.name}</span>
+                      <div className="flex flex-col min-w-0 py-0.5">
+                        <span className="font-medium truncate">
+                          {room.name}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {room.capacity} seats • {room.screen_type}
                         </span>
@@ -211,7 +212,7 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, date: e.target.value }))
                 }
-                min={format(new Date(), 'yyyy-MM-dd')}
+                min={format(new Date(), "yyyy-MM-dd")}
               />
             </div>
 
@@ -277,16 +278,19 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
                   Screening Summary
                 </h4>
                 <div className="space-y-1 text-sm">
-                  <p>
-                    <strong>Movie:</strong> {selectedMovie?.title}
+                  <p className="flex gap-2">
+                    <strong className="shrink-0">Movie:</strong>
+                    <span className="truncate">{selectedMovie?.title}</span>
+                  </p>
+                  <p className="flex gap-2">
+                    <strong className="shrink-0">Room:</strong>{" "}
+                    <span className="truncate">
+                      {rooms?.find((r) => r.room_id === formData.room_id)?.name}
+                    </span>
                   </p>
                   <p>
-                    <strong>Room:</strong>{' '}
-                    {rooms?.find((r) => r.room_id === formData.room_id)?.name}
-                  </p>
-                  <p>
-                    <strong>Date & Time:</strong>{' '}
-                    {format(new Date(formData.date), 'MMM d, yyyy')} at{' '}
+                    <strong>Date & Time:</strong>{" "}
+                    {format(new Date(formData.date), "MMM d, yyyy")} at{" "}
                     {formData.time}
                   </p>
                   {endTime && (
@@ -312,11 +316,11 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
               disabled={createShowtime.isPending}
               className="bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
             >
-              {createShowtime.isPending ? 'Creating...' : 'Create Showtime'}
+              {createShowtime.isPending ? "Creating..." : "Create Showtime"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

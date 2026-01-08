@@ -66,7 +66,7 @@ export const handler: PostConfirmationTriggerHandler = async (
 
     // Only create if user doesn't exist
     if (!existingUser) {
-      const userId = `user-${cognitoSub}`;
+      const userId = cognitoSub; // Use Cognito sub as user ID
       const defaultRole: "Admins" | "Users" = "Users";
 
       const newUser = {

@@ -146,3 +146,11 @@ export interface MyLocksResponse {
   }>
   ttl_seconds: number
 }
+
+export interface MovieSyncResult {
+  newMoviesCreated: number
+  ratingsUpdated: number
+  errorCount: number
+  errors?: Array<string>
+  duration: string
+}

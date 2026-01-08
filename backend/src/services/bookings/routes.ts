@@ -87,7 +87,7 @@ bookings.get("/", requireAuth(), async (c) => {
             const roomResult = await docClient.send(
               new GetCommand({
                 TableName: TABLE_NAMES.ROOMS,
-                Key: { room_id: showtime.room_id },
+                Key: { room_id: showtime.room_id, sk: "METADATA" },
               }),
             );
             room = roomResult.Item;
@@ -238,7 +238,7 @@ bookings.get("/admin/all", requireRole(["Admins"]), async (c) => {
             const roomResult = await docClient.send(
               new GetCommand({
                 TableName: TABLE_NAMES.ROOMS,
-                Key: { room_id: showtime.room_id },
+                Key: { room_id: showtime.room_id, sk: "METADATA" },
               }),
             );
             room = roomResult.Item;

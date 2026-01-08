@@ -19,7 +19,7 @@ function IndexPage() {
 
   // Role-based redirect
   if (user?.role === 'Admins') {
-    return <Navigate to="/admin/dashboard" />
+    return <Navigate to="/admin/bookings" />
   }
 
   if (user?.role === 'Users') {

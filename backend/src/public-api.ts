@@ -11,6 +11,7 @@ import ratingsRoutes from "./services/ratings/routes";
 import usersRoutes from "./services/users/routes";
 import imagesRoutes from "./services/images/routes";
 import adminNotificationsRoutes from "./services/admin-notifications/routes";
+import notificationsRoutes from "./services/notifications/routes";
 
 const app = new Hono();
 
@@ -37,6 +38,7 @@ app.route("/ratings", ratingsRoutes);
 app.route("/users", usersRoutes);
 app.route("/images", imagesRoutes);
 app.route("/admin/notifications", adminNotificationsRoutes);
+app.route("/notifications", notificationsRoutes); 
 
 // Error handling
 app.onError((err, c) => {
