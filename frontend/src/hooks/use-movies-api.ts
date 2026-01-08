@@ -69,3 +69,11 @@ export function useDeleteMovie() {
     onSuccess: () => invalidate([...QUERY_KEYS.all]),
   })
 }
+
+export function useSyncMovies() {
+  const { invalidate } = useInvalidateQueries()
+
+  return useApiMutation(() => apiClient.post('/movies/sync', {}), {
+    onSuccess: () => invalidate([...QUERY_KEYS.all]),
+  })
+}

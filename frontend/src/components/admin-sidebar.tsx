@@ -1,5 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import {
+  Bell,
   Calendar,
   DoorOpen,
   Film,
@@ -55,6 +56,11 @@ const navigationItems = [
     title: 'Reviews',
     href: '/admin/reviews',
     icon: MessageSquare,
+  },
+  {
+    title: 'Notifications',
+    href: '/admin/notifications',
+    icon: Bell,
   },
 ]
 

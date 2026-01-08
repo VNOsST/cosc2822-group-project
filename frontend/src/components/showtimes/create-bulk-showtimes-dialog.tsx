@@ -261,7 +261,7 @@ export function CreateBulkShowtimesDialog({
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Common Fields */}
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-3">
               <Label htmlFor="bulk-movie" className="flex items-center gap-2">
                 <Film className="h-4 w-4 text-amber-500" />
                 Movie
@@ -273,13 +273,20 @@ export function CreateBulkShowtimesDialog({
                 }
                 disabled={moviesLoading}
               >
-                <SelectTrigger id="bulk-movie">
+                <SelectTrigger id="bulk-movie" className="w-full">
                   <SelectValue placeholder="Select a movie" />
                 </SelectTrigger>
                 <SelectContent>
                   {movies?.map((movie) => (
                     <SelectItem key={movie.id} value={movie.id}>
-                      {movie.title} ({movie.runtime}min)
+                      <div className="flex items-center gap-2 min-w-0 py-0.5">
+                        <span className="font-medium truncate">
+                          {movie.title}
+                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          ({movie.runtime} min)
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -298,13 +305,13 @@ export function CreateBulkShowtimesDialog({
                 }
                 disabled={roomsLoading}
               >
-                <SelectTrigger id="bulk-room">
+                <SelectTrigger id="bulk-room" className="w-full">
                   <SelectValue placeholder="Select a room" />
                 </SelectTrigger>
                 <SelectContent>
                   {rooms?.map((room) => (
                     <SelectItem key={room.room_id} value={room.room_id}>
-                      {room.name}
+                      <div className="py-0.5 truncate">{room.name}</div>
                     </SelectItem>
                   ))}
                 </SelectContent>

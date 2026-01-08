@@ -8,7 +8,7 @@ import { nitro } from 'nitro/vite'
 
 const config = defineConfig({
   plugins: [
-    devtools(),
+    // devtools(),
     nitro({ preset: 'bun' }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({

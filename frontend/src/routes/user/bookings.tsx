@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Calendar, Clock, MapPin, Ticket } from 'lucide-react'
+import { Calendar, Clock, Info, MapPin, Ticket } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { useCancelBooking, useUserBookings } from '@/hooks/use-bookings-api'
 import { formatCurrency } from '@/lib/utils'
 import type { BookingWithDetails } from '@/lib/api-types'
@@ -25,6 +33,8 @@ export const Route = createFileRoute('/user/bookings')({
 function UserBookingsPage() {
   const { data: bookings, isLoading, error } = useUserBookings()
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking()
+  const [selectedBooking, setSelectedBooking] =
+    useState<BookingWithDetails | null>(null)
 
   const handleCancelBooking = (booking: BookingWithDetails) => {
     cancelBooking(
@@ -127,9 +137,19 @@ function UserBookingsPage() {
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg text-white">
-                      {booking.movie?.title || 'Unknown Movie'}
-                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg text-white">
+                        {booking.movie?.title || 'Unknown Movie'}
+                      </CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-slate-400 hover:text-white"
+                        onClick={() => setSelectedBooking(booking)}
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <Badge className="bg-green-500/20 text-green-400">
                       Confirmed
                     </Badge>
@@ -235,9 +255,19 @@ function UserBookingsPage() {
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg text-slate-300">
-                      {booking.movie?.title || 'Unknown Movie'}
-                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg text-slate-300">
+                        {booking.movie?.title || 'Unknown Movie'}
+                      </CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-slate-500 hover:text-white"
+                        onClick={() => setSelectedBooking(booking)}
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <Badge
                       variant="secondary"
                       className="bg-slate-700 text-slate-400"
@@ -276,6 +306,155 @@ function UserBookingsPage() {
           </div>
         )}
       </div>
+
+      <Dialog
+        open={!!selectedBooking}
+        onOpenChange={(open) => !open && setSelectedBooking(null)}
+      >
+        <DialogContent className="max-w-2xl border-slate-700 bg-slate-900 text-white">
+          {selectedBooking && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold">
+                  Booking Details
+                </DialogTitle>
+                <DialogDescription className="text-slate-400">
+                  Reference: {selectedBooking.booking_id}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Movie Info */}
+                <div className="space-y-4">
+                  <div className="aspect-[2/3] overflow-hidden rounded-lg bg-slate-800">
+                    {selectedBooking.movie?.poster_url ? (
+                      <img
+                        src={selectedBooking.movie.poster_url}
+                        alt={selectedBooking.movie.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-slate-600">
+                        No Poster
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      {selectedBooking.movie?.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-400 line-clamp-3">
+                      {selectedBooking.movie?.synopsis}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {selectedBooking.movie?.genres.map((genre) => (
+                        <Badge
+                          key={genre}
+                          variant="outline"
+                          className="border-slate-700 text-slate-400"
+                        >
+                          {genre}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Booking Details */}
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium uppercase tracking-wider text-slate-500">
+                      Showtime & Venue
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <MapPin className="h-4 w-4 text-amber-500" />
+                        <span>
+                          {selectedBooking.room?.name} (
+                          {selectedBooking.room?.screen_type})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <Calendar className="h-4 w-4 text-amber-500" />
+                        <span>
+                          {selectedBooking.showtime &&
+                            new Date(
+                              selectedBooking.showtime.start_time,
+                            ).toLocaleDateString(undefined, {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <Clock className="h-4 w-4 text-amber-500" />
+                        <span>
+                          {selectedBooking.showtime &&
+                            new Date(
+                              selectedBooking.showtime.start_time,
+                            ).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          {' - '}
+                          {selectedBooking.showtime &&
+                            new Date(
+                              selectedBooking.showtime.endtime,
+                            ).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium uppercase tracking-wider text-slate-500">
+                      Seats & Payment
+                    </h4>
+                    <div className="space-y-3 rounded-lg bg-slate-800/50 p-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-400">Seats</span>
+                        <span className="font-medium text-white">
+                          {selectedBooking.seats.join(', ')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-400">Status</span>
+                        <Badge
+                          className={
+                            selectedBooking.status === 'confirmed'
+                              ? 'bg-green-500/20 text-green-400'
+                              : 'bg-red-500/20 text-red-400'
+                          }
+                        >
+                          {selectedBooking.status.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between border-t border-slate-700 pt-3">
+                        <span className="text-base font-semibold">
+                          Total Amount
+                        </span>
+                        <span className="text-xl font-bold text-amber-500">
+                          {formatCurrency(selectedBooking.total_amount)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-xs italic text-slate-500">
+                    Booked on{' '}
+                    {new Date(selectedBooking.booking_date).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

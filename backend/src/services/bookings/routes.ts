@@ -10,7 +10,9 @@ import {
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
 import { requireAuth, requireRole, getUser } from "../../shared/middleware";
 import { validateLocks, releaseLocksForBooking } from "../../shared/cache/redis-client";
-import type { Booking, Showtime, Movie, User } from "../../shared/types/entities";
+import type { Booking, Showtime, Movie, User, Room } from "../../shared/types/entities";
+import { notifyAdmins } from "../../shared/notifications/sns-client";
+import { LOW_SEAT_THRESHOLD_PERCENT } from "../../shared/notifications/types";
 
 const bookings = new Hono();
 
@@ -85,7 +87,7 @@ bookings.get("/", requireAuth(), async (c) => {
             const roomResult = await docClient.send(
               new GetCommand({
                 TableName: TABLE_NAMES.ROOMS,
-                Key: { room_id: showtime.room_id },
+                Key: { room_id: showtime.room_id, sk: "METADATA" },
               }),
             );
             room = roomResult.Item;
@@ -236,7 +238,7 @@ bookings.get("/admin/all", requireRole(["Admins"]), async (c) => {
             const roomResult = await docClient.send(
               new GetCommand({
                 TableName: TABLE_NAMES.ROOMS,
-                Key: { room_id: showtime.room_id },
+                Key: { room_id: showtime.room_id, sk: "METADATA" },
               }),
             );
             room = roomResult.Item;
@@ -374,6 +376,76 @@ bookings.post("/", requireAuth(), async (c) => {
       }),
     );
 
+    // Fetch movie and room details for notification
+    let movieTitle = "Unknown Movie";
+    let roomName = "Unknown Room";
+    let totalCapacity = 0;
+
+    try {
+      const movieResult = await docClient.send(
+        new GetCommand({
+          TableName: TABLE_NAMES.MOVIES,
+          Key: { id: data.movie_id },
+        }),
+      );
+      if (movieResult.Item) {
+        movieTitle = (movieResult.Item as Movie).title;
+      }
+
+      const roomResult = await docClient.send(
+        new GetCommand({
+          TableName: TABLE_NAMES.ROOMS,
+          Key: { room_id: showtime.room_id, sk: "METADATA" },
+        }),
+      );
+      if (roomResult.Item) {
+        const room = roomResult.Item as Room;
+        roomName = room.name;
+        totalCapacity =
+          room.layout_config.rows * room.layout_config.columns - (room.unavailable?.length || 0);
+      }
+    } catch (error) {
+      console.error("[bookings] Error fetching details for notification:", error);
+    }
+
+    // Send admin notification for new booking
+    await notifyAdmins({
+      type: "booking_created",
+      bookingId,
+      userEmail: data.user_email,
+      movieTitle,
+      showtime: showtime.start_time,
+      roomName,
+      seats: data.seats,
+      totalAmount: data.total_amount,
+      timestamp: new Date().toISOString(),
+    }).catch((err) => console.error("[bookings] Failed to send booking notification:", err));
+
+    // Check for low seat availability and send alert if threshold reached
+    if (totalCapacity > 0) {
+      const occupiedCount = newOccupiedSeats.length;
+      const percentageFilled = (occupiedCount / totalCapacity) * 100;
+
+      if (percentageFilled >= LOW_SEAT_THRESHOLD_PERCENT) {
+        const remainingSeats = totalCapacity - occupiedCount;
+
+        await notifyAdmins({
+          type: "low_seat_availability",
+          showtimeId: data.showtime_id,
+          movieTitle,
+          showtime: showtime.start_time,
+          roomName,
+          remainingSeats,
+          totalCapacity,
+          percentageFilled: Math.round(percentageFilled),
+          timestamp: new Date().toISOString(),
+        }).catch((err) => console.error("[bookings] Failed to send low seat notification:", err));
+
+        console.log(
+          `[bookings] Low seat availability alert: ${movieTitle} at ${showtime.start_time} - ${remainingSeats}/${totalCapacity} seats remaining (${Math.round(percentageFilled)}% filled)`,
+        );
+      }
+    }
     // Release seat locks after successful booking
     if (data.lock_id) {
       try {
@@ -491,6 +563,53 @@ bookings.delete("/:userEmail/:bookingId", requireAuth(), async (c) => {
         },
       }),
     );
+
+    // Fetch movie and room details for cancellation notification
+    let movieTitle = "Unknown Movie";
+    let roomName = "Unknown Room";
+    let showtimeStr = "Unknown";
+
+    try {
+      const movieResult = await docClient.send(
+        new GetCommand({
+          TableName: TABLE_NAMES.MOVIES,
+          Key: { id: booking.movie_id },
+        }),
+      );
+      if (movieResult.Item) {
+        movieTitle = (movieResult.Item as Movie).title;
+      }
+
+      if (showtimeResult.Items && showtimeResult.Items.length > 0) {
+        const showtime = showtimeResult.Items[0] as Showtime;
+        showtimeStr = showtime.start_time;
+
+        const roomResult = await docClient.send(
+          new GetCommand({
+            TableName: TABLE_NAMES.ROOMS,
+            Key: { room_id: showtime.room_id, sk: "METADATA" },
+          }),
+        );
+        if (roomResult.Item) {
+          roomName = (roomResult.Item as Room).name;
+        }
+      }
+    } catch (error) {
+      console.error("[bookings] Error fetching details for cancellation notification:", error);
+    }
+
+    // Send admin notification for booking cancellation
+    await notifyAdmins({
+      type: "booking_cancelled",
+      bookingId: booking.booking_id,
+      userEmail: booking.user_email,
+      movieTitle,
+      showtime: showtimeStr,
+      roomName,
+      seats: Array.isArray(booking.seats) ? booking.seats : Array.from(booking.seats || []),
+      refundAmount: booking.total_amount,
+      timestamp: new Date().toISOString(),
+    }).catch((err) => console.error("[bookings] Failed to send cancellation notification:", err));
 
     return c.json({
       success: true,

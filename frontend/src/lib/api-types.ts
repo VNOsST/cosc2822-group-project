@@ -97,6 +97,12 @@ export interface MovieRating {
   }
 }
 
+export interface AdminSubscription {
+  email: string
+  subscriptionArn: string
+  status: 'pending' | 'confirmed'
+}
+
 // API Response wrapper
 export interface ApiResponse<T> {
   success: boolean
@@ -139,4 +145,12 @@ export interface MyLocksResponse {
     expires_at: number
   }>
   ttl_seconds: number
+}
+
+export interface MovieSyncResult {
+  newMoviesCreated: number
+  ratingsUpdated: number
+  errorCount: number
+  errors?: Array<string>
+  duration: string
 }

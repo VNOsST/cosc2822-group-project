@@ -1,15 +1,23 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { AlertCircle, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
+import {
+  AlertCircle,
+  Loader2,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react'
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useMovies } from '@/hooks/use-movies-api'
-import type { Movie } from '@/lib/api-types'
+import { useMovies, useSyncMovies } from '@/hooks/use-movies-api'
+import type { ApiResponse, Movie, MovieSyncResult } from '@/lib/api-types'
 import { MovieDialog } from '@/components/admin/movie-dialog'
 import { DeleteMovieDialog } from '@/components/admin/delete-movie-dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { RemoteImage } from '@/components/ui/remote-image'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/admin/movies')({
   component: MoviesPage,
@@ -17,6 +25,7 @@ export const Route = createFileRoute('/admin/movies')({
 
 function MoviesPage() {
   const { data: movies, isLoading, error } = useMovies()
+  const { mutate: syncMovies, isPending: isSyncing } = useSyncMovies()
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -37,6 +46,26 @@ function MoviesPage() {
   const handleAdd = () => {
     setSelectedMovie(undefined)
     setIsAddOpen(true)
+  }
+
+  const handleSync = () => {
+    syncMovies(undefined, {
+      onSuccess: (response) => {
+        const data = (response as ApiResponse<MovieSyncResult>).data
+        if (data.errorCount > 0) {
+          toast.warning(
+            `Synced ${data.newMoviesCreated} new movies and updated ${data.ratingsUpdated} ratings, but encountered ${data.errorCount} errors. Check logs for details.`,
+          )
+        } else {
+          toast.success(
+            `Successfully synced ${data.newMoviesCreated} new movies and updated ${data.ratingsUpdated} ratings in ${data.duration}.`,
+          )
+        }
+      },
+      onError: (error) => {
+        toast.error(error.message || 'Failed to sync movies')
+      },
+    })
   }
 
   if (isLoading) {
@@ -68,13 +97,33 @@ function MoviesPage() {
             Manage your movie library synced with the database.
           </p>
         </div>
-        <Button
-          onClick={handleAdd}
-          className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Movie
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleSync}
+            disabled={isSyncing}
+            variant="outline"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
+          >
+            {isSyncing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Syncing...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Sync Movies
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={handleAdd}
+            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Movie
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

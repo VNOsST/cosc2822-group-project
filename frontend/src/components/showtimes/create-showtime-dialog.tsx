@@ -137,7 +137,7 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Movie Selection */}
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="movie" className="flex items-center gap-2">
                 <Film className="h-4 w-4 text-amber-500" />
                 Movie
@@ -149,16 +149,15 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
                 }
                 disabled={moviesLoading}
               >
-                <SelectTrigger id="movie">
+                <SelectTrigger id="movie" className="w-full">
                   <SelectValue placeholder="Select a movie" />
                 </SelectTrigger>
                 <SelectContent>
                   {movies?.map((movie) => (
                     <SelectItem key={movie.id} value={movie.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{movie.title}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {movie.runtime} mins
+                      <div className="flex flex-col min-w-0 py-0.5">
+                        <span className="font-medium truncate">
+                          {movie.title} ({movie.runtime} mins)
                         </span>
                       </div>
                     </SelectItem>
@@ -180,14 +179,16 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
                 }
                 disabled={roomsLoading}
               >
-                <SelectTrigger id="room">
+                <SelectTrigger id="room" className="w-full">
                   <SelectValue placeholder="Select a room" />
                 </SelectTrigger>
                 <SelectContent>
                   {rooms?.map((room) => (
                     <SelectItem key={room.room_id} value={room.room_id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{room.name}</span>
+                      <div className="flex flex-col min-w-0 py-0.5">
+                        <span className="font-medium truncate">
+                          {room.name}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {room.capacity} seats • {room.screen_type}
                         </span>
@@ -277,12 +278,15 @@ export function CreateShowtimeDialog({ trigger }: CreateShowtimeDialogProps) {
                   Screening Summary
                 </h4>
                 <div className="space-y-1 text-sm">
-                  <p>
-                    <strong>Movie:</strong> {selectedMovie?.title}
+                  <p className="flex gap-2">
+                    <strong className="shrink-0">Movie:</strong>
+                    <span className="truncate">{selectedMovie?.title}</span>
                   </p>
-                  <p>
-                    <strong>Room:</strong>{' '}
-                    {rooms?.find((r) => r.room_id === formData.room_id)?.name}
+                  <p className="flex gap-2">
+                    <strong className="shrink-0">Room:</strong>{' '}
+                    <span className="truncate">
+                      {rooms?.find((r) => r.room_id === formData.room_id)?.name}
+                    </span>
                   </p>
                   <p>
                     <strong>Date & Time:</strong>{' '}

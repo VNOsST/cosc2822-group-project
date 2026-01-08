@@ -98,6 +98,13 @@ export interface Notification {
   type: NotificationType;
   message: string;
   sent_at: string;
+  read: boolean;
+  metadata?: {
+    movie_id?: string;
+    showtime_id?: string;
+    booking_id?: string;
+    movie_title?: string;
+  };
 }
 
 export interface SeatLock {
