@@ -18,10 +18,10 @@ WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/frontend/node_modules ./frontend/node_modules
 
 # Copy source code
 COPY . .
+
 
 # Set working directory to frontend for the build
 WORKDIR /app/frontend
