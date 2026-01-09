@@ -31,6 +31,8 @@ Globals:
         REDIS_ENDPOINT: !If [HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Address, ""]
         REDIS_PORT: !If [HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Port, "6379"]
         ADMIN_NOTIFICATION_QUEUE_URL: !Ref AdminNotificationQueue
+        SYNC_JOBS_TABLE: !Ref SyncJobsTable
+        MOVIE_SYNC_QUEUE_URL: !Ref MovieSyncQueue
 
 Parameters:
   Environment:
@@ -394,6 +396,12 @@ Resources:
             RestApiId: !Ref CineCloudApi
             Path: /movies/sync
             Method: POST
+        GetSyncStatus:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CineCloudApi
+            Path: /movies/sync/{jobId}
+            Method: GET
         # Showtimes Service Events
         GetShowtimes:
           Type: Api
@@ -845,6 +853,40 @@ Resources:
         External:
           - "@aws-sdk/*"
 
+  # Movie Sync Worker Lambda Function
+  # Processes SQS messages to run movie sync jobs asynchronously
+  MovieSyncWorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cinecloud-movie-sync-worker-${Environment}"
+      ReservedConcurrentExecutions: 1 # Strict limit - only one sync at a time
+      CodeUri: ./
+      Handler: workers/movie-sync/index.handler
+      Description: CineCloud Movie Sync Worker - Processes SQS messages to sync movies from TMDB
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 300 # 5 minutes timeout for sync processing
+      MemorySize: 512 # More memory for batch operations
+      Environment:
+        Variables:
+          TMDB_API_KEY: !Ref TMDBApiKey
+          MOVIES_IMAGES_BUCKET: !Ref MovieImagesBucket
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt MovieSyncQueue.Arn
+            BatchSize: 1 # Process one job at a time
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/workers/movie-sync/index.ts
+        External:
+          - "@aws-sdk/*"
+
   # S3 Bucket for Movie Images
   MovieImagesBucket:
     Type: AWS::S3::Bucket
@@ -1167,6 +1209,80 @@ Resources:
     Properties:
       QueueName: !Sub "cinecloud-admin-notifications-dlq-${Environment}"
       MessageRetentionPeriod: 1209600 # 14 days
+
+  # SyncJobs DynamoDB Table - Tracks async movie sync job status
+  SyncJobsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "cinecloud-sync-jobs-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      AttributeDefinitions:
+        - AttributeName: job_id
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: created_at
+          AttributeType: S
+      KeySchema:
+        - AttributeName: job_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: status-created_at-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  # SQS FIFO Queue for Movie Sync Jobs (with content-based deduplication)
+  MovieSyncQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "cinecloud-movie-sync-${Environment}.fifo"
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      VisibilityTimeout: 360 # 6 minutes (longer than worker timeout)
+      MessageRetentionPeriod: 86400 # 1 day
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt MovieSyncDLQ.Arn
+        maxReceiveCount: 2
+
+  # Dead Letter Queue for Movie Sync (FIFO)
+  MovieSyncDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "cinecloud-movie-sync-dlq-${Environment}.fifo"
+      FifoQueue: true
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  # SQS Queue Policy for Movie Sync Queue
+  MovieSyncQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref MovieSyncQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowLabRoleAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Action:
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+            Resource: !GetAtt MovieSyncQueue.Arn
 
 Outputs:
   ApiEndpoint:

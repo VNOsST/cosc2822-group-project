@@ -13,6 +13,7 @@ import { configureAmplify } from '@/lib/amplify-config'
 import { AuthProvider } from '@/lib/auth-context'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 // Initialize Amplify
 configureAmplify()
@@ -38,6 +39,9 @@ const queryClient = new QueryClient({
       retry: 2,
       retryDelay: (attemptIndex) =>
         Math.min(1000 * Math.pow(2, attemptIndex), 10000),
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
     mutations: {
       retry: 2,
@@ -56,6 +60,7 @@ function RootComponent() {
             <Outlet />
             <Toaster richColors position="top-right" />
           </div>
+          <ReactQueryDevtools buttonPosition="bottom-left" position="left" />
           <TanStackRouterDevtools position="bottom-right" />
         </QueryClientProvider>
       </AuthProvider>

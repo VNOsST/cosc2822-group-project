@@ -152,5 +152,25 @@ export interface MovieSyncResult {
   ratingsUpdated: number
   errorCount: number
   errors?: Array<string>
-  duration: string
+  duration?: string
+}
+
+// Sync job status types for async movie sync
+export type SyncJobStatus = 'queued' | 'running' | 'completed' | 'failed'
+
+export interface SyncJobResponse {
+  job_id: string
+  status: SyncJobStatus
+  created_at: string
+  message?: string
+}
+
+export interface SyncJobDetails {
+  job_id: string
+  status: SyncJobStatus
+  triggered_by: string
+  created_at: string
+  started_at?: string
+  completed_at?: string
+  result?: MovieSyncResult
 }

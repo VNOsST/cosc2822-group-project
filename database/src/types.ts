@@ -112,6 +112,26 @@ export interface DynamoDBItem {
   [key: string]: unknown
 }
 
+// Sync job status types
+export type SyncJobStatus = 'queued' | 'running' | 'completed' | 'failed'
+
+export interface SyncJob {
+  job_id: string // UUID - Partition Key
+  status: SyncJobStatus
+  triggered_by: string // Admin email who triggered the sync
+  created_at: string // ISO datetime
+  started_at?: string // ISO datetime - when worker picked it up
+  completed_at?: string // ISO datetime - when sync finished
+  result?: {
+    newMoviesCreated: number
+    ratingsUpdated: number
+    errorCount: number
+    errors?: Array<string>
+    duration?: string
+  }
+  ttl: number // Unix timestamp for auto-deletion (7 days)
+}
+
 // Table names - Defaults for local development, can be overridden by environment variables
 export const TABLE_NAMES = {
   USERS: process.env.USERS_TABLE || 'Users',
@@ -121,6 +141,7 @@ export const TABLE_NAMES = {
   BOOKINGS: process.env.BOOKINGS_TABLE || 'Bookings',
   MOVIE_RATINGS: process.env.RATINGS_TABLE || 'MovieRatings',
   NOTIFICATIONS: process.env.NOTIFICATIONS_TABLE || 'Notifications',
+  SYNC_JOBS: process.env.SYNC_JOBS_TABLE || 'SyncJobs',
 } as const
 
 export type TableName = (typeof TABLE_NAMES)[keyof typeof TABLE_NAMES]

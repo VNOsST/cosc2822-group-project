@@ -64,4 +64,5 @@ export const TABLE_NAMES = {
   NOTIFICATIONS: isLocalDynamo
     ? "Notifications"
     : process.env.NOTIFICATIONS_TABLE || "Notifications",
+  SYNC_JOBS: isLocalDynamo ? "SyncJobs" : process.env.SYNC_JOBS_TABLE || "SyncJobs",
 } as const;
