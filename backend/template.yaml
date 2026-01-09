@@ -6,7 +6,7 @@ Metadata:
   cfn-lint:
     config:
       ignore_checks:
-      - W1030 # Ignore VPC ID pattern validation for optional parameters
+        - W1030 # Ignore VPC ID pattern validation for optional parameters
 
 Globals:
   Function:
@@ -14,7 +14,7 @@ Globals:
     MemorySize: 256
     Runtime: nodejs20.x
     Architectures:
-    - x86_64
+      - x86_64
     Environment:
       Variables:
         NODE_ENV: production
@@ -28,8 +28,8 @@ Globals:
         USERS_TABLE: !Ref UsersTable
         IMAGES_BUCKET: !Ref ImagesBucket
         ADMIN_ALERTS_TOPIC_ARN: !Ref AdminAlertsTopic
-        REDIS_ENDPOINT: !If [ HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Address, "" ]
-        REDIS_PORT: !If [ HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Port, "6379" ]
+        REDIS_ENDPOINT: !If [HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Address, ""]
+        REDIS_PORT: !If [HasVpc, !GetAtt ElastiCacheCluster.RedisEndpoint.Port, "6379"]
         ADMIN_NOTIFICATION_QUEUE_URL: !Ref AdminNotificationQueue
         SYNC_JOBS_TABLE: !Ref SyncJobsTable
         MOVIE_SYNC_QUEUE_URL: !Ref MovieSyncQueue
@@ -39,9 +39,9 @@ Parameters:
     Type: String
     Default: dev
     AllowedValues:
-    - dev
-    - staging
-    - prod
+      - dev
+      - staging
+      - prod
     Description: Deployment environment
 
   TMDBApiKey:
@@ -75,9 +75,9 @@ Parameters:
 
 Conditions:
   # Use frontend stack if provided, otherwise fall back to manual VPC params
-  UseFrontendStack: !Not [ !Equals [ !Ref FrontendStackName, "" ] ]
-  HasManualVpc: !Not [ !Equals [ !Ref VpcId, "" ] ]
-  HasVpc: !Or [ !Condition UseFrontendStack, !Condition HasManualVpc ]
+  UseFrontendStack: !Not [!Equals [!Ref FrontendStackName, ""]]
+  HasManualVpc: !Not [!Equals [!Ref VpcId, ""]]
+  HasVpc: !Or [!Condition UseFrontendStack, !Condition HasManualVpc]
 
 Resources:
   # Lambda Security Group for VPC access (only created when VPC is provided)
@@ -93,11 +93,11 @@ Resources:
           Fn::Sub: "${FrontendStackName}-VPCId"
         - !Ref VpcId
       SecurityGroupEgress:
-      - IpProtocol: "-1"
-        CidrIp: 0.0.0.0/0
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
       Tags:
-      - Key: Name
-        Value: !Sub "cinecloud-lambda-sg-${Environment}"
+        - Key: Name
+          Value: !Sub "cinecloud-lambda-sg-${Environment}"
 
   # ElastiCache Security Group (only created when VPC is provided)
   ElastiCacheSecurityGroup:
@@ -112,13 +112,13 @@ Resources:
           Fn::Sub: "${FrontendStackName}-VPCId"
         - !Ref VpcId
       SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 6379
-        ToPort: 6379
-        SourceSecurityGroupId: !Ref LambdaSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref LambdaSecurityGroup
       Tags:
-      - Key: Name
-        Value: !Sub "cinecloud-elasticache-sg-${Environment}"
+        - Key: Name
+          Value: !Sub "cinecloud-elasticache-sg-${Environment}"
 
   # ElastiCache Subnet Group (only created when VPC is provided)
   ElastiCacheSubnetGroup:
@@ -148,12 +148,12 @@ Resources:
       Port: 6379
       CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup
       VpcSecurityGroupIds:
-      - !GetAtt ElastiCacheSecurityGroup.GroupId
+        - !GetAtt ElastiCacheSecurityGroup.GroupId
       Tags:
-      - Key: Name
-        Value: !Sub "cinecloud-redis-${Environment}"
-      - Key: Environment
-        Value: !Ref Environment
+        - Key: Name
+          Value: !Sub "cinecloud-redis-${Environment}"
+        - Key: Environment
+          Value: !Ref Environment
 
   # Security Group for VPC Endpoints
   # Allows HTTPS traffic from the entire VPC
@@ -169,13 +169,13 @@ Resources:
           Fn::Sub: "${FrontendStackName}-VPCId"
         - !Ref VpcId
       SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 443
-        ToPort: 443
-        CidrIp: 0.0.0.0/0 # Allow from anywhere (effectively VPC-only due to private routing)
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0 # Allow from anywhere (effectively VPC-only due to private routing)
       Tags:
-      - Key: Name
-        Value: !Sub "cinecloud-vpce-sg-${Environment}"
+        - Key: Name
+          Value: !Sub "cinecloud-vpce-sg-${Environment}"
 
   # SQS VPC Endpoint
   SQSEndpoint:
@@ -198,7 +198,7 @@ Resources:
             Fn::Sub: "${FrontendStackName}-PublicSubnet2Id"
         - !Ref SubnetIds
       SecurityGroupIds:
-      - !Ref VPCEndpointSecurityGroup
+        - !Ref VPCEndpointSecurityGroup
 
   # DynamoDB VPC Gateway Endpoint
   DynamoDBEndpoint:
@@ -213,11 +213,11 @@ Resources:
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.dynamodb"
       VpcEndpointType: Gateway
       RouteTableIds:
-      - !If
-        - UseFrontendStack
-        - !ImportValue
-          Fn::Sub: "${FrontendStackName}-PublicRouteTableId"
-        - !Ref PublicRouteTableId
+        - !If
+          - UseFrontendStack
+          - !ImportValue
+            Fn::Sub: "${FrontendStackName}-PublicRouteTableId"
+          - !Ref PublicRouteTableId
 
   # API Gateway
   CineCloudApi:
@@ -272,9 +272,9 @@ Resources:
     Properties:
       UserPoolName: !Sub "cinecloud-users-${Environment}"
       AutoVerifiedAttributes:
-      - email
+        - email
       UsernameAttributes:
-      - email
+        - email
       Policies:
         PasswordPolicy:
           MinimumLength: 8
@@ -293,9 +293,9 @@ Resources:
       UserPoolId: !Ref CineCloudUserPool
       GenerateSecret: false
       ExplicitAuthFlows:
-      - ALLOW_USER_PASSWORD_AUTH
-      - ALLOW_REFRESH_TOKEN_AUTH
-      - ALLOW_USER_SRP_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
 
   # Admin Group
   AdminsGroup:
@@ -619,9 +619,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-        - src/public-api.ts
+          - src/public-api.ts
         External:
-        - "@aws-sdk/*"
+          - "@aws-sdk/*"
 
   # Secure API Monolith (Bookings, Seat Locks) - Requires VPC
   SecureApiFunction:
@@ -638,7 +638,7 @@ Resources:
       VpcConfig: !If
         - HasVpc
         - SecurityGroupIds:
-          - !Ref LambdaSecurityGroup
+            - !Ref LambdaSecurityGroup
           SubnetIds: !If
             - UseFrontendStack
             - - !ImportValue
@@ -655,7 +655,7 @@ Resources:
             - !Join
               - ""
               - - "https://"
-                - !Select [ 0, !GetAtt SQSEndpoint.DnsEntries ]
+                - !Select [0, !GetAtt SQSEndpoint.DnsEntries]
                 - "/"
                 - !Ref AWS::AccountId
                 - "/"
@@ -755,9 +755,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-        - src/secure-api.ts
+          - src/secure-api.ts
         External:
-        - "@aws-sdk/*"
+          - "@aws-sdk/*"
 
   # Post Confirmation Lambda Trigger
   PostConfirmationFunction:
@@ -776,9 +776,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-        - src/triggers/post-confirmation/index.ts
+          - src/triggers/post-confirmation/index.ts
         External:
-        - "@aws-sdk/*"
+          - "@aws-sdk/*"
 
   # Permission for Cognito to invoke PostConfirmation Lambda
   PostConfirmationFunctionPermission:
@@ -822,9 +822,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-        - src/scheduled/movie-sync/index.ts
+          - src/scheduled/movie-sync/index.ts
         External:
-        - "@aws-sdk/*"
+          - "@aws-sdk/*"
 
   # Admin Notification Worker Lambda Function
   AdminNotificationWorkerFunction:
@@ -849,9 +849,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-        - src/workers/admin-notifications/index.ts
+          - src/workers/admin-notifications/index.ts
         External:
-        - "@aws-sdk/*"
+          - "@aws-sdk/*"
 
   # Movie Sync Worker Lambda Function
   # Processes SQS messages to run movie sync jobs asynchronously
@@ -883,9 +883,9 @@ Resources:
         Target: es2022
         Sourcemap: true
         EntryPoints:
-        - src/workers/movie-sync/index.ts
+          - src/workers/movie-sync/index.ts
         External:
-        - "@aws-sdk/*"
+          - "@aws-sdk/*"
 
   # S3 Bucket for Movie Images
   MovieImagesBucket:
@@ -901,13 +901,13 @@ Resources:
         RestrictPublicBuckets: false
       CorsConfiguration:
         CorsRules:
-        - AllowedHeaders:
-          - "*"
-          AllowedMethods:
-          - GET
-          AllowedOrigins:
-          - "*"
-          MaxAge: 3600
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+            AllowedOrigins:
+              - "*"
+            MaxAge: 3600
 
   # S3 Bucket Policy for public read access
   MovieImagesBucketPolicy:
@@ -917,11 +917,11 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-        - Sid: PublicReadGetObject
-          Effect: Allow
-          Principal: "*"
-          Action: s3:GetObject
-          Resource: !Sub "${MovieImagesBucket.Arn}/*"
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "${MovieImagesBucket.Arn}/*"
 
   # DynamoDB Tables
   MoviesTable:
@@ -934,32 +934,32 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
-      - AttributeName: tmdb_id
-        AttributeType: S
-      - AttributeName: type
-        AttributeType: S
-      - AttributeName: rating
-        AttributeType: N
-      KeySchema:
-      - AttributeName: id
-        KeyType: HASH
-      GlobalSecondaryIndexes:
-      - IndexName: tmdb_id-index
-        KeySchema:
+        - AttributeName: id
+          AttributeType: S
         - AttributeName: tmdb_id
-          KeyType: HASH
-        Projection:
-          ProjectionType: ALL
-      - IndexName: type-rating-index
-        KeySchema:
+          AttributeType: S
         - AttributeName: type
-          KeyType: HASH
+          AttributeType: S
         - AttributeName: rating
-          KeyType: RANGE
-        Projection:
-          ProjectionType: ALL
+          AttributeType: N
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: tmdb_id-index
+          KeySchema:
+            - AttributeName: tmdb_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: type-rating-index
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: rating
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   ShowtimesTable:
     Type: AWS::DynamoDB::Table
@@ -971,34 +971,34 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-      - AttributeName: movie_id
-        AttributeType: S
-      - AttributeName: start_time
-        AttributeType: S
-      - AttributeName: room_id
-        AttributeType: S
-      - AttributeName: showtime_id
-        AttributeType: S
-      KeySchema:
-      - AttributeName: movie_id
-        KeyType: HASH
-      - AttributeName: start_time
-        KeyType: RANGE
-      GlobalSecondaryIndexes:
-      - IndexName: room_id-start_time-index
-        KeySchema:
+        - AttributeName: movie_id
+          AttributeType: S
+        - AttributeName: start_time
+          AttributeType: S
         - AttributeName: room_id
+          AttributeType: S
+        - AttributeName: showtime_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: movie_id
           KeyType: HASH
         - AttributeName: start_time
           KeyType: RANGE
-        Projection:
-          ProjectionType: ALL
-      - IndexName: showtime_id-index
-        KeySchema:
-        - AttributeName: showtime_id
-          KeyType: HASH
-        Projection:
-          ProjectionType: ALL
+      GlobalSecondaryIndexes:
+        - IndexName: room_id-start_time-index
+          KeySchema:
+            - AttributeName: room_id
+              KeyType: HASH
+            - AttributeName: start_time
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: showtime_id-index
+          KeySchema:
+            - AttributeName: showtime_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
 
   BookingsTable:
     Type: AWS::DynamoDB::Table
@@ -1010,32 +1010,32 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-      - AttributeName: user_email
-        AttributeType: S
-      - AttributeName: booking_id
-        AttributeType: S
-      - AttributeName: showtime_id
-        AttributeType: S
-      - AttributeName: user_id
-        AttributeType: S
-      KeySchema:
-      - AttributeName: user_email
-        KeyType: HASH
-      - AttributeName: booking_id
-        KeyType: RANGE
-      GlobalSecondaryIndexes:
-      - IndexName: showtime_id-index
-        KeySchema:
+        - AttributeName: user_email
+          AttributeType: S
+        - AttributeName: booking_id
+          AttributeType: S
         - AttributeName: showtime_id
-          KeyType: HASH
-        Projection:
-          ProjectionType: ALL
-      - IndexName: user_id-index
-        KeySchema:
+          AttributeType: S
         - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_email
           KeyType: HASH
-        Projection:
-          ProjectionType: ALL
+        - AttributeName: booking_id
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: showtime_id-index
+          KeySchema:
+            - AttributeName: showtime_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: user_id-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
 
   RoomsTable:
     Type: AWS::DynamoDB::Table
@@ -1047,15 +1047,15 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-      - AttributeName: room_id
-        AttributeType: S
-      - AttributeName: sk
-        AttributeType: S
+        - AttributeName: room_id
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
       KeySchema:
-      - AttributeName: room_id
-        KeyType: HASH
-      - AttributeName: sk
-        KeyType: RANGE
+        - AttributeName: room_id
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
 
   RatingsTable:
     Type: AWS::DynamoDB::Table
@@ -1067,28 +1067,28 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
-      - AttributeName: movie_id
-        AttributeType: S
-      - AttributeName: user_id
-        AttributeType: S
-      KeySchema:
-      - AttributeName: id
-        KeyType: HASH
-      GlobalSecondaryIndexes:
-      - IndexName: movie_id-index
-        KeySchema:
+        - AttributeName: id
+          AttributeType: S
         - AttributeName: movie_id
-          KeyType: HASH
-        Projection:
-          ProjectionType: ALL
-      - IndexName: user_id-index
-        KeySchema:
+          AttributeType: S
         - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
           KeyType: HASH
-        Projection:
-          ProjectionType: ALL
+      GlobalSecondaryIndexes:
+        - IndexName: movie_id-index
+          KeySchema:
+            - AttributeName: movie_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: user_id-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
 
   NotificationsTable:
     Type: AWS::DynamoDB::Table
@@ -1100,24 +1100,24 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
-      - AttributeName: user_id
-        AttributeType: S
-      - AttributeName: sent_at
-        AttributeType: S
-      KeySchema:
-      - AttributeName: id
-        KeyType: HASH
-      GlobalSecondaryIndexes:
-      - IndexName: user_id-sent_at-index
-        KeySchema:
+        - AttributeName: id
+          AttributeType: S
         - AttributeName: user_id
-          KeyType: HASH
+          AttributeType: S
         - AttributeName: sent_at
-          KeyType: RANGE
-        Projection:
-          ProjectionType: ALL
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: user_id-sent_at-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+            - AttributeName: sent_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   UsersTable:
     Type: AWS::DynamoDB::Table
@@ -1129,20 +1129,20 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
-      - AttributeName: email
-        AttributeType: S
-      KeySchema:
-      - AttributeName: id
-        KeyType: HASH
-      GlobalSecondaryIndexes:
-      - IndexName: email-index
-        KeySchema:
+        - AttributeName: id
+          AttributeType: S
         - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
           KeyType: HASH
-        Projection:
-          ProjectionType: ALL
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
 
   ImagesBucket:
     Type: AWS::S3::Bucket
@@ -1155,15 +1155,15 @@ Resources:
         RestrictPublicBuckets: true
       CorsConfiguration:
         CorsRules:
-        - AllowedHeaders:
-          - "*"
-          AllowedMethods:
-          - GET
-          - PUT
-          - HEAD
-          AllowedOrigins:
-          - "*"
-          MaxAge: 3000
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - HEAD
+            AllowedOrigins:
+              - "*"
+            MaxAge: 3000
 
   # SNS Topic for Admin Notifications
   AdminAlertsTopic:
@@ -1188,20 +1188,20 @@ Resources:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
-      - !Ref AdminNotificationQueue
+        - !Ref AdminNotificationQueue
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-        - Sid: AllowLabRoleAccess
-          Effect: Allow
-          Principal:
-            AWS: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-          Action:
-          - sqs:SendMessage
-          - sqs:ReceiveMessage
-          - sqs:DeleteMessage
-          - sqs:GetQueueAttributes
-          Resource: !GetAtt AdminNotificationQueue.Arn
+          - Sid: AllowLabRoleAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Action:
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+            Resource: !GetAtt AdminNotificationQueue.Arn
 
   # Dead Letter Queue for Admin Notifications
   AdminNotificationDLQ:
@@ -1224,24 +1224,24 @@ Resources:
         AttributeName: ttl
         Enabled: true
       AttributeDefinitions:
-      - AttributeName: job_id
-        AttributeType: S
-      - AttributeName: status
-        AttributeType: S
-      - AttributeName: created_at
-        AttributeType: S
-      KeySchema:
-      - AttributeName: job_id
-        KeyType: HASH
-      GlobalSecondaryIndexes:
-      - IndexName: status-created_at-index
-        KeySchema:
+        - AttributeName: job_id
+          AttributeType: S
         - AttributeName: status
-          KeyType: HASH
+          AttributeType: S
         - AttributeName: created_at
-          KeyType: RANGE
-        Projection:
-          ProjectionType: ALL
+          AttributeType: S
+      KeySchema:
+        - AttributeName: job_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: status-created_at-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: created_at
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   # SQS FIFO Queue for Movie Sync Jobs (with content-based deduplication)
   MovieSyncQueue:
@@ -1269,20 +1269,20 @@ Resources:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
-      - !Ref MovieSyncQueue
+        - !Ref MovieSyncQueue
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-        - Sid: AllowLabRoleAccess
-          Effect: Allow
-          Principal:
-            AWS: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
-          Action:
-          - sqs:SendMessage
-          - sqs:ReceiveMessage
-          - sqs:DeleteMessage
-          - sqs:GetQueueAttributes
-          Resource: !GetAtt MovieSyncQueue.Arn
+          - Sid: AllowLabRoleAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+            Action:
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+            Resource: !GetAtt MovieSyncQueue.Arn
 
 Outputs:
   ApiEndpoint:

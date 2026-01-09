@@ -4,12 +4,7 @@
  */
 
 import { v4 as uuidv4 } from "uuid";
-import {
-  GetCommand,
-  PutCommand,
-  UpdateCommand,
-  QueryCommand,
-} from "@aws-sdk/lib-dynamodb";
+import { GetCommand, PutCommand, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../db/client";
 import type { SyncJob, SyncJobResult, SyncJobStatus } from "./types";
 
@@ -81,16 +76,12 @@ export async function markJobRunning(jobId: string): Promise<void> {
 /**
  * Update sync job status to 'completed' with result
  */
-export async function markJobCompleted(
-  jobId: string,
-  result: SyncJobResult,
-): Promise<void> {
+export async function markJobCompleted(jobId: string, result: SyncJobResult): Promise<void> {
   await docClient.send(
     new UpdateCommand({
       TableName: SYNC_JOBS_TABLE,
       Key: { job_id: jobId },
-      UpdateExpression:
-        "SET #status = :status, completed_at = :completed_at, #result = :result",
+      UpdateExpression: "SET #status = :status, completed_at = :completed_at, #result = :result",
       ExpressionAttributeNames: {
         "#status": "status",
         "#result": "result",
@@ -109,16 +100,12 @@ export async function markJobCompleted(
 /**
  * Update sync job status to 'failed' with error
  */
-export async function markJobFailed(
-  jobId: string,
-  errorMessage: string,
-): Promise<void> {
+export async function markJobFailed(jobId: string, errorMessage: string): Promise<void> {
   await docClient.send(
     new UpdateCommand({
       TableName: SYNC_JOBS_TABLE,
       Key: { job_id: jobId },
-      UpdateExpression:
-        "SET #status = :status, completed_at = :completed_at, #result = :result",
+      UpdateExpression: "SET #status = :status, completed_at = :completed_at, #result = :result",
       ExpressionAttributeNames: {
         "#status": "status",
         "#result": "result",

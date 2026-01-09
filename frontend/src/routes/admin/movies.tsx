@@ -69,13 +69,14 @@ function MoviesPage() {
     if (jobStatus.status === 'completed') {
       const result = jobStatus.result
       if (result) {
-        const message = result.errorCount > 0
-          ? `Synced ${result.newMoviesCreated} new movies and updated ${result.ratingsUpdated} ratings, but encountered ${result.errorCount} errors.`
-          : `Successfully synced ${result.newMoviesCreated} new movies and updated ${result.ratingsUpdated} ratings${result.duration ? ` in ${result.duration}` : ''}.`
-        
+        const message =
+          result.errorCount > 0
+            ? `Synced ${result.newMoviesCreated} new movies and updated ${result.ratingsUpdated} ratings, but encountered ${result.errorCount} errors.`
+            : `Successfully synced ${result.newMoviesCreated} new movies and updated ${result.ratingsUpdated} ratings${result.duration ? ` in ${result.duration}` : ''}.`
+
         result.errorCount > 0 ? toast.warning(message) : toast.success(message)
       }
-      
+
       invalidate(['movies'])
       setActiveJobId(null)
     } else if (jobStatus.status === 'failed') {
@@ -106,7 +107,9 @@ function MoviesPage() {
 
         // Show appropriate toast based on job status
         if (data.status === 'queued') {
-          toast.info(data.message || 'Sync job started. This may take a moment...')
+          toast.info(
+            data.message || 'Sync job started. This may take a moment...',
+          )
         } else if (data.message?.includes('already')) {
           // Job already in progress
           toast.info(data.message)
