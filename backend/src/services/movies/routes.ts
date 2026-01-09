@@ -15,11 +15,7 @@ import {
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
 import { adminOnly, getUser } from "../../shared/middleware";
 import type { Movie, Showtime } from "../../shared/types/entities";
-import {
-  createSyncJob,
-  getSyncJob,
-  getActiveSyncJob,
-} from "../../shared/movie-sync/job-service";
+import { createSyncJob, getSyncJob, getActiveSyncJob } from "../../shared/movie-sync/job-service";
 import { enqueueMovieSyncJob } from "../../shared/movie-sync/queue-client";
 
 const movies = new Hono();

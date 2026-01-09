@@ -99,5 +99,7 @@ export function useDeleteMovie() {
 
 // Start a sync job (returns job info for polling)
 export function useStartSyncJob() {
-  return useApiMutation(() => apiClient.post<SyncJobResponse>('/movies/sync', {}))
+  return useApiMutation(() =>
+    apiClient.post<SyncJobResponse>('/movies/sync', {}),
+  )
 }

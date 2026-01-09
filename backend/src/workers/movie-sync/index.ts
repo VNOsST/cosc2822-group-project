@@ -17,9 +17,7 @@ import type { SyncJobMessage } from "../../shared/movie-sync/types";
  * SQS Event Handler for Movie Sync Worker
  */
 export const handler = async (event: SQSEvent): Promise<void> => {
-  console.log(
-    `[movie-sync-worker] Processing ${event.Records.length} records`,
-  );
+  console.log(`[movie-sync-worker] Processing ${event.Records.length} records`);
 
   for (const record of event.Records) {
     const startTime = Date.now();
@@ -65,12 +63,9 @@ export const handler = async (event: SQSEvent): Promise<void> => {
         duration: `${duration}s`,
       });
 
-      console.log(
-        `[movie-sync-worker] Job ${jobId} completed successfully in ${duration}s`,
-      );
+      console.log(`[movie-sync-worker] Job ${jobId} completed successfully in ${duration}s`);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error(`[movie-sync-worker] Error processing job:`, error);
 
       // Mark job as failed if we have a job ID
@@ -78,10 +73,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
         try {
           await markJobFailed(jobId, errorMessage);
         } catch (updateError) {
-          console.error(
-            `[movie-sync-worker] Failed to update job status:`,
-            updateError,
-          );
+          console.error(`[movie-sync-worker] Failed to update job status:`, updateError);
         }
       }
 
