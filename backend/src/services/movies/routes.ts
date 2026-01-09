@@ -13,9 +13,14 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAMES } from "../../shared/db/client";
-import { adminOnly } from "../../shared/middleware";
-import { runMovieSync } from "../../scheduled/movie-sync";
+import { adminOnly, getUser } from "../../shared/middleware";
 import type { Movie, Showtime } from "../../shared/types/entities";
+import {
+  createSyncJob,
+  getSyncJob,
+  getActiveSyncJob,
+} from "../../shared/movie-sync/job-service";
+import { enqueueMovieSyncJob } from "../../shared/movie-sync/queue-client";
 
 const movies = new Hono();
 
@@ -368,32 +373,93 @@ movies.delete("/:id", adminOnly(), async (c) => {
 });
 
 // POST /movies/sync - Trigger manual movie sync from TMDB (admin)
+// Now uses async queue-based processing instead of synchronous execution
 movies.post("/sync", adminOnly(), async (c) => {
   try {
-    console.log("[movies] Manual sync triggered");
-    const startTime = Date.now();
+    const user = getUser(c);
+    const triggeredBy = user?.email || "unknown";
 
-    const result = await runMovieSync();
+    console.log(`[movies] Manual sync triggered by ${triggeredBy}`);
 
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`[movies] Manual sync completed in ${duration}s`);
+    // Check for existing active sync job (deduplication)
+    const activeJob = await getActiveSyncJob();
+    if (activeJob) {
+      console.log(
+        `[movies] Active sync job already exists: ${activeJob.job_id} (status: ${activeJob.status})`,
+      );
+      return c.json({
+        success: true,
+        data: {
+          job_id: activeJob.job_id,
+          status: activeJob.status,
+          created_at: activeJob.created_at,
+          message: `A sync job is already ${activeJob.status}. Please wait for it to complete.`,
+        },
+      });
+    }
+
+    // Create a new sync job record
+    const job = await createSyncJob(triggeredBy);
+
+    // Enqueue the job to SQS for async processing
+    await enqueueMovieSyncJob(job.job_id);
+
+    console.log(`[movies] Sync job ${job.job_id} created and enqueued`);
 
     return c.json({
       success: true,
       data: {
-        newMoviesCreated: result.newMoviesCreated,
-        ratingsUpdated: result.ratingsUpdated,
-        errorCount: result.errors.length,
-        errors: result.errors.length > 0 ? result.errors : undefined,
-        duration: `${duration}s`,
+        job_id: job.job_id,
+        status: job.status,
+        created_at: job.created_at,
+        message: "Sync job has been queued and will be processed shortly.",
       },
     });
   } catch (error) {
-    console.error("[movies]", "Error during manual sync:", error);
+    console.error("[movies]", "Error triggering sync:", error);
     return c.json(
       {
         success: false,
-        error: `Sync failed: ${(error as Error).message}`,
+        error: `Failed to trigger sync: ${(error as Error).message}`,
+      },
+      500,
+    );
+  }
+});
+
+// GET /movies/sync/:jobId - Get sync job status (admin)
+movies.get("/sync/:jobId", adminOnly(), async (c) => {
+  try {
+    const jobId = c.req.param("jobId");
+
+    if (!jobId) {
+      return c.json({ success: false, error: "Job ID is required" }, 400);
+    }
+
+    const job = await getSyncJob(jobId);
+
+    if (!job) {
+      return c.json({ success: false, error: "Sync job not found" }, 404);
+    }
+
+    return c.json({
+      success: true,
+      data: {
+        job_id: job.job_id,
+        status: job.status,
+        triggered_by: job.triggered_by,
+        created_at: job.created_at,
+        started_at: job.started_at,
+        completed_at: job.completed_at,
+        result: job.result,
+      },
+    });
+  } catch (error) {
+    console.error("[movies]", "Error fetching sync job:", error);
+    return c.json(
+      {
+        success: false,
+        error: "Failed to fetch sync job status",
       },
       500,
     );

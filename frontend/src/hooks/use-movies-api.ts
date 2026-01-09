@@ -5,12 +5,18 @@
 
 import { useApiMutation, useApiQuery, useInvalidateQueries } from './use-api'
 import { apiClient } from '@/lib/api-client'
-import type { Movie, Showtime } from '@/lib/api-types'
+import type {
+  Movie,
+  Showtime,
+  SyncJobDetails,
+  SyncJobResponse,
+} from '@/lib/api-types'
 
 const QUERY_KEYS = {
   all: ['movies'] as const,
   detail: (id: string) => ['movies', id] as const,
   showtimes: (id: string) => ['movies', id, 'showtimes'] as const,
+  syncJob: (jobId: string) => ['sync-jobs', jobId] as const,
 }
 
 // Queries
@@ -30,6 +36,27 @@ export function useMovieShowtimes(id: string) {
     `/movies/${id}/showtimes`,
     {
       enabled: !!id,
+    },
+  )
+}
+
+// Query for polling sync job status
+export function useSyncJobStatus(jobId: string | null, enabled = true) {
+  return useApiQuery<SyncJobDetails>(
+    [...QUERY_KEYS.syncJob(jobId || '')],
+    `/movies/sync/${jobId}`,
+    {
+      enabled: !!jobId && enabled,
+      staleTime: 0,
+      refetchInterval: (query) => {
+        // Poll every 2 seconds while job is queued or running
+        const status = query.state.data?.status
+        if (status === 'queued' || status === 'running') {
+          return 2000
+        }
+        // Stop polling when completed or failed
+        return false
+      },
     },
   )
 }
@@ -70,10 +97,7 @@ export function useDeleteMovie() {
   })
 }
 
-export function useSyncMovies() {
-  const { invalidate } = useInvalidateQueries()
-
-  return useApiMutation(() => apiClient.post('/movies/sync', {}), {
-    onSuccess: () => invalidate([...QUERY_KEYS.all]),
-  })
+// Start a sync job (returns job info for polling)
+export function useStartSyncJob() {
+  return useApiMutation(() => apiClient.post<SyncJobResponse>('/movies/sync', {}))
 }

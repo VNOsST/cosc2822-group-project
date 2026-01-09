@@ -159,6 +159,21 @@ const tableDefinitions: CreateTableCommandInput[] = [
     ],
     ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
   },
+
+  // SyncJobs Table - Tracks async movie sync jobs
+  {
+    TableName: TABLE_NAMES.SYNC_JOBS,
+    KeySchema: [{ AttributeName: 'job_id', KeyType: 'HASH' }],
+    AttributeDefinitions: [
+      { AttributeName: 'job_id', AttributeType: 'S' },
+      { AttributeName: 'status', AttributeType: 'S' },
+      { AttributeName: 'created_at', AttributeType: 'S' },
+    ],
+    GlobalSecondaryIndexes: [
+      createGSI('status-created_at-index', 'status', 'created_at'),
+    ],
+    ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
+  },
 ]
 
 /**
